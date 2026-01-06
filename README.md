@@ -30,10 +30,21 @@ docker pull ghcr.io/<your-username>/<repo-name>:latest
 ```
 
 2. **运行容器**：
-```bash
-# 运行默认演示（使用内置视频文件）
-docker run --rm --device /dev/video0:/dev/video0 -v $(pwd)/model:/app/model ghcr.io/<your-username>/<repo-name>:latest
 
-# 运行指定视频文件（挂载本地目录）
-docker run --rm -v $(pwd)/video:/app/video ghcr.io/<your-username>/<repo-name>:latest python realtime_detection.py --model_path model/yolo11n.rknn --video_path video/your_video.mp4
+> 注意：为了显示视频窗口，需要配置 X11 转发。
+
+**Linux (支持 X11):**
+```bash
+xhost +local:docker
+docker run --rm --net=host --env DISPLAY=$DISPLAY \
+    -v /tmp/.X11-unix:/tmp/.X11-unix \
+    --device /dev/video0:/dev/video0 \
+    -v $(pwd)/model:/app/model \
+    ghcr.io/<your-username>/<repo-name>:latest
+```
+
+**仅运行推理 (无显示窗口):**
+如果不需要显示窗口，可以使用以下命令（需修改代码适配 headless 模式）：
+```bash
+docker run --rm --device /dev/video0:/dev/video0 -v $(pwd)/model:/app/model ghcr.io/<your-username>/<repo-name>:latest
 ```
