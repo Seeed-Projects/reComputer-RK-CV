@@ -337,7 +337,7 @@ def main():
                 draw(frame, co_helper.get_real_box(boxes), scores, classes)
 
             # 在画面上显示信息
-            cv2.putText(frame, f'NPU FPS: {fps_counter:.1f}', (10, 30), 
+            cv2.putText(frame, f'Inference FPS: {fps_counter:.1f}', (10, 30), 
                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
             cv2.putText(frame, f'Inference: {inference_time*1000:.1f}ms', (10, 70), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
