@@ -293,9 +293,15 @@ def main():
     frame_times = []
     fps_counter = 0
     
+    # 初始化预览窗口
+    window_name = 'RK3588 Real-time Detection'
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, 1280, 720)
+    
     try:
+        last_frame_time = time.time()
         while True:
-            loop_start_time = time.time()
+            # loop_start_time 不再需要，我们使用更准确的帧间间隔
             ret, frame = cap.read()
             if not ret:
                 if args.video_path:
@@ -326,8 +332,10 @@ def main():
                 draw(frame, co_helper.get_real_box(boxes), scores, classes)
 
             # 计算并显示FPS
-            loop_end_time = time.time()
-            frame_times.append(loop_end_time - loop_start_time)
+            curr_time = time.time()
+            frame_times.append(curr_time - last_frame_time)
+            last_frame_time = curr_time
+            
             if len(frame_times) > fps_avg_frame_count:
                 frame_times.pop(0)
             
@@ -348,9 +356,6 @@ def main():
                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
 
             # 显示结果
-            window_name = 'RK3588 Real-time Detection'
-            cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-            cv2.resizeWindow(window_name, 1280, 720)
             cv2.imshow(window_name, frame)
 
             # 按键处理
