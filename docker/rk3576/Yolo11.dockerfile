@@ -46,4 +46,4 @@ RUN chmod 755 /usr/lib/librknnrt.so
 COPY . .
 
 # Set the default command to run the detection script
-CMD ["python", "realtime_detection.py", "--model_path", "model/3576_yolo11n.rknn", "--video_path", "video/test.mp4"]
+CMD ["python", "realtime_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]
