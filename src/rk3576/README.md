@@ -20,5 +20,6 @@ sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/<your-username>/rk3576-yolo:latest
+    ghcr.io/litxaohu/rk3588_yolo/rk3576-yolo:latest
+    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```

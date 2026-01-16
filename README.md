@@ -73,6 +73,7 @@ sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     --device /dev/dri/renderD128:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
     ghcr.io/litxaohu/rk3588_yolo/rk3588-yolo:latest
+    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
 rk3576:
@@ -85,6 +86,7 @@ sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
     ghcr.io/litxaohu/rk3588_yolo/rk3576-yolo:latest
+    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
 > **注意**：对于 RK3576，设备路径改为 `/dev/dri/renderD128`。
