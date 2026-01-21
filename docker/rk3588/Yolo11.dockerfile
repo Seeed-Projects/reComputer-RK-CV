@@ -55,8 +55,5 @@ COPY . .
 EXPOSE 8000
 
 # Set the default command to run the detection script
-# GUI version (requires DISPLAY)
-# CMD ["python", "realtime_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]
-
-# Web version (accessible via browser at http://localhost:8000)
-CMD ["python", "web_detection.py", "--model_path", "model/yolo11n.rknn", "--source", "video/test.mp4"]
+# This script now supports both GUI (if DISPLAY is available) and Web Preview (on port 8000)
+CMD ["python", "realtime_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]

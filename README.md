@@ -31,53 +31,46 @@ reComputer-RK-CV/
 在开发板上执行以下命令安装 Docker：
 
 ```bash
-# 1. 下载安装脚本
+# 下载安装脚本
 curl -fsSL https://get.docker.com -o get-docker.sh
-
-# 2. 使用阿里云镜像源安装（推荐国内用户）
+# 使用阿里云镜像源安装
 sudo sh get-docker.sh --mirror Aliyun
-
-# 3. 启动 Docker 并设置开机自启
+# 启动 Docker 并设置开机自启
 sudo systemctl enable docker
 sudo systemctl start docker
-
-# 4. (可选) 将当前用户加入 docker 用户组，避免每次都输 sudo
-sudo usermod -aG docker $USER
-# 注意：执行完上一条命令后需要注销并重新登录才能生效
 ```
 
-### 2. 运行项目 (以 RK3576 为例)
+### 2. 运行项目 (一条命令，双模预览)
 
-首先开启 X11 访问权限（用于预览窗口显示）：
+本项目支持 **本地 GUI** 与 **Web 浏览器** 双模式同时预览。程序会自动检测显示器环境，无显示器时自动降级为 Web 模式。
 
+#### 步骤 A：配置显示权限 (可选)
+如果您连接了显示器并希望在本地看到窗口：
 ```bash
 xhost +local:docker
 ```
 
-拉取最新镜像
-
+#### 步骤 B：拉取镜像
 ```bash
 sudo docker pull ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
 sudo docker pull ghcr.io/litxaohu/recomputer-rk-cv/rk3576-yolo:latest
 ```
 
-运行 Docker 容器：
+#### 步骤 C：一键运行
 
-rk3588:
-
+**针对 RK3588:**
 ```bash
 sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /dev/bus/usb:/dev/bus/usb \
     --device /dev/video0:/dev/video0 \
-    --device /dev/dri/renderD128:/dev/dri/renderD129 \
+    --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
     ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
     python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
-rk3576:
-
+**针对 RK3576:**
 ```bash
 sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
@@ -89,22 +82,11 @@ sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
-> **注意**：对于 RK3576，设备路径改为 `/dev/dri/renderD128`。
+#### 如何预览：
+1.  **本地显示器**：自动弹出实时检测窗口（需连接显示器并执行了 xhost）。
+2.  **Web 浏览器**：在局域网内访问 `http://<开发板IP>:8000` 即可实时预览。
 
-### 3. Web 浏览器远程预览 (推荐)
-
-如果您不想配置 X11 或在没有显示器的情况下运行，可以使用 Web 预览功能。直接在浏览器中访问开发板 IP 即可看到带检测框的实时视频流。
-
-**运行 Web 预览 (以 RK3588 为例):**
-
-```bash
-sudo docker run --rm --privileged --net=host \
-    --device /dev/dri/renderD129:/dev/dri/renderD129 \
-    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
-```
-
-运行后，在同局域网的浏览器访问：`http://<开发板IP>:8000`
+---
 
 ## 平台详细文档
 
@@ -121,17 +103,11 @@ sudo docker run --rm --privileged --net=host \
 ## 💻 二次开发指南
 ### 代码说明
 - `realtime_detection.py`:
-    - RKNNLiteModel: 封装了 RKNN 初始化、加载模型、推理的逻辑。
-    - preprocess_frame: 图像预处理（Resize, Padding, Color conversion）。
-    - post_process: YOLO 后处理（Box解码, NMS 非极大值抑制）。
-    - main: 主循环，处理视频流，调用推理并显示结果。
+    - **双模支持**: 集成 FastAPI，同时支持本地渲染和 MJPEG 流式输出。
+    - **环境自适应**: 自动检测 `DISPLAY` 环境变量，无环境时静默跳过 GUI 初始化。
+    - **RKNN 推理**: 封装了 RKNN 初始化、加载模型、多核推理逻辑。
+    - **后处理**: YOLOv11 专用的 Box 解码与 NMS 逻辑。
+
 ### 修改模型
-1. 将训练好并转换完成的 .rknn 模型放入 model/ 目录。
-2. 运行命令时修改 --model_path 参数指向新模型。
-
-### 重新构建镜像
-如果你修改了代码或依赖，需要重新构建 Docker 镜像：
-
-# 在项目根目录下执行
-sudo docker build -t rk3588_yolo:local .
-构建完成后，使用 rk3588_yolo:local 替换命令中的镜像名即可运行。
+1. 将训练好并转换完成的 .rknn 模型放入相应平台的 `model/` 目录。
+2. 运行命令时可添加 `--model_path` 参数指向新模型（默认已在 Dockerfile 中配置）。
