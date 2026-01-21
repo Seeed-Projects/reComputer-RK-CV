@@ -46,50 +46,38 @@ sudo usermod -aG docker $USER
 # 注意：执行完上一条命令后需要注销并重新登录才能生效
 ```
 
-### 2. 运行项目 (以 RK3576 为例)
+### 2. 运行项目
 
-首先开启 X11 访问权限（用于预览窗口显示）：
+本项目提供两种预览方式：**本地 GUI 窗口预览**（需连接显示器）和 **Web 浏览器远程预览**（推荐）。
+
+#### 方式 A: Web 浏览器远程预览 (推荐)
+无需配置 X11，直接通过浏览器访问。
+
+```bash
+# 以 RK3588 为例
+sudo docker run --rm --privileged --net=host \
+    --device /dev/dri/renderD129:/dev/dri/renderD129 \
+    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
+    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
+```
+运行后，在同局域网的浏览器访问：`http://开发板IP:8000`
+
+#### 方式 B: 本地 GUI 窗口预览
+需要开启 X11 访问权限：
 
 ```bash
 xhost +local:docker
-```
 
-拉取最新镜像
-
-```bash
-sudo docker pull ghcr.io/litxaohu/rk3588_yolo/rk3588-yolo:latest
-sudo docker pull ghcr.io/litxaohu/rk3588_yolo/rk3576-yolo:latest
-```
-
-运行 Docker 容器：
-
-rk3588:
-
-```bash
+# 以 RK3588 为例
 sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v /dev/bus/usb:/dev/bus/usb \
-    --device /dev/video0:/dev/video0 \
-    --device /dev/dri/renderD128:/dev/dri/renderD129 \
+    --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/rk3588_yolo/rk3588-yolo:latest
+    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest \
     python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
-rk3576:
-
-```bash
-sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
-    -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v /dev/bus/usb:/dev/bus/usb \
-    --device /dev/video0:/dev/video0 \
-    --device /dev/dri/renderD128:/dev/dri/renderD128 \
-    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/rk3588_yolo/rk3576-yolo:latest
-    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
-```
-
-> **注意**：对于 RK3576，设备路径改为 `/dev/dri/renderD128`。
+> **提示**：RK3588 的 NPU 设备通常为 `/dev/dri/renderD129`，RK3576 通常为 `/dev/dri/renderD128`。
 
 ## 平台详细文档
 

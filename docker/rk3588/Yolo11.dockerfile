@@ -51,10 +51,12 @@ RUN chmod 755 /usr/lib/librknnrt.so
 # Copy the rest of the application code
 COPY . .
 
+# Expose port for Web Preview
+EXPOSE 8000
+
 # Set the default command to run the detection script
-# Users can override this command
-# Using a default model path (assuming one exists or user mounts it)
-# Since we don't know which model the user wants, we can just set python as entrypoint or give a help message
-# But the user asked for "one line docker command", so a default CMD is good.
-# Let's assume yolo11n.rknn is a good default if it exists.
-CMD ["python", "realtime_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]
+# GUI version (requires DISPLAY)
+# CMD ["python", "realtime_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]
+
+# Web version (accessible via browser at http://localhost:8000)
+CMD ["python", "web_detection.py", "--model_path", "model/yolo11n.rknn", "--source", "video/test.mp4"]

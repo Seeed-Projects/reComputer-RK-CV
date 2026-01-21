@@ -12,14 +12,24 @@
 - `model/`：存放针对 RK3588 转换的 `.rknn` 模型。
 - `realtime_detection.py`：主程序。
 
-## 运行命令
+## 运行方式
+
+### 1. Web 浏览器预览 (推荐)
 ```bash
+sudo docker run --rm --privileged --net=host \
+    --device /dev/dri/renderD129:/dev/dri/renderD129 \
+    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
+    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
+```
+访问：`http://localhost:8000`
+
+### 2. 本地 GUI 预览
+```bash
+xhost +local:docker
 sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v /dev/bus/usb:/dev/bus/usb \
-    --device /dev/video0:/dev/video0 \
-    --device /dev/dri/renderD128:/dev/dri/renderD129 \
+    --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/rk3588_yolo/rk3588-yolo:latest
+    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest \
     python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
