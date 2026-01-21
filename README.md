@@ -63,11 +63,11 @@ sudo docker pull ghcr.io/litxaohu/recomputer-rk-cv/rk3576-yolo:latest
 sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v /dev/bus/usb:/dev/bus/usb \
-    --device /dev/video0:/dev/video0 \
+    --device /dev/video1:/dev/video1 \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
     ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
-    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
+    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 1
 ```
 
 **针对 RK3576:**

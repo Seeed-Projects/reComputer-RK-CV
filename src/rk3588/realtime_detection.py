@@ -33,12 +33,8 @@ CLASSES = ("person", "bicycle", "car","motorbike ","aeroplane ","bus ","train","
            "pottedplant","bed","diningtable","toilet ","tvmonitor","laptop	","mouse	","remote ","keyboard ","cell phone","microwave ",
            "oven ","toaster","sink","refrigerator ","book","clock","vase","scissors ","teddy bear ","hair drier", "toothbrush ")
 
-import logging
-
 # --- FastAPI 核心组件 ---
-app = FastAPI(title="reComputer RK-CV Combined Preview")
-latest_frame = None
-frame_lock = threading.Lock()
+app = FastAPI(title="reComputer RK-CV Combined Preview (RK3588)")
 
 class FrameBuffer:
     def __init__(self):
@@ -63,7 +59,7 @@ async def video_feed():
             if frame is not None:
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-            time.sleep(0.03) # 约 30 FPS
+            time.sleep(0.03)
     return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.get("/")
@@ -72,7 +68,7 @@ async def index():
     <html>
       <head><title>reComputer RK-CV Web Preview</title></head>
       <body style="background-color: #1a1a1a; color: white; text-align: center; font-family: sans-serif;">
-        <h1>reComputer RK-CV Real-time Detection (Web Mode)</h1>
+        <h1>reComputer RK-CV Real-time Detection (RK3588 Web Mode)</h1>
         <div style="margin: 20px auto; display: inline-block; border: 5px solid #333; border-radius: 10px; overflow: hidden;">
           <img src="/api/video_feed" style="max-width: 100%; height: auto;">
         </div>
@@ -82,14 +78,7 @@ async def index():
     """, media_type="text/html")
 
 def run_fastapi(host, port):
-    # 禁用 Uvicorn 的默认日志配置，避免在某些 Docker 环境下报错
-    # ValueError: Unknown level: 'INFO'
-    try:
-        config = uvicorn.Config(app, host=host, port=port, log_config=None)
-        server = uvicorn.Server(config)
-        server.run()
-    except Exception as e:
-        print(f"Failed to start Web Server: {e}")
+    uvicorn.run(app, host=host, port=port, log_level="error")
 
 # --- 原有推理逻辑 ---
 
@@ -269,13 +258,12 @@ def main():
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
     if not cap.isOpened():
-        print("Error: Cannot open video source")
+        print(f"Error: Cannot open video source (ID: {args.camera_id if not args.video_path else args.video_path})")
         return
 
     # GUI 状态
     show_gui = True
     window_name = 'RK3588 Real-time Detection'
-    
     if args.no_gui:
         print("GUI disabled by --no_gui argument. Running in Web-only mode.")
         show_gui = False
@@ -284,9 +272,6 @@ def main():
         show_gui = False
     else:
         try:
-            # 尝试简单检测 Display 是否可用，避免 Qt 硬崩溃
-            # 注意: 这里只能做有限的预防，如果 X11 鉴权失败，cv2.namedWindow 仍可能导致程序终止
-            # 建议在不稳定环境下使用 --no_gui
             cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
             cv2.resizeWindow(window_name, 1280, 720)
         except Exception as e:
@@ -333,7 +318,7 @@ def main():
                     show_gui = False
                     print("GUI display failed during runtime, switching to Web-only mode.")
             else:
-                # Web-only 模式下稍微休眠以防过度占用 CPU
+                # 降低非 GUI 模式下的 CPU 占用
                 time.sleep(0.01)
 
     except KeyboardInterrupt:
