@@ -351,6 +351,30 @@ def nms_boxes(boxes, scores):
         order = order[inds + 1]
     return np.array(keep)
 
+def dfl(position):
+    n, c, h, w = position.shape
+    p_num = 4
+    mc = c // p_num
+    y = position.reshape(n, p_num, mc, h, w)
+    y_exp = np.exp(y - np.max(y, axis=2, keepdims=True))
+    y_softmax = y_exp / np.sum(y_exp, axis=2, keepdims=True)
+    acc_metrix = np.arange(mc).reshape(1, 1, mc, 1, 1).astype(np.float32)
+    y = (y_softmax * acc_metrix).sum(2)
+    return y
+
+def box_process(position):
+    grid_h, grid_w = position.shape[2:4]
+    col, row = np.meshgrid(np.arange(0, grid_w), np.arange(0, grid_h))
+    col = col.reshape(1, 1, grid_h, grid_w)
+    row = row.reshape(1, 1, grid_h, grid_w)
+    grid = np.concatenate((col, row), axis=1)
+    stride = np.array([IMG_SIZE[1]//grid_h, IMG_SIZE[0]//grid_w]).reshape(1,2,1,1)
+    position = dfl(position)
+    box_xy  = grid +0.5 -position[:,0:2,:,:]
+    box_xy2 = grid +0.5 +position[:,2:4,:,:]
+    xyxy = np.concatenate((box_xy*stride, box_xy2*stride), axis=1)
+    return xyxy
+
 def post_process(input_data):
     obj, nms = det_config.get()
     return post_process_with_thresh(input_data, obj, nms)
