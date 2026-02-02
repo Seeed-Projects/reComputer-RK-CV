@@ -21,7 +21,7 @@ sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-yolo:latest \
     python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
@@ -36,7 +36,7 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-yolo:latest \
     python web_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 访问：`http://<IP>:8000`
