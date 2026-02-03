@@ -234,8 +234,15 @@ async def index():
     """, media_type="text/html")
 
 def run_fastapi(host, port):
-    # 使用 log_config=None 避开某些环境下 uvicorn 日志配置报错的问题
-    uvicorn.run(app, host=host, port=port, log_level="error", log_config=None)
+    # 打印所有注册的路由，用于调试 404 问题
+    print("\n" + "="*50)
+    print("Registered Routes:")
+    for route in app.routes:
+        print(f"Path: {route.path:30} | Methods: {route.methods}")
+    print("="*50 + "\n")
+    
+    # 将 log_level 改为 info 以便查看请求日志
+    uvicorn.run(app, host=host, port=port, log_level="info", log_config=None)
 
 # --- 推理逻辑 ---
 
