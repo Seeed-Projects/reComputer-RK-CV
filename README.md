@@ -101,6 +101,8 @@ sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
 **针对 RK3588:**
 ```bash
 sudo docker run --rm --privileged --net=host \
+    -e PYTHONUNBUFFERED=1 \
+    -e RKNN_LOG_LEVEL=0 \
     --device /dev/video1:/dev/video1 \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
@@ -111,6 +113,8 @@ sudo docker run --rm --privileged --net=host \
 **针对 RK3576:**
 ```bash
 sudo docker run --rm --privileged --net=host \
+    -e PYTHONUNBUFFERED=1 \
+    -e RKNN_LOG_LEVEL=0 \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \

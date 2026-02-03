@@ -235,11 +235,13 @@ async def index():
 
 def run_fastapi(host, port):
     # 打印所有注册的路由，用于调试 404 问题
-    print("\n" + "="*50)
-    print("Registered Routes:")
+    print("\n" + "="*50, flush=True)
+    print("Registered Routes:", flush=True)
     for route in app.routes:
-        print(f"Path: {route.path:30} | Methods: {route.methods}")
-    print("="*50 + "\n")
+        if hasattr(route, "methods"):
+            print(f"Path: {route.path:35} | Methods: {route.methods}", flush=True)
+    print("="*50 + "\n", flush=True)
+    sys.stdout.flush()
     
     # 将 log_level 改为 info 以便查看请求日志
     uvicorn.run(app, host=host, port=port, log_level="info", log_config=None)
@@ -294,8 +296,7 @@ def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
         x = b[:, 0]
         y = b[:, 1]
         w = b[:, 2] - b[:, 0]
-        h = b[:, 3] - b[:, 1]
-        areas = w * h
+        h = b[:, 3] - b[:, 1] Clarification areas = w * h
         order = s.argsort()[::-1]
         keep = []
         while order.size > 0:
@@ -399,15 +400,18 @@ class RKNNLiteModel:
         if not os.path.exists(model_path):
             raise FileNotFoundError(f"RKNN model file not found: {model_path}")
         self.rknn_lite = RKNNLite()
-        print(f'Loading RKNN model from {model_path}...')
+        print(f'Loading RKNN model from {model_path}...', flush=True)
+        sys.stdout.flush()
         ret = self.rknn_lite.load_rknn(model_path)
         if ret != 0:
             raise Exception(f"Load RKNN model failed with error code: {ret}")
-        print('Initializing runtime...')
+        print('Initializing runtime...', flush=True)
+        sys.stdout.flush()
         ret = self.rknn_lite.init_runtime()
         if ret != 0:
             raise Exception(f"Init runtime failed with error code: {ret}")
-        print('RKNN model loaded successfully')
+        print('RKNN model loaded successfully', flush=True)
+        sys.stdout.flush()
     
     def run(self, inputs):
         try:
@@ -445,7 +449,8 @@ def main():
     # 启动 Web 服务器线程
     web_thread = threading.Thread(target=run_fastapi, args=(args.host, args.port), daemon=True)
     web_thread.start()
-    print(f"Web Preview started at http://{args.host}:{args.port}")
+    print(f"Web Preview started at http://{args.host}:{args.port}", flush=True)
+    sys.stdout.flush()
 
     global _global_model, _global_co_helper
     # 初始化模型
