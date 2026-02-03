@@ -89,11 +89,10 @@ async def predict(
         h, w = img.shape[:2]
 
         # 预处理
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        input_img, ratio, (dw, dh) = _global_co_helper.letterbox(img_rgb)
+        input_img = preprocess_frame(img, _global_co_helper)
 
         # 推理
-        outputs = _global_model.run([input_img])
+        outputs = _global_model.run(input_img)
 
         # 使用请求参数或全局配置
         current_obj_thresh, current_nms_thresh = det_config.get()

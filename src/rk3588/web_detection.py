@@ -76,7 +76,7 @@ async def predict(
     iou: Optional[float] = Form(None)
 ):
     if _global_model is None or _global_co_helper is None:
-        return {"success": false, "message": "Model not initialized"}
+        return {"success": False, "message": "Model not initialized"}
 
     try:
         # 读取上传的文件
