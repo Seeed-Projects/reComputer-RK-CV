@@ -338,7 +338,8 @@ def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
         x = b[:, 0]
         y = b[:, 1]
         w = b[:, 2] - b[:, 0]
-        h = b[:, 3] - b[:, 1] Clarification areas = w * h
+        h = b[:, 3] - b[:, 1]
+        areas = w * h
         order = s.argsort()[::-1]
         keep = []
         while order.size > 0:
