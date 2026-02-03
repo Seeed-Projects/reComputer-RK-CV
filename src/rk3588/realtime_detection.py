@@ -71,7 +71,10 @@ _global_co_helper = None
 
 @app.post("/api/models/yolo11/predict")
 async def predict(
-    file: UploadFile = File(...),
+    file: Optional[UploadFile] = File(None),
+    video: Optional[UploadFile] = File(None),
+    timestamp: Optional[float] = Form(None),
+    realtime: Optional[bool] = Form(False),
     conf: Optional[float] = Form(None),
     iou: Optional[float] = Form(None)
 ):
@@ -79,12 +82,43 @@ async def predict(
         return {"success": False, "message": "Model not initialized"}
 
     try:
-        # 读取上传的文件
-        contents = await file.read()
-        nparr = np.frombuffer(contents, np.uint8)
-        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        img = None
+        source_info = ""
+
+        # 1. 优先级：如果有上传图片
+        if file:
+            contents = await file.read()
+            nparr = np.frombuffer(contents, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            source_info = "uploaded image"
+
+        # 2. 优先级：如果有上传视频且有时间戳
+        elif video:
+            # 保存临时视频文件
+            import tempfile
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as tmp:
+                tmp.write(await video.read())
+                tmp_path = tmp.name
+            
+            cap = cv2.VideoCapture(tmp_path)
+            if cap.isOpened():
+                if timestamp is not None:
+                    # 跳转到指定时间 (毫秒)
+                    cap.set(cv2.CAP_PROP_POS_MSEC, timestamp * 1000)
+                ret, frame = cap.read()
+                if ret:
+                    img = frame
+                    source_info = f"video frame at {timestamp if timestamp else 0}s"
+                cap.release()
+            os.unlink(tmp_path)
+
+        # 3. 优先级：realtime 参数或没有任何文件上传，使用摄像头当前帧
         if img is None:
-            return {"success": False, "message": "Invalid image file"}
+            img = frame_buffer.get_raw_frame()
+            source_info = "realtime camera frame"
+
+        if img is None:
+            return {"success": False, "message": "No valid input source found (image, video, or camera)"}
 
         h, w = img.shape[:2]
 
@@ -118,6 +152,7 @@ async def predict(
 
         return {
             "success": True,
+            "source": source_info,
             "predictions": predictions,
             "image": {
                 "width": w,
@@ -130,15 +165,22 @@ async def predict(
 class FrameBuffer:
     def __init__(self):
         self.frame = None
+        self.raw_frame = None  # 新增：保存原始 BGR 帧用于 API 推理
         self.lock = threading.Lock()
 
-    def set_frame(self, frame):
+    def set_frame(self, frame, raw_frame=None):
         with self.lock:
             self.frame = frame
+            if raw_frame is not None:
+                self.raw_frame = raw_frame
 
     def get_frame(self):
         with self.lock:
             return self.frame
+
+    def get_raw_frame(self):
+        with self.lock:
+            return self.raw_frame.copy() if self.raw_frame is not None else None
 
 frame_buffer = FrameBuffer()
 
@@ -520,7 +562,7 @@ def main():
 
             # 更新 Web 帧缓冲区
             _, buffer = cv2.imencode('.jpg', frame)
-            frame_buffer.set_frame(buffer.tobytes())
+            frame_buffer.set_frame(buffer.tobytes(), frame)
 
             # 本地显示 (仅当有屏幕时)
             if show_gui:
