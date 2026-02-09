@@ -26,13 +26,49 @@ OBJ_THRESH = 0.25
 NMS_THRESH = 0.45
 IMG_SIZE = (640, 640)  # (width, height)
 
-CLASSES = ("person", "bicycle", "car","motorbike ","aeroplane ","bus ","train","truck ","boat","traffic light",
+# 默认类别定义 (COCO 80类)
+DEFAULT_CLASSES = ("person", "bicycle", "car","motorbike ","aeroplane ","bus ","train","truck ","boat","traffic light",
            "fire hydrant","stop sign ","parking meter","bench","bird","cat","dog ","horse ","sheep","cow","elephant",
            "bear","zebra ","giraffe","backpack","umbrella","handbag","tie","suitcase","frisbee","skis","snowboard","sports ball","kite",
            "baseball bat","baseball glove","skateboard","surfboard","tennis racket","bottle","wine glass","cup","fork","knife ",
            "spoon","bowl","banana","apple","sandwich","orange","broccoli","carrot","hot dog","pizza ","donut","cake","chair","sofa",
            "pottedplant","bed","diningtable","toilet ","tvmonitor","laptop	","mouse	","remote ","keyboard ","cell phone","microwave ",
            "oven ","toaster","sink","refrigerator ","book","clock","vase","scissors ","teddy bear ","hair drier", "toothbrush ")
+
+CLASSES = DEFAULT_CLASSES
+
+def load_classes(path):
+    """
+    从文件加载类别，支持双引号和逗号分隔的格式
+    例如: "person", "bicycle", "car"
+    """
+    global CLASSES
+    if not path or not os.path.exists(path):
+        CLASSES = DEFAULT_CLASSES
+        return
+
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            content = f.read().strip()
+            # 简单的解析逻辑：移除换行，按逗号分割，去除空格和双引号
+            import re
+            # 匹配双引号内的内容
+            items = re.findall(r'"([^"]*)"', content)
+            if items:
+                CLASSES = tuple(items)
+                print(f"Successfully loaded {len(CLASSES)} classes from {path}")
+            else:
+                # 备选方案：如果没匹配到双引号，尝试按逗号分割
+                items = [item.strip().strip('"') for item in content.split(',') if item.strip()]
+                if items:
+                    CLASSES = tuple(items)
+                    print(f"Loaded {len(CLASSES)} classes from {path} (fallback parsing)")
+                else:
+                    print(f"Warning: No classes found in {path}, using default COCO classes")
+                    CLASSES = DEFAULT_CLASSES
+    except Exception as e:
+        print(f"Error loading classes from {path}: {e}. Using default COCO classes")
+        CLASSES = DEFAULT_CLASSES
 
 # 动态配置参数
 class DetectionConfig:
@@ -481,6 +517,7 @@ def main():
     parser.add_argument('--model_path', type=str, required=True, help='RKNN model path')
     parser.add_argument('--camera_id', type=int, default=1, help='Camera device ID (default: 1 for /dev/video1)')
     parser.add_argument('--video_path', type=str, help='Path to video file (overrides camera_id)')
+    parser.add_argument('--class_path', type=str, help='Path to class_config.txt file for dynamic category loading')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Web server host')
     parser.add_argument('--port', type=int, default=8000, help='Web server port')
     args = parser.parse_args()
@@ -488,6 +525,10 @@ def main():
     if not RKNN_LITE_AVAILABLE:
         print("Error: RKNN-Toolkit-Lite2 is not available.")
         return
+
+    # 加载自定义类别
+    if args.class_path:
+        load_classes(args.class_path)
 
     # 启动 Web 服务器线程
     web_thread = threading.Thread(target=run_fastapi, args=(args.host, args.port), daemon=True)

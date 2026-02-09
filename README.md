@@ -60,46 +60,6 @@ sudo docker pull ghcr.io/litxaohu/recomputer-rk-cv/rk3576-yolo:latest
 
 **针对 RK3588:**
 ```bash
-sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
-    -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v /dev/bus/usb:/dev/bus/usb \
-    --device /dev/video1:/dev/video1 \
-    --device /dev/dri/renderD129:/dev/dri/renderD129 \
-    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
-    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 1
-```
-
-**针对 RK3576:**
-```bash
-sudo docker run --rm --privileged --net=host --env DISPLAY=$DISPLAY \
-    -v /tmp/.X11-unix:/tmp/.X11-unix \
-    -v /dev/bus/usb:/dev/bus/usb \
-    --device /dev/video0:/dev/video0 \
-    --device /dev/dri/renderD128:/dev/dri/renderD128 \
-    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/litxaohu/recomputer-rk-cv/rk3576-yolo:latest
-    python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0
-```
-
-#### 如何预览：
-1.  **本地显示器**：自动弹出实时检测窗口（需连接显示器并执行了 xhost）。
-2.  **Web 浏览器**：在局域网内访问 `http://<开发板IP>:8000` 即可实时预览。
-
-#### 常见问题排查：
-**问题：SSH 远程无屏幕运行报错 `qt.qpa.xcb: could not connect to display`**
-解决方案：在运行命令末尾添加 `--no_gui` 参数，强制关闭本地窗口初始化。
-```bash
-# 示例 (在原有命令末尾追加):
-... python realtime_detection.py --model_path model/yolo11n.rknn --camera_id 0 --no_gui
-```
-
-### 3. 独立 Web 预览模式 (仅浏览器查看)
-
-如果您只需要通过 Web 浏览器查看预览画面（例如在远程服务器或无显示器环境下运行），可以使用专用的 Web 预览脚本：
-
-**针对 RK3588:**
-```bash
 sudo docker run --rm --privileged --net=host \
     -e PYTHONUNBUFFERED=1 \
     -e RKNN_LOG_LEVEL=0 \
@@ -123,6 +83,22 @@ sudo docker run --rm --privileged --net=host \
 ```
 
 访问方式：`http://<开发板IP>:8000`
+
+> **注意**: 如果需要自定义类别，可以增加 `-v $(pwd)/class_config.txt:/app/class_config.txt \` 挂载和 `--class_path` 参数，程序默认使用 COCO 80 类。
+
+例如：
+
+```bash
+sudo docker run --rm --privileged --net=host \
+    -e PYTHONUNBUFFERED=1 \
+    -e RKNN_LOG_LEVEL=0 \
+    -v $(pwd)/class_config.txt:/app/class_config.txt \
+    --device /dev/video1:/dev/video1 \
+    --device /dev/dri/renderD129:/dev/dri/renderD129 \
+    -v /proc/device-tree/compatible:/proc/device-tree/compatible \
+    ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest \
+    python web_detection.py --model_path model/yolo11n.rknn --camera_id 1 --class_path class_config.txt
+```
 
 ---
 
@@ -190,7 +166,26 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 - **请求体 (JSON):** `{"obj_thresh": 0.3, "nms_thresh": 0.5}`
 - **响应:** `{"status": "success"}`
 
-### 3. 实时视频流接口 (Video Feed)
+### 3. 命令行参数说明
+
+运行 `web_detection.py` 时支持以下参数：
+
+| 参数 | 说明 | 默认值 |
+| :--- | :--- | :--- |
+| `--model_path` | RKNN 模型文件路径 | (必填) |
+| `--camera_id` | 摄像头设备 ID (如 `/dev/video1` 则填 1) | 1 |
+| `--video_path` | 视频文件路径 (若提供则忽略 camera_id) | None |
+| `--class_path` | 自定义类别配置文件路径 (class_config.txt) | None (默认 COCO 80类) |
+| `--host` | Web 服务器监听地址 | `0.0.0.0` |
+| `--port` | Web 服务器端口 | 8000 |
+
+#### 自定义类别配置 (class_config.txt) 格式：
+使用双引号命名分类，不同分类之间使用逗号隔开，例如：
+`"person", "bicycle", "car", "motorbike"`
+
+---
+
+## 实时视频流接口 (Video Feed)
 
 获取带有检测框绘制的实时 MJPEG 视频流，可直接嵌入 HTML `<img>` 标签。
 
@@ -211,12 +206,13 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 
 ---
 
-## �️ 开发者指南 (量产建议)
+## 🛠️ 开发者指南 (量产建议)
 ### 代码说明
-- `realtime_detection.py`:
+- `web_detection.py`:
     - **双模支持**: 集成 FastAPI，同时支持本地渲染和 MJPEG 流式输出。
     - **环境自适应**: 自动检测 `DISPLAY` 环境变量，无环境时静默跳过 GUI 初始化。
     - **RKNN 推理**: 封装了 RKNN 初始化、加载模型、多核推理逻辑。
+    - **动态加载**: 支持通过 `--class_path` 动态加载类别配置。
     - **后处理**: YOLOv11 专用的 Box 解码与 NMS 逻辑。
 
 ### 修改模型
