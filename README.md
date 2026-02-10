@@ -1,64 +1,66 @@
 # reComputer-RK-CV
 
-本项目旨在为瑞芯微（Rockchip）系列开发板提供工业级、高性能的计算机视觉（CV）应用方案。目前已支持 **RK3588** 和 **RK3576** 平台，主要集成了 YOLOv11 目标检测模型。
+[English] | [中文](./README_zh.md)
 
-## 项目架构
+This project aims to provide industrial-grade, high-performance Computer Vision (CV) application solutions for Rockchip series development boards. It currently supports **RK3588** and **RK3576** platforms, primarily integrating the YOLOv11 object detection model.
 
-项目采用多平台适配架构，各平台代码和环境配置独立管理：
+## Project Architecture
+
+The project uses a multi-platform adaptation architecture, with code and environment configurations managed independently for each platform:
 
 ```text
 reComputer-RK-CV/
-├── docker/                 # Docker 镜像配置文件
-│   ├── rk3576/             # RK3576 专属 Dockerfile
-│   └── rk3588/             # RK3588 专属 Dockerfile
-├── src/                    # 源码目录
-│   ├── rk3576/             # RK3576 源码、模型及依赖库
-│   └── rk3588/             # RK3588 源码、模型及依赖库
-└── .github/workflows/      # GitHub Actions 自动化构建脚本
+├── docker/                 # Docker image configuration files
+│   ├── rk3576/             # RK3576 specific Dockerfile
+│   └── rk3588/             # RK3588 specific Dockerfile
+├── src/                    # Source code directory
+│   ├── rk3576/             # RK3576 source code, models, and dependencies
+│   └── rk3588/             # RK3588 source code, models, and dependencies
+└── .github/workflows/      # GitHub Actions automated build scripts
 ```
 
-## 支持平台
+## Supported Platforms
 
-| 平台 | 芯片 | 算力 | 镜像名称 |
+| Platform | Chip | Computing Power | Image Name |
 | :--- | :--- | :--- | :--- |
 | **RK3588** | RK3588/RK3588S | 6 TOPS | `rk3588-yolo` |
 | **RK3576** | RK3576 | 6 TOPS | `rk3576-yolo` |
 
-## 快速开始
+## Quick Start
 
-### 1. 安装 Docker
+### 1. Install Docker
 
-在开发板上执行以下命令安装 Docker：
+Run the following commands on the development board to install Docker:
 
 ```bash
-# 下载安装脚本
+# Download installation script
 curl -fsSL https://get.docker.com -o get-docker.sh
-# 使用阿里云镜像源安装
+# Install using Aliyun mirror source
 sudo sh get-docker.sh --mirror Aliyun
-# 启动 Docker 并设置开机自启
+# Start Docker and enable auto-start on boot
 sudo systemctl enable docker
 sudo systemctl start docker
 ```
 
-### 2. 运行项目 (一条命令，双模预览)
+### 2. Run the Project (One command, dual-mode preview)
 
-本项目支持 **本地 GUI** 与 **Web 浏览器** 双模式同时预览。程序会自动检测显示器环境，无显示器时自动降级为 Web 模式。
+This project supports simultaneous preview via **Local GUI** and **Web Browser**. The program automatically detects the display environment and downgrades to Web mode if no display is connected.
 
-#### 步骤 A：配置显示权限 (可选)
-如果您连接了显示器并希望在本地看到窗口：
+#### Step A: Configure Display Permissions (Optional)
+If you have a monitor connected and want to see the window locally:
 ```bash
 xhost +local:docker
 ```
 
-#### 步骤 B：拉取镜像
+#### Step B: Pull Images
 ```bash
 sudo docker pull ghcr.io/litxaohu/recomputer-rk-cv/rk3588-yolo:latest
 sudo docker pull ghcr.io/litxaohu/recomputer-rk-cv/rk3576-yolo:latest
 ```
 
-#### 步骤 C：一键运行
+#### Step C: Run with One Click
 
-**针对 RK3588:**
+**For RK3588:**
 ```bash
 sudo docker run --rm --privileged --net=host \
     -e PYTHONUNBUFFERED=1 \
@@ -70,7 +72,7 @@ sudo docker run --rm --privileged --net=host \
     python web_detection.py --model_path model/yolo11n.rknn --camera_id 1
 ```
 
-**针对 RK3576:**
+**For RK3576:**
 ```bash
 sudo docker run --rm --privileged --net=host \
     -e PYTHONUNBUFFERED=1 \
@@ -82,11 +84,11 @@ sudo docker run --rm --privileged --net=host \
     python web_detection.py --model_path model/yolo11n.rknn --camera_id 0
 ```
 
-访问方式：`http://<开发板IP>:8000`
+Access via: `http://<Board_IP>:8000`
 
-> **注意**: 如果需要自定义类别，可以增加 `-v $(pwd)/class_config.txt:/app/class_config.txt \` 挂载和 `--class_path` 参数，程序默认使用 COCO 80 类。
+> **Note**: If you need custom classes, you can add `-v $(pwd)/class_config.txt:/app/class_config.txt \` mount and `--class_path` parameter. The program defaults to COCO 80 classes.
 
-例如：
+Example:
 
 ```bash
 sudo docker run --rm --privileged --net=host \
@@ -102,42 +104,42 @@ sudo docker run --rm --privileged --net=host \
 
 ---
 
-## 🔌 API 接口文档
+## 🔌 API Documentation
 
-本项目提供了兼容 Ultralytics Cloud API 标准的 RESTful 接口，支持通过 HTTP POST 请求上传图片进行目标检测。
+This project provides RESTful interfaces compatible with the Ultralytics Cloud API standard, supporting object detection via image uploads using HTTP POST requests.
 
-### 1. 模型推理接口 (Predict)
+### 1. Model Inference Interface (Predict)
 
 **Endpoint:** `POST /api/models/yolo11/predict`
 
-#### 请求参数 (Multipart/Form-Data):
-- `file`: (可选) 待检测的图片文件。
-- `video`: (可选) 待检测的 MP4 视频文件。
-- `timestamp`: (可选) 视频文件的时间戳（单位：秒），返回该时间点的视频帧检测结果。默认为 0。
-- `realtime`: (可选) 布尔值。若为 `true` 或未提供 `file`/`video` 参数，则返回摄像头当前帧的检测结果。
-- `conf`: (可选) 单次请求的置信度阈值，范围 0.0-1.0。
-- `iou`: (可选) 单次请求的 NMS IOU 阈值，范围 0.0-1.0。
+#### Request Parameters (Multipart/Form-Data):
+- `file`: (Optional) Image file to be detected.
+- `video`: (Optional) MP4 video file to be detected.
+- `timestamp`: (Optional) Timestamp in the video file (seconds), returns detection results for the frame at that point. Default is 0.
+- `realtime`: (Optional) Boolean. If `true` or if no `file`/`video` parameters are provided, returns detection results for the current camera frame.
+- `conf`: (Optional) Confidence threshold for a single request, range 0.0-1.0.
+- `iou`: (Optional) NMS IOU threshold for a single request, range 0.0-1.0.
 
-#### 调用示例:
+#### Usage Examples:
 
-**1. 图片检测:**
+**1. Image Detection:**
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict" -F "file=@/home/cat/001.jpg"
 ```
 
-**2. 视频特定时间帧检测:**
+**2. Video Specific Frame Detection:**
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict" -F "video=@/home/cat/test.mp4" -F "timestamp=5.5"
 ```
 
-**3. 获取摄像头当前帧检测:**
+**3. Get Current Camera Frame Detection:**
 ```bash
 curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict" -F "realtime=true"
-# 或者不传文件参数
+# Or without file parameters
 curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 ```
 
-#### 响应格式 (JSON):
+#### Response Format (JSON):
 ```json
 {
   "success": true,
@@ -153,68 +155,68 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 }
 ```
 
-### 2. 系统配置接口 (Config)
+### 2. System Configuration Interface (Config)
 
-用于动态调整实时视频流和默认推理的阈值。
+Used to dynamically adjust thresholds for real-time video streams and default inference.
 
-#### 获取当前配置
+#### Get Current Configuration
 - **Endpoint:** `GET /api/config`
-- **响应:** `{"obj_thresh": 0.25, "nms_thresh": 0.45}`
+- **Response:** `{"obj_thresh": 0.25, "nms_thresh": 0.45}`
 
-#### 更新系统配置
+#### Update System Configuration
 - **Endpoint:** `POST /api/config`
-- **请求体 (JSON):** `{"obj_thresh": 0.3, "nms_thresh": 0.5}`
-- **响应:** `{"status": "success"}`
+- **Request Body (JSON):** `{"obj_thresh": 0.3, "nms_thresh": 0.5}`
+- **Response:** `{"status": "success"}`
 
-### 3. 命令行参数说明
+### 3. Command Line Arguments
 
-运行 `web_detection.py` 时支持以下参数：
+`web_detection.py` supports the following arguments:
 
-| 参数 | 说明 | 默认值 |
+| Argument | Description | Default |
 | :--- | :--- | :--- |
-| `--model_path` | RKNN 模型文件路径 | (必填) |
-| `--camera_id` | 摄像头设备 ID (如 `/dev/video1` 则填 1) | 1 |
-| `--video_path` | 视频文件路径 (若提供则忽略 camera_id) | None |
-| `--class_path` | 自定义类别配置文件路径 (class_config.txt) | None (默认 COCO 80类) |
-| `--host` | Web 服务器监听地址 | `0.0.0.0` |
-| `--port` | Web 服务器端口 | 8000 |
+| `--model_path` | Path to RKNN model file | (Required) |
+| `--camera_id` | Camera device ID (e.g., fill 1 for `/dev/video1`) | 1 |
+| `--video_path` | Path to video file (overrides camera_id if provided) | None |
+| `--class_path` | Path to custom class configuration file (class_config.txt) | None (Default COCO 80) |
+| `--host` | Web server listening address | `0.0.0.0` |
+| `--port` | Web server port | 8000 |
 
-#### 自定义类别配置 (class_config.txt) 格式：
-使用双引号命名分类，不同分类之间使用逗号隔开，例如：
+#### Custom Class Configuration (class_config.txt) Format:
+Name classes with double quotes, separated by commas, for example:
 `"person", "bicycle", "car", "motorbike"`
 
 ---
 
-## 实时视频流接口 (Video Feed)
+## Real-time Video Stream Interface (Video Feed)
 
-获取带有检测框绘制的实时 MJPEG 视频流，可直接嵌入 HTML `<img>` 标签。
+Get real-time MJPEG video stream with detection boxes drawn, can be directly embedded in HTML `<img>` tags.
 
 - **Endpoint:** `GET /api/video_feed`
-- **使用示例:** `<img src="http://<开发板IP>:8000/api/video_feed">`
+- **Example Usage:** `<img src="http://<Board_IP>:8000/api/video_feed">`
 
-## 平台详细文档
+## Detailed Platform Documentation
 
-- [RK3588 使用指南](src/rk3588/README.md)
-- [RK3576 使用指南](src/rk3576/README.md)
+- [RK3588 Guide](src/rk3588/README.md)
+- [RK3576 Guide](src/rk3576/README.md)
 
-## 自动化构建
+## Automated Build
 
-本项目支持通过 GitHub Actions 自动构建多平台镜像。
-- 当修改 `src/rk3588/` 目录时，会自动触发 `rk3588-yolo` 镜像的构建。
-- 当修改 `src/rk3576/` 目录时，会自动触发 `rk3576-yolo` 镜像的构建。
-- 支持手动触发构建，并可指定 `image_tag`。
+This project supports automated multi-platform image building via GitHub Actions.
+- Modifying the `src/rk3588/` directory automatically triggers the `rk3588-yolo` image build.
+- Modifying the `src/rk3576/` directory automatically triggers the `rk3576-yolo` image build.
+- Manual trigger is supported, with the option to specify `image_tag`.
 
 ---
 
-## 🛠️ 开发者指南 (量产建议)
-### 代码说明
+## 🛠️ Developer Guide (Production Recommendations)
+### Code Description
 - `web_detection.py`:
-    - **双模支持**: 集成 FastAPI，同时支持本地渲染和 MJPEG 流式输出。
-    - **环境自适应**: 自动检测 `DISPLAY` 环境变量，无环境时静默跳过 GUI 初始化。
-    - **RKNN 推理**: 封装了 RKNN 初始化、加载模型、多核推理逻辑。
-    - **动态加载**: 支持通过 `--class_path` 动态加载类别配置。
-    - **后处理**: YOLOv11 专用的 Box 解码与 NMS 逻辑。
+    - **Dual-mode Support**: Integrates FastAPI, supporting both local rendering and MJPEG streaming output.
+    - **Environment Adaptive**: Automatically detects the `DISPLAY` environment variable, silently skipping GUI initialization if not present.
+    - **RKNN Inference**: Encapsulates RKNN initialization, model loading, and multi-core inference logic.
+    - **Dynamic Loading**: Supports dynamic class configuration loading via `--class_path`.
+    - **Post-processing**: YOLOv11 specific Box decoding and NMS logic.
 
-### 修改模型
-1. 将训练好并转换完成的 .rknn 模型放入相应平台的 `model/` 目录。
-2. 运行命令时可添加 `--model_path` 参数指向新模型（默认已在 Dockerfile 中配置）。
+### Modifying Models
+1. Place the trained and converted .rknn model into the `model/` directory of the corresponding platform.
+2. Add the `--model_path` argument to the running command to point to the new model (default already configured in Dockerfile).
