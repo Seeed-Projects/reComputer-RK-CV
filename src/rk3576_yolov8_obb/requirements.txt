@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+opencv-python
+numpy
+shapely
+python-multipart

@@ -1,0 +1,59 @@
+# Use Python 3.11 slim image as base (matching the wheel requirement)
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies for OpenCV and others
+# libgl1: replacement for libgl1-mesa-glx in Debian 12 (Bookworm)
+# libglib2.0-0: for cv2
+# libgomp1: for OpenMP support if needed
+# libsm6, libxext6, libxrender1: common OpenCV dependencies
+# libxcb-*: dependencies for Qt (bundled in opencv-python) to fix "Could not load the Qt platform plugin 'xcb'"
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libglib2.0-0 \
+    libgomp1 \
+    libsm6 \
+    libxext6 \
+    libxrender1 \
+    libxcb-cursor0 \
+    libxcb-xinerama0 \
+    libxcb-keysyms1 \
+    libxcb-image0 \
+    libxcb-shm0 \
+    libxcb-icccm4 \
+    libxcb-sync1 \
+    libxcb-xfixes0 \
+    libxcb-shape0 \
+    libxcb-randr0 \
+    libxcb-render-util0 \
+    libxkbcommon-x11-0 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements file
+COPY requirements.txt .
+
+# Install Python dependencies
+# Use --no-cache-dir to keep image small
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the RKNN Toolkit Lite2 wheel
+COPY rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl .
+
+# Install the local wheel
+RUN pip install --no-cache-dir rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+
+# Copy librknnrt.so to /usr/lib/
+COPY lib/librknnrt.so /usr/lib/
+RUN chmod 755 /usr/lib/librknnrt.so
+
+# Copy the rest of the application code
+COPY . .
+
+# Expose port for Web Preview
+EXPOSE 8000
+
+# Set the default command to run the detection script
+# This script now supports both GUI (if DISPLAY is available) and Web Preview (on port 8000)
+CMD ["python", "web_detection.py", "--model_path", "model/yolov8n_obb.rknn", "--video_path", "video/test.mp4"]

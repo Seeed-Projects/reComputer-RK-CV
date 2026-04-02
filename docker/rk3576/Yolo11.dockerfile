@@ -50,4 +50,4 @@ EXPOSE 8000
 
 # Set the default command to run the detection script
 # This script now supports both GUI (if DISPLAY is available) and Web Preview (on port 8000)
-CMD ["python", "realtime_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]
+CMD ["python", "web_detection.py", "--model_path", "model/yolo11n.rknn", "--video_path", "video/test.mp4"]

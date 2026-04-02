@@ -4,15 +4,17 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'src/rk3588/**'
-      - 'src/rk3576/**'
+      - 'src/rk3588_yolo11/**'
+      - 'src/rk3576_yolo11/**'
+      - 'src/rk3588_yolov8_obb/**'
+      - 'src/rk3576_yolov8_obb/**'
       - 'docker/**'
     tags: ['v*.*.*']
   pull_request:
   workflow_dispatch:
     inputs:
       platform:
-        description: 'Platform to build (rk3588, rk3576, all)'
+        description: 'Platform to build (rk3588_yolo11, rk3576_yolo11, rk3588_yolov8_obb, rk3576_yolov8_obb, all)'
         required: true
         default: 'all'
       image_tag:
@@ -29,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [rk3588, rk3576]
+        platform: [rk3588_yolo11, rk3576_yolo11, rk3588_yolov8_obb, rk3576_yolov8_obb]
     
     steps:
       - name: Checkout Code
@@ -58,7 +60,7 @@ jobs:
         run: |
           # Use reComputer-RK-CV as the base repo name if renamed, otherwise use repo name
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME="${{ matrix.platform }}-yolo"
+          IMAGE_NAME=$(echo "${{ matrix.platform }}" | sed 's/_/-/g')
           echo "GHCR_IMAGE=ghcr.io/${REPO_NAME}/${IMAGE_NAME}" >> $GITHUB_ENV
           
           TAG="latest"
@@ -90,7 +92,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: src/${{ matrix.platform }}
-          file: docker/${{ matrix.platform }}/Yolo11.dockerfile
+          file: docker/${{ matrix.platform == 'rk3588_yolo11' && 'rk3588/Yolo11.dockerfile' || matrix.platform == 'rk3576_yolo11' && 'rk3576/Yolo11.dockerfile' || matrix.platform == 'rk3588_yolov8_obb' && 'rk3588/Yolov8-obb.dockerfile' || 'rk3576/Yolov8-obb.dockerfile' }}
           platforms: linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
