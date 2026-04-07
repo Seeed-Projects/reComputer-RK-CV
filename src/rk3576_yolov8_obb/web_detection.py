@@ -81,6 +81,8 @@ class DetectionConfig:
             return self.obj_thresh, self.nms_thresh
 
 det_config = DetectionConfig()
+_global_camera_id = -1
+_global_video_path = None
 
 # --- Video Analysis Components ---
 UPLOAD_DIR = "workspace/uploads"
@@ -380,7 +382,7 @@ async def video_feed():
 
 @app.get("/")
 async def index():
-    return Response(content="""
+    html_content = """
     <html>
       <head>
         <title>RK3576 YOLOv8-OBB Preview</title>
@@ -487,7 +489,11 @@ async def index():
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
+            
+            // Set active class to the clicked tab without relying on global event
+            const tabs = document.querySelectorAll('.tab');
+            if (tabId === 'realtime' && tabs.length > 0) tabs[0].classList.add('active');
+            if (tabId === 'analysis' && tabs.length > 1) tabs[1].classList.add('active');
             
             // 如果是实时流，确保图片 src 正确
             if (tabId === 'realtime') {
@@ -622,7 +628,36 @@ async def index():
         </script>
       </body>
     </html>
-    """, media_type="text/html")
+    """
+
+    # Dynamically inject UI logic based on camera_id
+    has_video = "true" if _global_video_path else "false"
+    html_content = html_content.replace(
+        "</body>",
+        f"""
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {{
+              const camId = {_global_camera_id};
+              const hasVideo = {has_video};
+              const tabRealtime = document.querySelectorAll('.tab')[0];
+              const tabAnalysis = document.querySelectorAll('.tab')[1];
+              
+              if (camId === -1 && !hasVideo) {{
+                  // Hide Real-time Detection
+                  if (tabRealtime) tabRealtime.style.display = 'none';
+                  if (tabAnalysis) tabAnalysis.click();
+              }} else {{
+                  // Hide Local Video Analysis
+                  if (tabAnalysis) tabAnalysis.style.display = 'none';
+                  if (tabRealtime) tabRealtime.click();
+              }}
+          }});
+        </script>
+      </body>
+        """
+    )
+    
+    return Response(content=html_content, media_type="text/html")
 
 def run_fastapi(host, port):
     print(f"\n{'='*50}Web Preview started at http://{host}:{port}\n", flush=True)
@@ -819,8 +854,8 @@ def preprocess_frame_with_info(frame, co_helper):
 def main():
     parser = argparse.ArgumentParser(description='YOLOv8-OBB detection on RK3576')
     parser.add_argument('--model_path', type=str, required=True, help='RKNN model path')
-    parser.add_argument('--camera_id', type=int, default=-1, help='Camera device ID. If not provided (-1), defaults to using video/test.mp4')
-    parser.add_argument('--video_path', type=str, help='Path to video file')
+    parser.add_argument('--camera_id', type=int, default=-1, help='Camera device ID. If -1, runs in Local Video Analysis mode only. If >= 0, runs in Real-time Detection mode.')
+    parser.add_argument('--video_path', type=str, help='Path to video file (overrides camera_id if provided)')
     parser.add_argument('--class_path', type=str, help='Path to class_config.txt')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Web server host')
     parser.add_argument('--port', type=int, default=8000, help='Web server port')
@@ -833,9 +868,11 @@ def main():
     if args.class_path:
         load_classes(args.class_path)
 
-    global _global_model, _global_co_helper
+    global _global_model, _global_co_helper, _global_camera_id, _global_video_path
     _global_model = RKNNLiteModel(args.model_path)
     _global_co_helper = COCO_test_helper(enable_letter_box=True)
+    _global_camera_id = args.camera_id
+    _global_video_path = args.video_path
     video_analyzer.set_engine(_global_model, _global_co_helper)
 
     # Start Web Server
@@ -843,18 +880,18 @@ def main():
     web_thread.start()
 
     # Main Loop
-    cap = None
-    
-    # If no explicit video path and no explicit camera id (or camera_id is default -1)
-    if not args.video_path and args.camera_id == -1:
-        default_video = os.path.join(os.path.dirname(__file__), 'video', 'test.mp4')
-        if os.path.exists(default_video):
-            print(f"No camera_id or video_path specified. Using default video: {default_video}")
-            args.video_path = default_video
-        else:
-            print(f"Warning: Default video {default_video} not found. Falling back to camera 0.")
-            args.camera_id = 0
+    if args.camera_id == -1 and not args.video_path:
+        print("Running in Local Video Analysis mode only. Real-time Detection is disabled.")
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("Stopping...")
+        finally:
+            _global_model.release()
+        return
 
+    cap = None
     if args.video_path:
         cap = cv2.VideoCapture(args.video_path)
     else:
