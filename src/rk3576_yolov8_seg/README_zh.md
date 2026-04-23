@@ -64,7 +64,7 @@ sudo docker run --rm --privileged --net=host \
     -v $(pwd)/video:/app/video \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    rghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-seg:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-seg:latest \
     python3 web_detection.py --model_path model/yolov8n-seg.rknn --video_path video/test.mp4
 ```
 

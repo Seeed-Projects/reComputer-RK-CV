@@ -37,7 +37,7 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video1:/dev/video1 \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    recomputer-rk-cv/debug/rk3576-yolov8-pose:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-pose:latest \
     python3 web_detection.py --model_path model/yolov8n_pose.rknn --camera_id 1
 ```
 Access via: `http://<Board_IP>:8000`
@@ -50,7 +50,7 @@ sudo docker run --rm --privileged --net=host \
     -v $(pwd)/video:/app/video \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    recomputer-rk-cv/debug/rk3576-yolov8-pose:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-pose:latest \
     python3 web_detection.py --model_path model/yolov8n_pose.rknn --video video/test.mp4
 ```
 

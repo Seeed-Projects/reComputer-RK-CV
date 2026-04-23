@@ -35,7 +35,7 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576_yolov8:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8:latest \
     python3 web_detection.py --model_path model/yolov8n.rknn --video video/test.mp4
 ```
 访问方式：`http://<开发板IP>:8000`
@@ -52,7 +52,7 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576_yolov8:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8:latest \
     python3 web_detection.py --model_path model/yolov8n.rknn --video video/test.mp4 --class_path class_config.txt
 ```
 
