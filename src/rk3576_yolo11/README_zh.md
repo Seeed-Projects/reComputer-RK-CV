@@ -34,8 +34,8 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/Seeed-Projects/recomputer-rk-cv/rk3576-yolo:latest \
-    python web_detection.py --model_path model/yolo11n.rknn --camera_id 0
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolo:latest \
+    python web_detection.py --model_path model/yolo11n.rknn --video video/test.mp4
 ```
 访问方式：`http://<开发板IP>:8000`
 
@@ -52,8 +52,8 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/Seeed-Projects/recomputer-rk-cv/rk3576-yolo:latest \
-    python web_detection.py --model_path model/yolo11n.rknn --camera_id 0 --class_path class_config.txt
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolo:latest \
+    python web_detection.py --model_path model/yolo11n.rknn --video video/test.mp4 --class_path class_config.txt
 ```
 
 

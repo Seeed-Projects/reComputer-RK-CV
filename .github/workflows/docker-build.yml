@@ -8,13 +8,23 @@ on:
       - 'src/rk3576_yolo11/**'
       - 'src/rk3588_yolov8_obb/**'
       - 'src/rk3576_yolov8_obb/**'
+      - 'src/rk3588_yolov5/**'
+      - 'src/rk3576_yolov5/**'
+      - 'src/rk3588_yolov5_seg/**'
+      - 'src/rk3576_yolov5_seg/**'
+      - 'src/rk3588_yolov8/**'
+      - 'src/rk3576_yolov8/**'
+      - 'src/rk3588_yolov8_pose/**'
+      - 'src/rk3576_yolov8_pose/**'
+      - 'src/rk3588_yolov8_seg/**'
+      - 'src/rk3576_yolov8_seg/**'
       - 'docker/**'
     tags: ['v*.*.*']
   pull_request:
   workflow_dispatch:
     inputs:
       platform:
-        description: 'Platform to build (rk3588_yolo11, rk3576_yolo11, rk3588_yolov8_obb, rk3576_yolov8_obb, all)'
+        description: 'Platform to build (e.g. rk3588_yolo11, rk3588_yolov5, all)'
         required: true
         default: 'all'
       image_tag:
@@ -31,7 +41,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [rk3588_yolo11, rk3576_yolo11, rk3588_yolov8_obb, rk3576_yolov8_obb]
+        platform: 
+          - rk3588_yolo11
+          - rk3576_yolo11
+          - rk3588_yolov8_obb
+          - rk3576_yolov8_obb
+          - rk3588_yolov5
+          - rk3576_yolov5
+          - rk3588_yolov5_seg
+          - rk3576_yolov5_seg
+          - rk3588_yolov8
+          - rk3576_yolov8
+          - rk3588_yolov8_pose
+          - rk3576_yolov8_pose
+          - rk3588_yolov8_seg
+          - rk3576_yolov8_seg
     
     steps:
       - name: Checkout Code
@@ -60,7 +84,11 @@ jobs:
         run: |
           # Use reComputer-RK-CV as the base repo name if renamed, otherwise use repo name
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          IMAGE_NAME=$(echo "${{ matrix.platform }}" | sed 's/_/-/g')
+          
+          # We only want to replace the FIRST underscore with a hyphen.
+          # For example, rk3588_yolov5_seg -> rk3588-yolov5_seg
+          IMAGE_NAME=$(echo "${{ matrix.platform }}" | sed 's/_/-/')
+          
           echo "GHCR_IMAGE=ghcr.io/${REPO_NAME}/${IMAGE_NAME}" >> $GITHUB_ENV
           
           TAG="latest"
@@ -87,12 +115,32 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare Dockerfile Path
+        if: steps.check_changes.outputs.build == 'true'
+        run: |
+          # Convert platform like rk3588_yolov5_seg to rk3588/yolov5_seg.dockerfile
+          # We extract the prefix (rk3588 or rk3576) and the model part.
+          PLATFORM="${{ matrix.platform }}"
+          HW_PREFIX="${PLATFORM%%_*}"
+          MODEL_SUFFIX="${PLATFORM#*_}"
+          
+          # Special cases for older names or capitalizations if needed
+          if [[ "$MODEL_SUFFIX" == "yolo11" ]]; then
+            DOCKERFILE_NAME="Yolo11.dockerfile"
+          elif [[ "$MODEL_SUFFIX" == "yolov8_obb" ]]; then
+            DOCKERFILE_NAME="Yolov8-obb.dockerfile"
+          else
+            DOCKERFILE_NAME="${MODEL_SUFFIX}.dockerfile"
+          fi
+          
+          echo "DOCKERFILE_PATH=docker/${HW_PREFIX}/${DOCKERFILE_NAME}" >> $GITHUB_ENV
+
       - name: Build and Push (arm64 Only)
         if: steps.check_changes.outputs.build == 'true'
         uses: docker/build-push-action@v5
         with:
           context: src/${{ matrix.platform }}
-          file: docker/${{ matrix.platform == 'rk3588_yolo11' && 'rk3588/Yolo11.dockerfile' || matrix.platform == 'rk3576_yolo11' && 'rk3576/Yolo11.dockerfile' || matrix.platform == 'rk3588_yolov8_obb' && 'rk3588/Yolov8-obb.dockerfile' || 'rk3576/Yolov8-obb.dockerfile' }}
+          file: ${{ env.DOCKERFILE_PATH }}
           platforms: linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
