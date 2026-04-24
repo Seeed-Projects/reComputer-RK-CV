@@ -37,8 +37,8 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video1:/dev/video1 \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-pose:latest \
-    python3 web_detection.py --model_path model/yolov8n_pose.rknn --camera_id 1
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8_pose:latest \
+    python3 web_detection.py --model_path model/yolov8n_pose.rknn --video video/test.mp4
 ```
 Access via: `http://<Board_IP>:8000`
 
@@ -50,7 +50,7 @@ sudo docker run --rm --privileged --net=host \
     -v $(pwd)/video:/app/video \
     --device /dev/dri/renderD129:/dev/dri/renderD129 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-pose:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8_pose:latest \
     python3 web_detection.py --model_path model/yolov8n_pose.rknn --video video/test.mp4
 ```
 
@@ -62,7 +62,7 @@ This project provides RESTful interfaces compatible with the Ultralytics Cloud A
 
 ### 1. Model Inference Interface (Predict)
 
-**Endpoint:** `POST /api/models/yolo11/predict` (compatible with original YOLO11 path design)
+**Endpoint:** `POST /api/models/yolov8_pose/predict`
 
 #### Request Parameters (Multipart/Form-Data):
 - `file`: (Optional) Image file to be detected.
@@ -76,19 +76,19 @@ This project provides RESTful interfaces compatible with the Ultralytics Cloud A
 
 **1. Image Detection:**
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict" -F "file=@/home/cat/001.jpg"
+curl -X POST "http://127.0.0.1:8000/api/models/yolov8_pose/predict" -F "file=@/home/cat/001.jpg"
 ```
 
 **2. Video Specific Frame Detection:**
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict" -F "video=@/home/cat/test.mp4" -F "timestamp=5.5"
+curl -X POST "http://127.0.0.1:8000/api/models/yolov8_pose/predict" -F "video=@/home/cat/test.mp4" -F "timestamp=5.5"
 ```
 
 **3. Get Current Camera Frame Detection:**
 ```bash
-curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict" -F "realtime=true"
+curl -X POST "http://127.0.0.1:8000/api/models/yolov8_pose/predict" -F "realtime=true"
 # Or without file parameters
-curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
+curl -X POST "http://127.0.0.1:8000/api/models/yolov8_pose/predict"
 ```
 
 #### Response Format (JSON):

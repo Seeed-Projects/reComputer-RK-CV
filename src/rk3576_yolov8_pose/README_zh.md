@@ -72,7 +72,7 @@ python3 web_detection.py --model_path model/yolov8n-pose.rknn --video video/test
 - **获取当前配置**: `GET /api/config`
 - **更新配置**: `POST /api/config`
 - **获取视频流**: `GET /api/video_feed`
-- **推理预测**: `POST /api/models/yolo11/predict` (兼容原有 YOLO11 的路径设计)
+- **推理预测**: `POST /api/models/yolov8_pose/predict`
   - 支持上传图片 (`file`)
   - 支持上传视频并指定时间戳 (`video`, `timestamp`)
   - 支持使用当前摄像头画面 (`realtime=true`)
