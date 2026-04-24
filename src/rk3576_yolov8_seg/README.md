@@ -37,7 +37,7 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-seg:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8_seg:latest \
     python3 web_detection.py --model_path model/yolov8n-seg.rknn --video video/test.mp4
 ```
 Access via: `http://<Board_IP>:8000`
@@ -54,7 +54,7 @@ sudo docker run --rm --privileged --net=host \
     --device /dev/video0:/dev/video0 \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-seg:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8_seg:latest \
     python3 web_detection.py --model_path model/yolov8n-seg.rknn --video video/test.mp4 --class_path class_config.txt
 ```
 
@@ -66,7 +66,7 @@ sudo docker run --rm --privileged --net=host \
     -v $(pwd)/video:/app/video \
     --device /dev/dri/renderD128:/dev/dri/renderD128 \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible \
-    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-seg:latest \
+    ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8_seg:latest \
     python3 web_detection.py --model_path model/yolov8n-seg.rknn --video_path video/test.mp4
 ```
 
