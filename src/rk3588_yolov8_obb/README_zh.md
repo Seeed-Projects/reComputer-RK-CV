@@ -1,93 +1,105 @@
-# RK3576 YOLOv8-OBB 部署指南
+# RK3588 YOLOv8-OBB 实时检测与 Web 预览项目
 
-本目录包含针对 RK3576 优化的 YOLOv8-OBB (Oriented Bounding Box，旋转目标检测) 推理代码。
-基于 RK3576 YOLO 示例架构，适配了旋转框检测逻辑，支持 DOTA 等航拍数据集场景。
-
-## 核心特性
-- **硬件加速**：针对 RK3576 的 NPU 架构进行了优化。
-- **OBB 支持**：支持旋转边界框检测 (x, y, w, h, angle)，适用于细长、倾斜物体的检测。
-- **灵活输入**：支持摄像头和本地 MP4 视频输入。
-- **Web 预览**：集成 FastAPI，支持浏览器实时预览检测结果。
+该项目基于 RKNN-Toolkit-Lite2，在瑞芯微 RK3588 平台上实现 YOLOv8-OBB (Oriented Bounding Box) 旋转目标检测模型的高性能部署。项目采用纯 Python 架构，集成了 FastAPI 提供 Web API 和 MJPEG 视频流预览，同时支持本地 GUI 实时显示。
 
 ## 目录结构
-- `lib/`：预留目录，可存放 C++ 依赖库。
-- `model/`：存放针对 RK3576 转换的 `.rknn` 模型。
-- `py_utils/`：包含 OBB 后处理、NMS 及图像预处理工具。
-- `web_detection.py`：主程序（支持 Web 预览与 API）。
-- `requirements.txt`：Python 依赖列表。
 
-## 快速开始
+- `model/`: 存放 YOLOv8-OBB 的 RKNN 模型文件 (`yolov8n_obb.rknn`)
+- `video/`: 存放用于测试的视频文件 (`test.mp4`)
+- `lib/`: 存放 NPU 运行时的依赖库 (`librknnrt.so`)
+- `rknn-toolkit-lite2-packages/`: 存放 RKNN-Toolkit-Lite2 的 Python 安装包
+- `py_utils/`: 包含推理引擎封装和 OBB 模型相关的后处理/画图工具
+- `realtime_detection.py`: 本地 GUI 实时检测与 FastAPI Web API 服务
+- `web_detection.py`: 支持多线程推理的 Web API 服务与视频流推流
+- `requirements.txt`: Python 依赖列表
 
-### 1. 准备模型
-请将训练并转换好的 YOLOv8-OBB `.rknn` 模型放入 `model/` 目录。
-> 注意：模型输入尺寸默认为 640x640。如需修改，请调整 `web_detection.py` 中的 `IMG_SIZE` 常量。
+## 环境准备
 
-### 2. 安装依赖
-本项目额外依赖 `shapely` 库用于计算多边形 IoU。
+### 1. 硬件要求
+- 瑞芯微 RK3588 开发板 (例如: reComputer RK-CV 系列)
+- 支持 USB 摄像头 (用于实时检测)
+
+### 2. 系统要求
+- 使用 armbian
+
+### 3. 安装依赖
 
 ```bash
-pip install -r requirements.txt
+# 1. 更新系统并安装系统依赖
+sudo apt update
+sudo apt install -y python3-pip python3-dev libgl1-mesa-glx libglib2.0-0
+
+# 2. 安装 Python 基础依赖
+pip3 install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 3. 安装 RKNN-Toolkit-Lite2 (根据 Python 版本选择)
+# 以 Python 3.9 为例：
+pip3 install rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.0.0b0-cp39-cp39-linux_aarch64.whl
 ```
 
-### 3. 运行项目
+## 运行指南
 
-**基本运行（使用摄像头）：**
+本项目提供两种运行模式：本地实时检测模式 (附带后台 Web API) 和 高性能 Web 服务模式。
+
+> **注意：** 在运行之前，请确保已将量化好的 `yolov8n_obb.rknn` 放入 `model/` 目录下，并将测试视频 `test.mp4` 放入 `video/` 目录下（用户自行补充）。
+
+
+### Web 服务 (web_detection.py)
+
+该模式采用多线程推理，专为 Web 端视频流和 API 设计，支持性能分析，不显示本地窗口。
+
 ```bash
-python web_detection.py --model_path model/yolov8n-obb.rknn --camera_id 0
+# 启动服务，默认处理 video/test.mp4
+python3 web_detection.py --model_path model/yolov8n_obb.rknn --video video/test.mp4
+
+# 处理摄像头画面
+python3 web_detection.py --model_path model/yolov8n_obb.rknn --video 0
+
+# 开启性能分析 (Profile)
+python3 web_detection.py --model_path model/yolov8n_obb.rknn --video video/test.mp4 --profile
 ```
 
-**检测视频文件：**
-```bash
-python web_detection.py --model_path model/yolov8n_obb.rknn --video_path test.mp4
-```
+## Web 访问与 API 说明
 
-**指定自定义类别文件：**
-```bash
-python web_detection.py --model_path model/custom.rknn --class_path class_config.txt
-```
+服务启动后，默认运行在 `0.0.0.0:8000`。
 
-访问方式：打开浏览器访问 `http://<开发板IP>:8000`
+### 1. Web 实时预览
+在浏览器中访问：`http://<开发板IP>:8000`
+页面提供实时视频流查看，并支持动态调整置信度 (Confidence) 和 NMS 阈值。
 
----
+### 2. RESTful API 接口
 
-## 🔌 API 接口文档
+- **获取当前配置**: `GET /api/config`
+- **更新配置**: `POST /api/config`
+- **获取视频流**: `GET /api/video_feed`
+- **推理预测**: `POST /api/models/yolo_obb/predict`
+  - 支持上传图片 (`file`)
+  - 支持上传视频并指定时间戳 (`video`, `timestamp`)
+  - 支持使用当前摄像头画面 (`realtime=true`)
+  - 返回结果包含类别、置信度、旋转多边形坐标 (`poly`) 和旋转角度 (`angle`)
 
-本项目提供了 RESTful 接口，支持通过 HTTP POST 请求获取旋转框检测结果。
-
-### 1. 模型推理接口 (Predict)
-
-**Endpoint:** `POST /api/models/yolo_obb/predict`
-
-#### 请求参数 (Multipart/Form-Data):
-- `file`: (可选) 待检测的图片文件。
-- `video`: (可选) 待检测的 MP4 视频文件。
-- `realtime`: (可选) 布尔值。若为 `true`，则返回摄像头当前帧的检测结果。
-- `conf`: (可选) 置信度阈值。
-- `iou`: (可选) NMS IoU 阈值。
-
-#### 响应示例 (JSON):
 ```json
-{
-  "success": true,
-  "source": "realtime camera frame",
-  "predictions": [
     {
-      "class": "plane",
-      "confidence": 0.92,
-      "poly": [[100, 100], [200, 100], [200, 200], [100, 200]],
-      "angle": 1.57
+      "success": true,
+      "source": "video frame at 5.5s",
+      "predictions": [
+        {
+          "class": "plane",
+          "confidence": 0.92,
+          "poly": [
+            [150, 210],
+            [160, 205],
+            [170, 215],
+            [160, 220]
+          ],
+          "angle": 1.5708
+        }
+      ],
+      "image": { "width": 1280, "height": 720 }
     }
-  ],
-  "image": { "width": 1280, "height": 720 }
-}
 ```
-* `poly`: 包含 4 个顶点坐标 `[[x1,y1], [x2,y2], [x3,y3], [x4,y4]]`。
-* `angle`: 旋转角度（弧度）。
 
-### 2. 实时视频流 (Video Feed)
-**Endpoint:** `GET /api/video_feed`
-可直接嵌入 HTML：`<img src="http://<IP>:8000/api/video_feed">`
+## 性能说明
 
-## 开发说明
-- **OBB 后处理**：核心逻辑位于 `py_utils/obb_utils.py`，实现了旋转框解码与多边形 NMS。
-- **坐标还原**：程序会自动处理 Letterbox 填充带来的坐标偏移，确保 API 返回的坐标对应原始图像分辨率。
+- 项目已默认配置使用 `RKNNLite.NPU_CORE_0_1_2`，充分利用 RK3588 的 3 个 NPU 核心 (6 TOPS 算力)。
+- YOLOv8-OBB 的后处理计算量较大（包含多边形坐标转换），项目中采用 Numpy 进行向量化加速。
