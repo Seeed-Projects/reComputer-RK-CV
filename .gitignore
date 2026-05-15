@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Mac OS
+.DS_Store
+
+# Workspace and temporary audio/video outputs
+workspace/
+**/workspace/*
+*.wav
+
+# IDEs
+.vscode/
+.idea/
