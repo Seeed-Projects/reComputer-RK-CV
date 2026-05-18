@@ -58,8 +58,9 @@ class WhisperModelManager:
                 self.decoder.release()
                 
             # 2. 拼接路径 (以 20s 长度的后缀作为标准)
-            encoder_path = f"model/whisper_encoder_{model_size}_20s.rknn"
-            decoder_path = f"model/whisper_decoder_{model_size}_20s.rknn"
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            encoder_path = os.path.join(base_dir, "model", f"whisper_encoder_{model_size}_20s.rknn")
+            decoder_path = os.path.join(base_dir, "model", f"whisper_decoder_{model_size}_20s.rknn")
             
             # 检查文件是否存在
             if not os.path.exists(encoder_path) or not os.path.exists(decoder_path):

@@ -15,7 +15,9 @@ class WhisperTokenizer:
         self.is_zh = (language == "zh")
         
         # 根据语言加载对应的 vocab 文件
-        vocab_path = f"model/vocab_{language}.txt"
+        # 使用绝对/相对安全的路径查找模型目录下的资源
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        vocab_path = os.path.join(base_dir, "model", f"vocab_{language}.txt")
         if not os.path.exists(vocab_path):
             print(f"Warning: {vocab_path} not found. Decoder output might be indices only.")
             self.is_dummy = True
@@ -172,10 +174,12 @@ def log_mel_spectrogram(audio, n_mels=80):
     # 4. 计算 Mel 频谱
     # 加载预设的 Mel Filters
     try:
-        filters = np.loadtxt("model/mel_80_filters.txt").reshape(n_mels, N_FFT // 2)
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        mel_filters_path = os.path.join(base_dir, "model", "mel_80_filters.txt")
+        filters = np.loadtxt(mel_filters_path).reshape(n_mels, N_FFT // 2)
         mel = np.dot(filters, magnitudes)
     except Exception as e:
-        print("Warning: mel_80_filters.txt not found. Using librosa mel basis as fallback.")
+        print(f"Warning: mel_80_filters.txt not found. Using librosa mel basis as fallback. Error: {e}")
         filters = librosa.filters.mel(sr=16000, n_fft=N_FFT, n_mels=n_mels)
         # librosa 生成的是 201，我们需要对齐截断
         filters = filters[:, :-1] 
