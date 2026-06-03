@@ -862,6 +862,7 @@ def main():
     parser.add_argument('--model_path', type=str, required=True, help='RKNN model path')
     parser.add_argument('--camera_id', type=int, default=1, help='Camera device ID (default: 1 for /dev/video1)')
     parser.add_argument('--video_path', type=str, help='Path to video file (overrides camera_id)')
+    parser.add_argument('--rtsp', type=str, help="RTSP stream address, such as:rtsp://user:pass@192.168.1.100:554/stream")
     parser.add_argument('--class_path', type=str, help='Path to class_config.txt file for dynamic category loading')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Web server host')
     parser.add_argument('--port', type=int, default=8000, help='Web server port')
@@ -904,7 +905,11 @@ def main():
         return
 
     # 打开视频源
-    if args.video_path:
+    if args.rtsp:
+        # 强制使用 TCP 协议拉取 RTSP 流，解决 UDP 丢包导致的 PPS 报错
+        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
+        cap = cv2.VideoCapture(args.rtsp, cv2.CAP_FFMPEG)
+    elif args.video_path:
         cap = cv2.VideoCapture(args.video_path)
     else:
         cap = cv2.VideoCapture(args.camera_id)
@@ -912,7 +917,8 @@ def main():
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
     
     if not cap.isOpened():
-        print(f"Error: Cannot open video source (ID: {args.camera_id if not args.video_path else args.video_path})")
+        source_name = args.rtsp if args.rtsp else (args.video_path if args.video_path else args.camera_id)
+        print(f"Error: Cannot open video source ({source_name})")
         return
 
     fps_counter = 0
