@@ -1,0 +1,474 @@
+The target system is: Linux -  - aarch64
+The host system is: Linux - 5.15.0-139-generic - x86_64
+Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+Compiler: /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.out"
+
+The C compiler identification is GNU, found in "/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/3.16.3/CompilerIdC/a.out"
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" succeeded.
+Compiler: /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++ 
+Build flags: 
+Id flags:  
+
+The output was:
+0
+
+
+Compilation of the CXX compiler identification source "CMakeCXXCompilerId.cpp" produced "a.out"
+
+The CXX compiler identification is GNU, found in "/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/3.16.3/CompilerIdCXX/a.out"
+
+Determining if the C compiler works passed with the following output:
+Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_43e52/fast && /usr/bin/make -f CMakeFiles/cmTC_43e52.dir/build.make CMakeFiles/cmTC_43e52.dir/build
+make[1]: 进入目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+Building C object CMakeFiles/cmTC_43e52.dir/testCCompiler.c.o
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc    -o CMakeFiles/cmTC_43e52.dir/testCCompiler.c.o   -c /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp/testCCompiler.c
+Linking C executable cmTC_43e52
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_43e52.dir/link.txt --verbose=1
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc      CMakeFiles/cmTC_43e52.dir/testCCompiler.c.o  -o cmTC_43e52 
+make[1]: 离开目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+
+
+
+Detecting C compiler ABI info compiled with the following output:
+Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_0710f/fast && /usr/bin/make -f CMakeFiles/cmTC_0710f.dir/build.make CMakeFiles/cmTC_0710f.dir/build
+make[1]: Entering directory '/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -v -o CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c
+Using built-in specs.
+COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc
+Target: aarch64-linux-gnu
+Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu
+Thread model: posix
+gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o' '-c' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/cc1 -quiet -v -imultiarch aarch64-linux-gnu -iprefix /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/ -isysroot /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -march=armv8-a -mlittle-endian -mabi=lp64 -auxbase-strip CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o -version -o /tmp/ccMmAjPR.s
+GNU C11 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)
+	compiled by GNU C version 4.8.4, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3, isl version none
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include"
+ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include/aarch64-linux-gnu"
+ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include"
+ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include/aarch64-linux-gnu"
+#include "..." search starts here:
+#include <...> search starts here:
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include
+End of search list.
+GNU C11 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)
+	compiled by GNU C version 4.8.4, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3, isl version none
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: c4df130d98804e26920c632548e1fa40
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o' '-c' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/as -v -EL -march=armv8-a -mabi=lp64 -o CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o /tmp/ccMmAjPR.s
+GNU assembler version 2.27.0 (aarch64-linux-gnu) using BFD version (Linaro_Binutils-2017.05) 2.27.0.20161019
+COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/
+LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o' '-c' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+Linking C executable cmTC_0710f
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0710f.dir/link.txt --verbose=1
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc     -v CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o  -o cmTC_0710f 
+Using built-in specs.
+COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc
+COLLECT_LTO_WRAPPER=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper
+Target: aarch64-linux-gnu
+Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu
+Thread model: posix
+gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) 
+COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/
+LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_0710f' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/collect2 -plugin /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/liblto_plugin.so -plugin-opt=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPKIfFj.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc --build-id --eh-frame-hdr -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux --fix-cortex-a53-835769 --fix-cortex-a53-843419 -o cmTC_0710f /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crt1.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crti.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtbegin.o -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtend.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_0710f' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+make[1]: Leaving directory '/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp'
+
+
+
+Parsed C implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include]
+  end of search list found
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/include]
+  implicit include dirs: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/include]
+
+
+Parsed C implicit link information from above output:
+  link line regex: [^( *|.*[/\])(aarch64-linux-gnu-ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/make cmTC_0710f/fast && /usr/bin/make -f CMakeFiles/cmTC_0710f.dir/build.make CMakeFiles/cmTC_0710f.dir/build]
+  ignore line: [make[1]: Entering directory '/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp']
+  ignore line: [Building C object CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -v -o CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o   -c /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc]
+  ignore line: [Target: aarch64-linux-gnu]
+  ignore line: [Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o' '-c' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/cc1 -quiet -v -imultiarch aarch64-linux-gnu -iprefix /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/ -isysroot /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc /usr/share/cmake-3.16/Modules/CMakeCCompilerABI.c -quiet -dumpbase CMakeCCompilerABI.c -march=armv8-a -mlittle-endian -mabi=lp64 -auxbase-strip CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o -version -o /tmp/ccMmAjPR.s]
+  ignore line: [GNU C11 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.8.4  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3  isl version none]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include"]
+  ignore line: [ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include/aarch64-linux-gnu"]
+  ignore line: [ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include"]
+  ignore line: [ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include/aarch64-linux-gnu"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include]
+  ignore line: [End of search list.]
+  ignore line: [GNU C11 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.8.4  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3  isl version none]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [Compiler executable checksum: c4df130d98804e26920c632548e1fa40]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o' '-c' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/as -v -EL -march=armv8-a -mabi=lp64 -o CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o /tmp/ccMmAjPR.s]
+  ignore line: [GNU assembler version 2.27.0 (aarch64-linux-gnu) using BFD version (Linaro_Binutils-2017.05) 2.27.0.20161019]
+  ignore line: [COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o' '-c' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  ignore line: [Linking C executable cmTC_0710f]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0710f.dir/link.txt --verbose=1]
+  ignore line: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc     -v CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o  -o cmTC_0710f ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc]
+  ignore line: [COLLECT_LTO_WRAPPER=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper]
+  ignore line: [Target: aarch64-linux-gnu]
+  ignore line: [Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) ]
+  ignore line: [COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_0710f' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  link line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/collect2 -plugin /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/liblto_plugin.so -plugin-opt=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccPKIfFj.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc --build-id --eh-frame-hdr -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux --fix-cortex-a53-835769 --fix-cortex-a53-843419 -o cmTC_0710f /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crt1.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crti.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtbegin.o -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtend.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crtn.o]
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccPKIfFj.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [--sysroot=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc] ==> ignore
+    arg [--build-id] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib/ld-linux-aarch64.so.1] ==> ignore
+    arg [-X] ==> ignore
+    arg [-EL] ==> ignore
+    arg [-maarch64linux] ==> ignore
+    arg [--fix-cortex-a53-835769] ==> ignore
+    arg [--fix-cortex-a53-843419] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_0710f] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crt1.o] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crti.o] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtbegin.o] ==> ignore
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib]
+    arg [CMakeFiles/cmTC_0710f.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [-lc] ==> lib [c]
+    arg [-lgcc] ==> lib [gcc]
+    arg [--as-needed] ==> ignore
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [--no-as-needed] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtend.o] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crtn.o] ==> ignore
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib64]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/lib]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/lib]
+  implicit libs: [gcc;gcc_s;c;gcc;gcc_s]
+  implicit dirs: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib64;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/lib;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/lib]
+  implicit fwks: []
+
+
+Determining if the CXX compiler works passed with the following output:
+Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_48889/fast && /usr/bin/make -f CMakeFiles/cmTC_48889.dir/build.make CMakeFiles/cmTC_48889.dir/build
+make[1]: 进入目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+Building CXX object CMakeFiles/cmTC_48889.dir/testCXXCompiler.cxx.o
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++     -o CMakeFiles/cmTC_48889.dir/testCXXCompiler.cxx.o -c /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_48889
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_48889.dir/link.txt --verbose=1
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++       CMakeFiles/cmTC_48889.dir/testCXXCompiler.cxx.o  -o cmTC_48889 
+make[1]: 离开目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+
+
+
+Detecting CXX compiler ABI info compiled with the following output:
+Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_e3d44/fast && /usr/bin/make -f CMakeFiles/cmTC_e3d44.dir/build.make CMakeFiles/cmTC_e3d44.dir/build
+make[1]: Entering directory '/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++    -v -o CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp
+Using built-in specs.
+COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++
+Target: aarch64-linux-gnu
+Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu
+Thread model: posix
+gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/cc1plus -quiet -v -imultiarch aarch64-linux-gnu -iprefix /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/ -isysroot /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc -D_GNU_SOURCE /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -march=armv8-a -mlittle-endian -mabi=lp64 -auxbase-strip CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o -version -o /tmp/ccGrsvJM.s
+GNU C++14 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)
+	compiled by GNU C version 4.8.4, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3, isl version none
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/backward"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include"
+ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include/aarch64-linux-gnu"
+ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed"
+ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include"
+ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include/aarch64-linux-gnu"
+#include "..." search starts here:
+#include <...> search starts here:
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/backward
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include
+End of search list.
+GNU C++14 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)
+	compiled by GNU C version 4.8.4, GMP version 6.1.0, MPFR version 3.1.4, MPC version 1.0.3, isl version none
+GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+Compiler executable checksum: 9ee4811e921bf53e50227b341e568269
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/as -v -EL -march=armv8-a -mabi=lp64 -o CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccGrsvJM.s
+GNU assembler version 2.27.0 (aarch64-linux-gnu) using BFD version (Linaro_Binutils-2017.05) 2.27.0.20161019
+COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/
+LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+Linking CXX executable cmTC_e3d44
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3d44.dir/link.txt --verbose=1
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++      -v CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_e3d44 
+Using built-in specs.
+COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++
+COLLECT_LTO_WRAPPER=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper
+Target: aarch64-linux-gnu
+Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu
+Thread model: posix
+gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) 
+COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/
+LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_e3d44' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/collect2 -plugin /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/liblto_plugin.so -plugin-opt=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccoCzISg.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc --build-id --eh-frame-hdr -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux --fix-cortex-a53-835769 --fix-cortex-a53-843419 -o cmTC_e3d44 /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crt1.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crti.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtbegin.o -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtend.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_e3d44' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64'
+make[1]: Leaving directory '/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp'
+
+
+
+Parsed CXX implicit include dir info from above output: rv=done
+  found start of include info
+  found start of implicit include info
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/backward]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include]
+    add: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include]
+  end of search list found
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include/c++/6.3.1]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/backward] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include/c++/6.3.1/backward]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include]
+  collapse include dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/include]
+  implicit include dirs: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include/c++/6.3.1;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include/c++/6.3.1/backward;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/include;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/include]
+
+
+Parsed CXX implicit link information from above output:
+  link line regex: [^( *|.*[/\])(aarch64-linux-gnu-ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
+  ignore line: [Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp]
+  ignore line: []
+  ignore line: [Run Build Command(s):/usr/bin/make cmTC_e3d44/fast && /usr/bin/make -f CMakeFiles/cmTC_e3d44.dir/build.make CMakeFiles/cmTC_e3d44.dir/build]
+  ignore line: [make[1]: Entering directory '/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp']
+  ignore line: [Building CXX object CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++    -v -o CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++]
+  ignore line: [Target: aarch64-linux-gnu]
+  ignore line: [Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/cc1plus -quiet -v -imultiarch aarch64-linux-gnu -iprefix /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/ -isysroot /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc -D_GNU_SOURCE /usr/share/cmake-3.16/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpbase CMakeCXXCompilerABI.cpp -march=armv8-a -mlittle-endian -mabi=lp64 -auxbase-strip CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o -version -o /tmp/ccGrsvJM.s]
+  ignore line: [GNU C++14 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.8.4  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3  isl version none]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/backward"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include"]
+  ignore line: [ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include/aarch64-linux-gnu"]
+  ignore line: [ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/local/include"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed"]
+  ignore line: [ignoring duplicate directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/../../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include"]
+  ignore line: [ignoring nonexistent directory "/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include/aarch64-linux-gnu"]
+  ignore line: [#include "..." search starts here:]
+  ignore line: [#include <...> search starts here:]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/aarch64-linux-gnu]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include/c++/6.3.1/backward]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/include-fixed]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/include]
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/include]
+  ignore line: [End of search list.]
+  ignore line: [GNU C++14 (Linaro GCC 6.3-2017.05) version 6.3.1 20170404 (aarch64-linux-gnu)]
+  ignore line: [	compiled by GNU C version 4.8.4  GMP version 6.1.0  MPFR version 3.1.4  MPC version 1.0.3  isl version none]
+  ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
+  ignore line: [Compiler executable checksum: 9ee4811e921bf53e50227b341e568269]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  ignore line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/as -v -EL -march=armv8-a -mabi=lp64 -o CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccGrsvJM.s]
+  ignore line: [GNU assembler version 2.27.0 (aarch64-linux-gnu) using BFD version (Linaro_Binutils-2017.05) 2.27.0.20161019]
+  ignore line: [COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  ignore line: [Linking CXX executable cmTC_e3d44]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3d44.dir/link.txt --verbose=1]
+  ignore line: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++      -v CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o  -o cmTC_e3d44 ]
+  ignore line: [Using built-in specs.]
+  ignore line: [COLLECT_GCC=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-g++]
+  ignore line: [COLLECT_LTO_WRAPPER=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper]
+  ignore line: [Target: aarch64-linux-gnu]
+  ignore line: [Configured with: '/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/snapshots/gcc.git~linaro-6.3-2017.05/configure' SHELL=/bin/bash --with-mpc=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-mpfr=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gmp=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu --with-gnu-as --with-gnu-ld --disable-libmudflap --enable-lto --enable-shared --without-included-gettext --enable-nls --disable-sjlj-exceptions --enable-gnu-unique-object --enable-linker-build-id --disable-libstdcxx-pch --enable-c99 --enable-clocale=gnu --enable-libstdcxx-debug --enable-long-long --with-cloog=no --with-ppl=no --with-isl=no --disable-multilib --enable-fix-cortex-a53-835769 --enable-fix-cortex-a53-843419 --with-arch=armv8-a --enable-threads=posix --enable-multiarch --enable-libstdcxx-time=yes --enable-gnu-indirect-function --with-build-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/sysroots/aarch64-linux-gnu --with-sysroot=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu/aarch64-linux-gnu/libc --enable-checking=release --disable-bootstrap --enable-languages=c,c++,fortran,lto --build=x86_64-unknown-linux-gnu --host=x86_64-unknown-linux-gnu --target=aarch64-linux-gnu --prefix=/home/tcwg-buildslave/workspace/tcwg-make-release/builder_arch/amd64/label/tcwg-x86_64-build/target/aarch64-linux-gnu/_build/builds/destdir/x86_64-unknown-linux-gnu]
+  ignore line: [Thread model: posix]
+  ignore line: [gcc version 6.3.1 20170404 (Linaro GCC 6.3-2017.05) ]
+  ignore line: [COMPILER_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/bin/]
+  ignore line: [LIBRARY_PATH=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib/:/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_e3d44' '-shared-libgcc' '-march=armv8-a' '-mlittle-endian' '-mabi=lp64']
+  link line: [ /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/collect2 -plugin /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/liblto_plugin.so -plugin-opt=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper -plugin-opt=-fresolution=/tmp/ccoCzISg.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --sysroot=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc --build-id --eh-frame-hdr -dynamic-linker /lib/ld-linux-aarch64.so.1 -X -EL -maarch64linux --fix-cortex-a53-835769 --fix-cortex-a53-843419 -o cmTC_e3d44 /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crt1.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crti.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtbegin.o -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64 -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib -L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtend.o /home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crtn.o]
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/collect2] ==> ignore
+    arg [-plugin] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/liblto_plugin.so] ==> ignore
+    arg [-plugin-opt=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../libexec/gcc/aarch64-linux-gnu/6.3.1/lto-wrapper] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccoCzISg.res] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lc] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
+    arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
+    arg [--sysroot=/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc] ==> ignore
+    arg [--build-id] ==> ignore
+    arg [--eh-frame-hdr] ==> ignore
+    arg [-dynamic-linker] ==> ignore
+    arg [/lib/ld-linux-aarch64.so.1] ==> ignore
+    arg [-X] ==> ignore
+    arg [-EL] ==> ignore
+    arg [-maarch64linux] ==> ignore
+    arg [--fix-cortex-a53-835769] ==> ignore
+    arg [--fix-cortex-a53-843419] ==> ignore
+    arg [-o] ==> ignore
+    arg [cmTC_e3d44] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crt1.o] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crti.o] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtbegin.o] ==> ignore
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib]
+    arg [-L/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib] ==> dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib]
+    arg [CMakeFiles/cmTC_e3d44.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [-lstdc++] ==> lib [stdc++]
+    arg [-lm] ==> lib [m]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [-lc] ==> lib [c]
+    arg [-lgcc_s] ==> lib [gcc_s]
+    arg [-lgcc] ==> lib [gcc]
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/crtend.o] ==> ignore
+    arg [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib/crtn.o] ==> ignore
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib/../lib64] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib64]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../lib/gcc/aarch64-linux-gnu/6.3.1/../../../../aarch64-linux-gnu/lib] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/lib] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/lib]
+  collapse library dir [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/../aarch64-linux-gnu/libc/usr/lib] ==> [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/lib]
+  implicit libs: [stdc++;m;gcc_s;gcc;c;gcc_s;gcc]
+  implicit dirs: [/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu/6.3.1;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc/aarch64-linux-gnu;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/lib/gcc;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib64;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/lib;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/lib;/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/aarch64-linux-gnu/libc/usr/lib]
+  implicit fwks: []
+
+
+Determining if the include file pthread.h exists passed with the following output:
+Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_2a92f/fast && /usr/bin/make -f CMakeFiles/cmTC_2a92f.dir/build.make CMakeFiles/cmTC_2a92f.dir/build
+make[1]: 进入目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+Building C object CMakeFiles/cmTC_2a92f.dir/CheckIncludeFile.c.o
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc    -o CMakeFiles/cmTC_2a92f.dir/CheckIncludeFile.c.o   -c /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_2a92f
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2a92f.dir/link.txt --verbose=1
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc      CMakeFiles/cmTC_2a92f.dir/CheckIncludeFile.c.o  -o cmTC_2a92f 
+make[1]: 离开目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+
+
+
+Determining if the function pthread_create exists in the pthread passed with the following output:
+Change Dir: /home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_f6901/fast && /usr/bin/make -f CMakeFiles/cmTC_f6901.dir/build.make CMakeFiles/cmTC_f6901.dir/build
+make[1]: 进入目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+Building C object CMakeFiles/cmTC_f6901.dir/CheckFunctionExists.c.o
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_f6901.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.16/Modules/CheckFunctionExists.c
+Linking C executable cmTC_f6901
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f6901.dir/link.txt --verbose=1
+/home/parker/Projects/gcc-linaro-6.3.1-2017.05-x86_64_aarch64-linux-gnu/bin/aarch64-linux-gnu-gcc  -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_f6901.dir/CheckFunctionExists.c.o  -o cmTC_f6901  -lpthread 
+make[1]: 离开目录“/home/parker/Projects/rk3576_yolov8tortsp_demo/build/CMakeFiles/CMakeTmp”
+
+
+

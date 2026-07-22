@@ -5,6 +5,7 @@ import argparse
 import time
 import numpy as np
 import threading
+import subprocess
 from fastapi import FastAPI, Response, UploadFile, File, Form, HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
 import uvicorn
@@ -364,11 +365,108 @@ class FrameBuffer:
         with self.lock:
             return self.frame
 
+    def set_raw_frame(self, raw_frame):
+        with self.lock:
+            self.raw_frame = raw_frame
+
     def get_raw_frame(self):
         with self.lock:
             return self.raw_frame.copy() if self.raw_frame is not None else None
 
 frame_buffer = FrameBuffer()
+
+class RealtimePipeline:
+    """低延迟实时处理流水线：抓流线程只保留最新帧，推理线程只处理最新帧。"""
+    def __init__(self, cap, model, co_helper, args):
+        self.cap = cap
+        self.model = model
+        self.co_helper = co_helper
+        self.args = args
+        self.stop_event = threading.Event()
+        self.frame_lock = threading.Lock()
+        self.latest_frame = None
+        self.latest_frame_id = 0
+        self.last_inferred_frame_id = -1
+        self.source_error = ""
+        self.capture_thread = None
+        self.inference_thread = None
+        self.display_fps = 0.0
+        self.capture_retries = 0
+
+    def start(self):
+        self.capture_thread = threading.Thread(target=self._capture_loop, daemon=True)
+        self.inference_thread = threading.Thread(target=self._inference_loop, daemon=True)
+        self.capture_thread.start()
+        self.inference_thread.start()
+
+    def stop(self):
+        self.stop_event.set()
+
+    def _capture_loop(self):
+        while not self.stop_event.is_set():
+            ret, frame = self.cap.read()
+            if not ret or frame is None:
+                if self.args.video_path:
+                    self.cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    time.sleep(0.01)
+                    continue
+
+                self.capture_retries += 1
+                if self.capture_retries > 100:
+                    self.source_error = "Video source has no decodable frames"
+                    self.stop_event.set()
+                    break
+                time.sleep(0.02)
+                continue
+
+            self.capture_retries = 0
+            with self.frame_lock:
+                # 只保留最新帧，旧帧直接覆盖，避免排队导致延迟不断累积
+                self.latest_frame = frame.copy()
+                self.latest_frame_id += 1
+
+            # API 实时推理接口始终读取当前最新原始帧
+            frame_buffer.set_raw_frame(frame)
+
+    def _inference_loop(self):
+        while not self.stop_event.is_set():
+            with self.frame_lock:
+                frame_id = self.latest_frame_id
+                if frame_id == self.last_inferred_frame_id or self.latest_frame is None:
+                    frame = None
+                else:
+                    frame = self.latest_frame.copy()
+                    self.last_inferred_frame_id = frame_id
+
+            if frame is None:
+                time.sleep(0.005)
+                continue
+
+            processed_img = preprocess_frame(frame, self.co_helper)
+            start_time = time.time()
+            outputs = self.model.run(processed_img)
+            inference_time = time.time() - start_time
+
+            if outputs is not None:
+                boxes, classes, scores = post_process(outputs)
+                if boxes is not None:
+                    draw(frame, self.co_helper.get_real_box(boxes), scores, classes)
+
+            inf_fps = 1.0 / inference_time if inference_time > 0 else 0.0
+            self.display_fps = 0.9 * self.display_fps + 0.1 * inf_fps if self.display_fps > 0 else inf_fps
+            cv2.putText(frame, f'NPU FPS: {self.display_fps:.1f}', (20, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+
+            ok, buffer = cv2.imencode('.jpg', frame)
+            if ok:
+                frame_buffer.set_frame(buffer.tobytes(), raw_frame=None)
+
+    def wait(self):
+        while not self.stop_event.is_set():
+            if self.source_error:
+                print(f"Error: {self.source_error}", flush=True)
+                break
+            time.sleep(0.2)
 
 @app.get("/api/video_feed")
 async def video_feed():
@@ -857,12 +955,167 @@ def preprocess_frame(frame, co_helper):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
+class FFmpegRTSPCapture:
+    """使用 ffmpeg 子进程拉取 RTSP，并通过 MJPEG 管道输出帧。"""
+    def __init__(self, rtsp_url, transport='tcp'):
+        self.rtsp_url = rtsp_url
+        self.transport = transport
+        self.process = None
+        self.opened = False
+        self._buffer = bytearray()
+        self._open()
+
+    def _open(self):
+        cmd = [
+            'ffmpeg',
+            '-hide_banner',
+            '-loglevel', 'error',
+            '-rtsp_transport', self.transport,
+            '-fflags', 'nobuffer',
+            '-flags', 'low_delay',
+            '-i', self.rtsp_url,
+            '-an',
+            '-f', 'image2pipe',
+            '-vcodec', 'mjpeg',
+            '-q:v', '5',
+            'pipe:1',
+        ]
+        self.process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            bufsize=1024 * 1024,
+        )
+        self.opened = self.process.stdout is not None
+
+    def isOpened(self):
+        return self.opened and self.process is not None and self.process.poll() is None
+
+    def _read_chunk(self, size=65536):
+        if self.process is None or self.process.stdout is None:
+            return None
+        return self.process.stdout.read(size)
+
+    def read(self):
+        if not self.isOpened():
+            return False, None
+
+        start_marker = b'\xff\xd8'
+        end_marker = b'\xff\xd9'
+
+        while True:
+            start_idx = self._buffer.find(start_marker)
+            if start_idx != -1:
+                end_idx = self._buffer.find(end_marker, start_idx + 2)
+                if end_idx != -1:
+                    jpeg = bytes(self._buffer[start_idx:end_idx + 2])
+                    del self._buffer[:end_idx + 2]
+                    frame = cv2.imdecode(np.frombuffer(jpeg, dtype=np.uint8), cv2.IMREAD_COLOR)
+                    if frame is not None:
+                        return True, frame
+
+            chunk = self._read_chunk()
+            if not chunk:
+                return False, None
+            self._buffer.extend(chunk)
+            if len(self._buffer) > 4 * 1024 * 1024:
+                self._buffer = self._buffer[-2 * 1024 * 1024:]
+
+    def release(self):
+        self.opened = False
+        if self.process is not None:
+            try:
+                self.process.kill()
+            except Exception:
+                pass
+            try:
+                self.process.wait(timeout=1)
+            except Exception:
+                pass
+            self.process = None
+
+    def set(self, *_args, **_kwargs):
+        return False
+
+def build_gstreamer_rtsp_pipeline(rtsp_url, latency):
+    """构建更稳定的 RTSP GStreamer 拉流管线。"""
+    return (
+        f'rtspsrc location="{rtsp_url}" protocols=tcp latency={latency} ! '
+        'rtph264depay ! h264parse ! avdec_h264 ! videoconvert ! '
+        'appsink drop=true max-buffers=1 sync=false'
+    )
+
+def open_video_source(args):
+    """统一打开视频源，并为 RTSP 提供 FFmpeg/GStreamer 双后端回退。"""
+    if args.rtsp:
+        source_name = args.rtsp
+        backends_to_try = []
+
+        if args.rtsp_backend in ('auto', 'ffmpeg'):
+            # 优先使用 ffmpeg 子进程拉流，更接近 VLC 的解码行为，稳定性更好
+            backends_to_try.append(("FFmpegPipe", lambda: FFmpegRTSPCapture(args.rtsp, args.rtsp_transport)))
+
+        if args.rtsp_backend in ('auto', 'opencv'):
+            os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = f"rtsp_transport;{args.rtsp_transport}"
+            backends_to_try.append(("OpenCV-FFmpeg", lambda: cv2.VideoCapture(args.rtsp, cv2.CAP_FFMPEG)))
+
+        if args.rtsp_backend in ('auto', 'gstreamer'):
+            pipeline = build_gstreamer_rtsp_pipeline(args.rtsp, args.rtsp_latency)
+            backends_to_try.append(("GStreamer", lambda: cv2.VideoCapture(pipeline, cv2.CAP_GSTREAMER)))
+
+        for backend_name, open_fn in backends_to_try:
+            print(f"Trying RTSP backend: {backend_name}", flush=True)
+            try:
+                cap = open_fn()
+            except Exception as e:
+                print(f"Warning: {backend_name} exception: {e}", flush=True)
+                continue
+
+            if cap is None or not cap.isOpened():
+                print(f"Warning: {backend_name} failed to open RTSP stream", flush=True)
+                continue
+
+            # 丢弃前几帧，等待关键帧和 SPS/PPS 到达，避免刚连流时解码失败
+            for _ in range(args.rtsp_warmup_frames):
+                ret, frame = cap.read()
+                if ret and frame is not None:
+                    print(f"RTSP stream opened successfully via {backend_name}", flush=True)
+                    return cap, source_name
+                time.sleep(0.05)
+
+            cap.release()
+            print(f"Warning: {backend_name} opened the stream but did not receive a valid frame", flush=True)
+
+        print("Error: RTSP stream open failed.", flush=True)
+        print("Hint 1: Set camera codec to H.264 instead of H.265/Smart Codec.", flush=True)
+        print("Hint 2: Enable SPS/PPS on every keyframe (sometimes named 'SPS/PPS insertion' or 'config interval').", flush=True)
+        print("Hint 3: Reduce GOP / I-frame interval to 25 or lower, then retry.", flush=True)
+        print("Hint 4: Try the camera sub-stream first, it is usually more stable for OpenCV.", flush=True)
+        print("Hint 5: Retry with --rtsp_backend ffmpeg, gstreamer or opencv to isolate the backend issue.", flush=True)
+        return None, source_name
+
+    if args.video_path:
+        return cv2.VideoCapture(args.video_path), args.video_path
+
+    cap = cv2.VideoCapture(args.camera_id)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    return cap, str(args.camera_id)
+
 def main():
     parser = argparse.ArgumentParser(description='Object detection on RK3588 (Web Preview Mode)')
     parser.add_argument('--model_path', type=str, required=True, help='RKNN model path')
     parser.add_argument('--camera_id', type=int, default=1, help='Camera device ID (default: 1 for /dev/video1)')
     parser.add_argument('--video_path', type=str, help='Path to video file (overrides camera_id)')
     parser.add_argument('--rtsp', type=str, help="RTSP stream address, such as:rtsp://user:pass@192.168.1.100:554/stream")
+    parser.add_argument('--rtsp_backend', type=str, default='auto', choices=['auto', 'ffmpeg', 'gstreamer', 'opencv'],
+                        help='RTSP decode backend: auto, ffmpeg, gstreamer or opencv (default: auto)')
+    parser.add_argument('--rtsp_transport', type=str, default='tcp', choices=['tcp', 'udp'],
+                        help='RTSP transport protocol used by FFmpeg backend (default: tcp)')
+    parser.add_argument('--rtsp_latency', type=int, default=200,
+                        help='GStreamer RTSP latency in ms (default: 200)')
+    parser.add_argument('--rtsp_warmup_frames', type=int, default=30,
+                        help='Warm up RTSP decoder by dropping initial frames (default: 30)')
     parser.add_argument('--class_path', type=str, help='Path to class_config.txt file for dynamic category loading')
     parser.add_argument('--host', type=str, default='0.0.0.0', help='Web server host')
     parser.add_argument('--port', type=int, default=8000, help='Web server port')
@@ -905,58 +1158,19 @@ def main():
         return
 
     # 打开视频源
-    if args.rtsp:
-        # 强制使用 TCP 协议拉取 RTSP 流，解决 UDP 丢包导致的 PPS 报错
-        os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp"
-        cap = cv2.VideoCapture(args.rtsp, cv2.CAP_FFMPEG)
-    elif args.video_path:
-        cap = cv2.VideoCapture(args.video_path)
-    else:
-        cap = cv2.VideoCapture(args.camera_id)
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-    
-    if not cap.isOpened():
-        source_name = args.rtsp if args.rtsp else (args.video_path if args.video_path else args.camera_id)
+    cap, source_name = open_video_source(args)
+    if cap is None or not cap.isOpened():
         print(f"Error: Cannot open video source ({source_name})")
         return
 
-    fps_counter = 0
+    pipeline = RealtimePipeline(cap, model, co_helper, args)
+    pipeline.start()
     try:
-        while True:
-            ret, frame = cap.read()
-            if not ret:
-                if args.video_path:
-                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                    continue
-                break
-
-            # 推理流程
-            processed_img = preprocess_frame(frame, co_helper)
-            start_time = time.time()
-            outputs = model.run(processed_img)
-            inference_time = time.time() - start_time
-            
-            if outputs is not None:
-                boxes, classes, scores = post_process(outputs)
-                if boxes is not None:
-                    draw(frame, co_helper.get_real_box(boxes), scores, classes)
-
-            # 计算并显示 FPS
-            inf_fps = 1.0 / inference_time if inference_time > 0 else 0
-            fps_counter = 0.9 * fps_counter + 0.1 * inf_fps if fps_counter > 0 else inf_fps
-            cv2.putText(frame, f'NPU FPS: {fps_counter:.1f}', (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-
-            # 更新 Web 帧缓冲区
-            _, buffer = cv2.imencode('.jpg', frame)
-            frame_buffer.set_frame(buffer.tobytes(), frame)
-
-            # 降低 CPU 占用
-            time.sleep(0.01)
-
+        pipeline.wait()
     except KeyboardInterrupt:
         print("Interrupted by user")
     finally:
+        pipeline.stop()
         cap.release()
         model.release()
 
