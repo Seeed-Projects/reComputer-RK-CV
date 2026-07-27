@@ -58,6 +58,7 @@ sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-yolo11:latest
 sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolo11:latest
 sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-yolov8-obb:latest
 sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8-obb:latest
+sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-yolov8_airborne:latest
 ```
 
 #### Step C: Run with One Click
