@@ -153,6 +153,10 @@ class VideoAnalyzer:
                         if boxes is not None:
                             draw(frame, self.co_helper.get_real_box(boxes), scores, classes)
 
+                # Push to web for real-time display
+                _, buffer = cv2.imencode('.jpg', frame)
+                frame_buffer.set_frame(buffer.tobytes(), frame)
+
                 out.write(frame)
                 frame_idx += 1
                 self.progress = int((frame_idx / total_frames) * 100)
@@ -561,6 +565,12 @@ async def index():
             const data = await res.json();
 
             if (data.status === 'started') {
+                // Switch to real-time tab to show live detection
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.getElementById('realtime').classList.add('active');
+                document.querySelector('.tab').classList.add('active');
+                document.getElementById('streamImg').src = '/api/video_feed';
                 startStatusPolling();
             } else {
                 alert(data.message || 'Error starting analysis');
@@ -613,36 +623,66 @@ def run_fastapi(host, port):
 # --- Inference logic (YOLOv8 DFL + NMS post-processing) ---
 
 def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
-    """YOLOv8 post-processing with DFL decoding and NMS."""
+    """YOLOv8 post-processing. Handles both single-output and 3-branch DFL formats."""
     if outputs is None:
         return None, None, None
 
-    boxes, scores, classes_conf = [], [], []
-    defualt_branch = 3
-    pair_per_branch = len(outputs) // defualt_branch
-    for i in range(defualt_branch):
-        boxes.append(box_process(outputs[pair_per_branch * i]))
-        classes_conf.append(outputs[pair_per_branch * i + 1])
-        scores.append(np.ones_like(outputs[pair_per_branch * i + 1][:, :1, :, :], dtype=np.float32))
+    # Detect output format: single tensor (1, 15, 8400) vs 3-branch DFL
+    if len(outputs) == 1 and len(outputs[0].shape) == 3:
+        # Single output format: (1, 4+nc, num_anchors) - already DFL decoded
+        output = outputs[0]
+        if output.shape[0] == 1:
+            output = output[0]  # (15, 8400)
+        # Transpose to (8400, 15)
+        if output.shape[0] < output.shape[1]:
+            output = output.T
 
-    def sp_flatten(_in):
-        ch = _in.shape[1]
-        _in = _in.transpose(0, 2, 3, 1)
-        return _in.reshape(-1, ch)
+        boxes = output[:, :4]       # cx, cy, w, h
+        classes_conf = output[:, 4:]  # class scores
 
-    boxes = np.concatenate([sp_flatten(_v) for _v in boxes])
-    classes_conf = np.concatenate([sp_flatten(_v) for _v in classes_conf])
-    scores = np.concatenate([sp_flatten(_v) for _v in scores])
+        # cx,cy,w,h -> x1,y1,x2,y2
+        boxes_xyxy = np.zeros_like(boxes)
+        boxes_xyxy[:, 0] = boxes[:, 0] - boxes[:, 2] / 2
+        boxes_xyxy[:, 1] = boxes[:, 1] - boxes[:, 3] / 2
+        boxes_xyxy[:, 2] = boxes[:, 0] + boxes[:, 2] / 2
+        boxes_xyxy[:, 3] = boxes[:, 1] + boxes[:, 3] / 2
 
-    # filter_boxes logic
-    scores_flat = scores.reshape(-1)
-    class_max_score = np.max(classes_conf, axis=-1)
-    classes = np.argmax(classes_conf, axis=-1)
-    _class_pos = np.where(class_max_score * scores_flat >= obj_thresh)
+        boxes = boxes_xyxy
+        scores_flat = np.ones(len(classes_conf), dtype=np.float32)
+        class_max_score = np.max(classes_conf, axis=-1)
+        classes = np.argmax(classes_conf, axis=-1)
 
-    scores = (class_max_score * scores_flat)[_class_pos]
-    boxes = boxes[_class_pos]
-    classes = classes[_class_pos]
+        _class_pos = np.where(class_max_score * scores_flat >= obj_thresh)
+        scores = (class_max_score * scores_flat)[_class_pos]
+        boxes = boxes[_class_pos]
+        classes = classes[_class_pos]
+
+    else:
+        # 3-branch DFL format (original reference project format)
+        all_boxes, all_scores, all_classes_conf = [], [], []
+        defualt_branch = 3
+        pair_per_branch = len(outputs) // defualt_branch
+        for i in range(defualt_branch):
+            all_boxes.append(box_process(outputs[pair_per_branch * i]))
+            all_classes_conf.append(outputs[pair_per_branch * i + 1])
+            all_scores.append(np.ones_like(outputs[pair_per_branch * i + 1][:, :1, :, :], dtype=np.float32))
+
+        def sp_flatten(_in):
+            ch = _in.shape[1]
+            _in = _in.transpose(0, 2, 3, 1)
+            return _in.reshape(-1, ch)
+
+        boxes = np.concatenate([sp_flatten(_v) for _v in all_boxes])
+        classes_conf = np.concatenate([sp_flatten(_v) for _v in all_classes_conf])
+        scores = np.concatenate([sp_flatten(_v) for _v in all_scores])
+
+        scores_flat = scores.reshape(-1)
+        class_max_score = np.max(classes_conf, axis=-1)
+        classes = np.argmax(classes_conf, axis=-1)
+        _class_pos = np.where(class_max_score * scores_flat >= obj_thresh)
+        scores = (class_max_score * scores_flat)[_class_pos]
+        boxes = boxes[_class_pos]
+        classes = classes[_class_pos]
 
     if len(classes) == 0:
         return None, None, None
