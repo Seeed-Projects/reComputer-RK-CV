@@ -2,7 +2,9 @@
 
 [English] | [中文](./README_zh.md)
 
-This project aims to provide industrial-grade, high-performance Computer Vision (CV) application solutions for Rockchip series development boards. It currently supports **RK3588** and **RK3576** platforms, primarily integrating the YOLOv11 object detection model.
+This project provides deployable Computer Vision (CV) applications for Rockchip
+development boards. It supports **RK3588** and **RK3576**, with object detection,
+image classification, pose estimation, segmentation, and speech examples.
 
 ## Project Architecture
 
@@ -14,8 +16,8 @@ reComputer-RK-CV/
 │   ├── rk3576/             # RK3576 specific Dockerfile
 │   └── rk3588/             # RK3588 specific Dockerfile
 ├── src/                    # Source code directory
-│   ├── rk3576/             # RK3576 source code, models, and dependencies
-│   └── rk3588/             # RK3588 source code, models, and dependencies
+│   ├── rk3576_<model>/     # Independent RK3576 application build contexts
+│   └── rk3588_<model>/     # Independent RK3588 application build contexts
 └── .github/workflows/      # GitHub Actions automated build scripts
 ```
 
@@ -25,6 +27,15 @@ reComputer-RK-CV/
 | :--- | :--- | :--- | :--- |
 | **RK3588** | RK3588/RK3588S | 6 TOPS | `rk3588-yolo` |
 | **RK3576** | RK3576 | 6 TOPS | `rk3576-yolo` |
+
+Image-classification services:
+
+| Platform | Model | Web/API entry point | Dockerfile |
+| :--- | :--- | :--- | :--- |
+| RK3588 | MobileNet | `POST /api/models/mobilenet/predict` | `docker/rk3588/mobilenet.dockerfile` |
+| RK3588 | ResNet50V2 | `POST /api/models/resnet50v2/predict` | `docker/rk3588/resnet50v2.dockerfile` |
+| RK3576 | MobileNet | `POST /api/models/mobilenet/predict` | `docker/rk3576/mobilenet.dockerfile` |
+| RK3576 | ResNet50V2 | `POST /api/models/resnet50v2/predict` | `docker/rk3576/resnet50v2.dockerfile` |
 
 ## Quick Start
 
@@ -199,14 +210,18 @@ Get real-time MJPEG video stream with detection boxes drawn, can be directly emb
 
 ## Detailed Platform Documentation
 
-- [RK3588 Guide](src/rk3588/README.md)
-- [RK3576 Guide](src/rk3576/README.md)
+- [RK3588 MobileNet](src/rk3588_mobilenet/README.md)
+- [RK3588 ResNet50V2](src/rk3588_resnet50v2/README.md)
+- [RK3576 MobileNet](src/rk3576_mobilenet/README.md)
+- [RK3576 ResNet50V2](src/rk3576_resnet50v2/README.md)
+- [RK3576 classification acceptance report](docs/rk3576-classification-acceptance.md)
+- [Python model project migration standard](src/PYTHON_PROJECT_STANDARD.md)
 
 ## Automated Build
 
 This project supports automated multi-platform image building via GitHub Actions.
-- Modifying the `src/rk3588/` directory automatically triggers the `rk3588-yolo` image build.
-- Modifying the `src/rk3576/` directory automatically triggers the `rk3576-yolo` image build.
+- Each `src/rk<platform>_<model>/` directory is an independent Docker build context.
+- MobileNet and ResNet50V2 are included in both RK3588 and RK3576 build matrices.
 - Manual trigger is supported, with the option to specify `image_tag`.
 
 ---

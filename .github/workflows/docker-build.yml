@@ -21,6 +21,10 @@ on:
       - 'src/rk3576_yolov8_airborne/**'
       - 'src/rk3588_whisper/**'
       - 'src/rk3576_whisper/**'
+      - 'src/rk3588_mobilenet/**'
+      - 'src/rk3588_resnet50v2/**'
+      - 'src/rk3576_mobilenet/**'
+      - 'src/rk3576_resnet50v2/**'
       - 'docker/**'
     tags: ['v*.*.*']
   pull_request:
@@ -62,6 +66,10 @@ jobs:
           - rk3576_yolov8_airborne
           - rk3588_whisper
           - rk3576_whisper
+          - rk3588_mobilenet
+          - rk3588_resnet50v2
+          - rk3576_mobilenet
+          - rk3576_resnet50v2
     
     steps:
       - name: Checkout Code

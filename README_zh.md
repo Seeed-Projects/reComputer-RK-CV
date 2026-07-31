@@ -2,7 +2,9 @@
 
 [English](./README.md) | [中文]
 
-本项目旨在为瑞芯微（Rockchip）系列开发板提供工业级、高性能的计算机视觉（CV）应用方案。目前已支持 **RK3588** 和 **RK3576** 平台，主要集成了 YOLOv11 目标检测模型。
+本项目为瑞芯微（Rockchip）开发板提供可直接部署的计算机视觉（CV）应用。
+目前支持 **RK3588** 和 **RK3576**，涵盖目标检测、图像分类、姿态估计、
+实例分割和语音等案例。
 
 ## 项目架构
 
@@ -14,8 +16,8 @@ reComputer-RK-CV/
 │   ├── rk3576/             # RK3576 专属 Dockerfile
 │   └── rk3588/             # RK3588 专属 Dockerfile
 ├── src/                    # 源码目录
-│   ├── rk3576/             # RK3576 源码、模型及依赖库
-│   └── rk3588/             # RK3588 源码、模型及依赖库
+│   ├── rk3576_<模型>/      # 独立的 RK3576 应用构建上下文
+│   └── rk3588_<模型>/      # 独立的 RK3588 应用构建上下文
 └── .github/workflows/      # GitHub Actions 自动化构建脚本
 ```
 
@@ -25,6 +27,15 @@ reComputer-RK-CV/
 | :--- | :--- | :--- | :--- |
 | **RK3588** | RK3588/RK3588S | 6 TOPS | `rk3588-yolo` |
 | **RK3576** | RK3576 | 6 TOPS | `rk3576-yolo` |
+
+图像分类服务：
+
+| 平台 | 模型 | Web/API 入口 | Dockerfile |
+| :--- | :--- | :--- | :--- |
+| RK3588 | MobileNet | `POST /api/models/mobilenet/predict` | `docker/rk3588/mobilenet.dockerfile` |
+| RK3588 | ResNet50V2 | `POST /api/models/resnet50v2/predict` | `docker/rk3588/resnet50v2.dockerfile` |
+| RK3576 | MobileNet | `POST /api/models/mobilenet/predict` | `docker/rk3576/mobilenet.dockerfile` |
+| RK3576 | ResNet50V2 | `POST /api/models/resnet50v2/predict` | `docker/rk3576/resnet50v2.dockerfile` |
 
 ## 快速开始
 
@@ -199,14 +210,18 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 
 ## 平台详细文档
 
-- [RK3588 使用指南](src/rk3588/README.md)
-- [RK3576 使用指南](src/rk3576/README.md)
+- [RK3588 MobileNet](src/rk3588_mobilenet/README_zh.md)
+- [RK3588 ResNet50V2](src/rk3588_resnet50v2/README_zh.md)
+- [RK3576 MobileNet](src/rk3576_mobilenet/README_zh.md)
+- [RK3576 ResNet50V2](src/rk3576_resnet50v2/README_zh.md)
+- [RK3576 图像分类验收报告](docs/rk3576-classification-acceptance.md)
+- [Python 模型项目迁移规范](src/PYTHON_PROJECT_STANDARD.md)
 
 ## 自动化构建
 
 本项目支持通过 GitHub Actions 自动构建多平台镜像。
-- 当修改 `src/rk3588/` 目录时，会自动触发 `rk3588-yolo` 镜像的构建。
-- 当修改 `src/rk3576/` 目录时，会自动触发 `rk3576-yolo` 镜像的构建。
+- 每个 `src/rk<平台>_<模型>/` 目录都是独立的 Docker 构建上下文。
+- MobileNet 和 ResNet50V2 已加入 RK3588、RK3576 构建矩阵。
 - 支持手动触发构建，并可指定 `image_tag`。
 
 ---
