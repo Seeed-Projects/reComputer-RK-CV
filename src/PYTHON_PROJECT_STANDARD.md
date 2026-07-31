@@ -50,13 +50,7 @@ FastAPI 自动提供 `/docs` 和 `/openapi.json`。推理接口至少支持图�
 - 新项目必须加入 `.github/workflows/docker-build.yml` 的 paths 和 matrix。
 - `.rknn`、`.mp4`、`.whl`、`.so` 使用仓库现有 Git LFS 属性。
 
-## 本地静态验证
+## 验证要求
 
-验证器不导入 OpenCV、FastAPI 或 RKNN，可在 x86 开发机执行：
-
-```bash
-python3 scripts/validate_python_projects.py \
-  rk3588_mobilenet rk3588_resnet50v2
-```
-
+提交前至少执行 Python 语法检查、Dockerfile 路径检查和 Git LFS 状态检查。
 最终仍需在对应开发板上完成 Docker 构建、NPU 推理和 API 请求验证。

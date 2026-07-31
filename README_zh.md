@@ -214,7 +214,6 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 - [RK3588 ResNet50V2](src/rk3588_resnet50v2/README_zh.md)
 - [RK3576 MobileNet](src/rk3576_mobilenet/README_zh.md)
 - [RK3576 ResNet50V2](src/rk3576_resnet50v2/README_zh.md)
-- [RK3576 图像分类验收报告](docs/rk3576-classification-acceptance.md)
 - [Python 模型项目迁移规范](src/PYTHON_PROJECT_STANDARD.md)
 
 ## 自动化构建
