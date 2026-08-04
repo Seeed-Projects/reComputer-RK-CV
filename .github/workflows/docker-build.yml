@@ -51,23 +51,6 @@ jobs:
       max-parallel: 4
       matrix:
         platform: 
-          - rk3588_yolo11
-          - rk3576_yolo11
-          - rk3588_yolov8_obb
-          - rk3576_yolov8_obb
-          - rk3588_yolov5
-          - rk3576_yolov5
-          - rk3588_yolov5_seg
-          - rk3576_yolov5_seg
-          - rk3588_yolov8
-          - rk3576_yolov8
-          - rk3588_yolov8_pose
-          - rk3576_yolov8_pose
-          - rk3588_yolov8_seg
-          - rk3576_yolov8_seg
-          - rk3576_yolov8_airborne
-          - rk3588_whisper
-          - rk3576_whisper
           - rk3588_mobilenet
           - rk3588_resnet50v2
           - rk3576_mobilenet
