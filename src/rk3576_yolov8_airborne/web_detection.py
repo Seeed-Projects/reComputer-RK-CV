@@ -664,11 +664,19 @@ def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
         pair_per_branch = len(outputs) // defualt_branch
         for i in range(defualt_branch):
             all_boxes.append(box_process(outputs[pair_per_branch * i]))
-            all_classes_conf.append(outputs[pair_per_branch * i + 1])
-            all_scores.append(np.ones_like(outputs[pair_per_branch * i + 1][:, :1, :, :], dtype=np.float32))
+            cls_out = outputs[pair_per_branch * i + 1]
+            all_classes_conf.append(cls_out)
+            # Handle both 3D (1, C, N) and 4D (1, C, H, W) tensors
+            if len(cls_out.shape) == 3:
+                all_scores.append(np.ones_like(cls_out[:, :1, :], dtype=np.float32))
+            else:
+                all_scores.append(np.ones_like(cls_out[:, :1, :, :], dtype=np.float32))
 
         def sp_flatten(_in):
             ch = _in.shape[1]
+            # Handle both 3D (N, C, HW) and 4D (N, C, H, W) tensors
+            if len(_in.shape) == 3:
+                return _in.transpose(0, 2, 1).reshape(-1, ch)
             _in = _in.transpose(0, 2, 3, 1)
             return _in.reshape(-1, ch)
 
@@ -725,6 +733,19 @@ def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
 
     return np.concatenate(nboxes), np.concatenate(nclasses), np.concatenate(nscores)
 
+def _infer_grid(hw):
+    """Infer grid dimensions from flattened spatial size for YOLOv8 grids."""
+    # Try common YOLOv8 grid sizes (640px input: 80x80, 40x40, 20x20)
+    for gh, gw in [(80, 80), (40, 40), (20, 20), (160, 160)]:
+        if gh * gw == hw:
+            return gh, gw
+    # Fallback: try square root
+    s = int(round(hw ** 0.5))
+    if s * s == hw:
+        return s, s
+    # Last resort: assume 1D grid
+    return 1, hw
+
 def dfl(position):
     """Distribution Focal Loss decoding."""
     n, c, h, w = position.shape
@@ -742,6 +763,12 @@ def dfl(position):
 
 def box_process(position):
     """Decode box predictions from DFL output."""
+    # Handle 3D tensors (1, C, N) from RKNN - reshape to 4D (1, C, H, W)
+    if len(position.shape) == 3:
+        n, c, hw = position.shape
+        grid_h, grid_w = _infer_grid(hw)
+        position = position.reshape(n, c, grid_h, grid_w)
+    
     grid_h, grid_w = position.shape[2:4]
     col, row = np.meshgrid(np.arange(0, grid_w), np.arange(0, grid_h))
     col = col.reshape(1, 1, grid_h, grid_w)
