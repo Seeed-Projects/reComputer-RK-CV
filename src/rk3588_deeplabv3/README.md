@@ -2,35 +2,52 @@
 
 [English] | [中文](./README_zh.md)
 
-This directory provides a standardized DeepLabV3 semantic-segmentation deployment for RK3588, including RKNN NPU inference, browser preview, REST API, video processing, and Docker startup.
+This project packages DeepLabV3 semantic segmentation for RK3588 with RKNN NPU inference, a browser UI, REST APIs, MP4 processing, and Docker deployment.
 
-## Core Features
+## Important Device Mapping
 
-- **NPU acceleration**: Runs `deeplabv3.rknn` through RKNN Toolkit Lite2 on RK3588.
-- **Semantic segmentation**: Produces a 21-class PASCAL VOC mask and reports the pixel count of every class present.
-- **Visual preview**: Blends the color mask with the source image and exposes it as an MJPEG stream.
-- **Standard service**: Provides health, prediction, configuration, video-analysis, and OpenAPI endpoints.
-
-## Directory Structure
-
-- `lib/`: RK3588 RKNN runtime library.
-- `model/deeplabv3.rknn` and `model/test.jpg`: RKNN model and warm-up sample.
-- `rknn_runtime.py`: Thread-safe RKNN loader and inference wrapper.
-- `task_runtime.py`: 513×513 preprocessing, mask decoding, PASCAL VOC labels/colors, and preview generation.
-- `web_service.py`: FastAPI service, browser UI, MJPEG preview, and video processing.
-- `video/test.mp4`: Sample video.
-- `requirements.txt` and `rknn-toolkit-lite2-packages/`: Runtime dependencies.
+On the supported reComputer boards, `/dev/dri/renderD129` is the RKNPU device; `renderD128` is the GPU. RKNN Toolkit Lite2 also checks the board-compatible file. Both paths must be mounted with `-v`, and `--privileged` is recommended for the runtime check.
 
 ## Quick Start
 
+Run the published image:
+
 ```bash
-sudo docker run --rm --privileged --net=host \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+sudo docker run --rm --name rk3588-deeplabv3 \
+  --privileged \
+  -p 8000:8000 \
+  -v /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-deeplabv3:latest
+  ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-deeplabv3:latest \
+  python3 web_service.py \
+    --platform rk3588 \
+    --model_path /app/model/deeplabv3.rknn \
+    --sample_path /app/model/test.jpg \
+    --overlay_alpha 0.5 \
+    --host 0.0.0.0 \
+    --port 8000
 ```
 
-Open `http://<BOARD_IP>:8000` for preview or `http://<BOARD_IP>:8000/docs` for OpenAPI.
+Open `http://<BOARD_IP>:8000`. OpenAPI is at `http://<BOARD_IP>:8000/docs`.
+
+If host port 8000 is occupied, only change the left side of `-p`:
+
+```bash
+-p 8001:8000
+```
+
+The service must still listen on container port 8000 so that its health check remains correct.
+
+### Startup Parameters
+
+| Parameter | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--platform` | Yes | — | Target NPU: `rk3588` for this image. |
+| `--model_path` | No | `model/deeplabv3.rknn` | DeepLabV3 RKNN file. |
+| `--sample_path` | No | `model/test.jpg` | Image used for startup warm-up and initial Web preview. |
+| `--overlay_alpha` | No | `0.5` | Initial color-mask opacity, from `0` to `1`. |
+| `--host` | No | `0.0.0.0` | FastAPI listen address. Keep `0.0.0.0` for external access. |
+| `--port` | No | `8000` | Port inside the container. |
 
 Build locally from the repository root:
 
@@ -41,47 +58,44 @@ docker build -f docker/rk3588/deeplabv3.dockerfile \
 
 ## API Documentation
 
-### Semantic-segmentation prediction
+### Predict
 
 **Endpoint:** `POST /api/models/deeplabv3/predict`
 **Content type:** `multipart/form-data`
 
-- `file`: Required image.
-- `threshold` and `topk` are accepted by the common service layer but are not used by the current argmax decoder.
+| Field | Required | Description |
+| --- | --- | --- |
+| `file` | Yes | JPEG/PNG or another OpenCV-decodable image. |
+| `overlay_alpha` | No | Per-request mask opacity, `0`–`1`; overrides the global configuration for this request only. |
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/models/deeplabv3/predict \
-  -F "file=@model/test.jpg"
+  -F "file=@model/test.jpg" \
+  -F "overlay_alpha=0.65"
 ```
 
-```json
-{
-  "success": true,
-  "model": "deeplabv3",
-  "inference_time": 0.0842,
-  "result": {
-    "classes": [
-      {"id": 0, "class": "background", "pixels": 180240},
-      {"id": 15, "class": "person", "pixels": 26418}
-    ],
-    "width": 640,
-    "height": 480
-  }
-}
+The response reports inference time, image size, opacity, and all PASCAL VOC classes present with their pixel counts. The rendered overlay is available through `GET /api/video_feed`.
+
+### Configuration
+
+```bash
+curl http://127.0.0.1:8000/api/config
+
+curl -X POST http://127.0.0.1:8000/api/config \
+  -H "Content-Type: application/json" \
+  -d '{"overlay_alpha":0.7}'
 ```
 
-The JSON contains mask statistics; the rendered overlay is available from `GET /api/video_feed`.
+### Other Endpoints
 
-### Configuration and video endpoints
+- `GET /api/health`: model, platform, and readiness.
+- `GET /api/video_feed`: latest segmentation overlay as MJPEG.
+- `POST /api/video/upload`: upload an MP4 as multipart `file`.
+- `POST /api/video/analyze`: start asynchronous processing with multipart `filename`.
+- `GET /api/video/status`, `GET /api/video/list`, `GET /api/video/download/{filename}`: progress and result management.
 
-- `GET /api/health`: Model, platform, input type, model file, and readiness.
-- `GET /api/config` and `POST /api/config`: Common configuration (`threshold` 0–1 and `topk` 1–100).
-- `GET /api/video_feed`: Latest overlay as MJPEG.
-- `POST /api/video/upload` and `POST /api/video/analyze`: Upload an MP4 and start per-frame segmentation with a multipart `filename` field.
-- `GET /api/video/status`, `GET /api/video/list`, `GET /api/video/download/{filename}`: Query and retrieve results.
+## Processing and Model Replacement
 
-## Developer Guide
+Input is resized to 513×513 and converted from BGR to RGB. RKNN output may be NHWC or NCHW; the service validates a 21-class output, restores logits to the source resolution, applies `argmax`, and overlays the PASCAL VOC color map.
 
-The pipeline resizes BGR input to 513×513, converts it to RGB, runs RKNN inference, restores logits to the original resolution, takes `argmax` over 21 PASCAL VOC classes, and overlays the color mask at 50% opacity.
-
-To replace the model, put a RK3588-converted `deeplabv3.rknn` in `model/`. Preserve the 21-class output layout or update `LABELS` and output handling in `task_runtime.py`.
+To replace the model, mount a compatible model and point `--model_path` to it. Models with a different class count require corresponding changes to `LABELS` and output processing in `task_runtime.py`.

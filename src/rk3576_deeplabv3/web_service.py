@@ -1,9 +1,7 @@
 import argparse
-import json
 import os
 import re
 import shutil
-import tempfile
 import threading
 import time
 from pathlib import Path
@@ -28,12 +26,21 @@ OUTPUTS.mkdir(parents=True, exist_ok=True)
 runtime = None
 runtime_lock = threading.Lock()
 config_lock = threading.Lock()
-runtime_config = {"threshold": 0.25, "topk": 5}
+runtime_config = {"overlay_alpha": 0.5}
 last_preview = None
 preview_lock = threading.Lock()
-analysis_state = {"is_processing": False, "progress": 0, "current_file": "", "error": ""}
+analysis_state = {
+    "is_processing": False,
+    "progress": 0,
+    "current_file": "",
+    "error": "",
+}
 
-app = FastAPI(title="reComputer RK-CV Standard Model API", version="1.0.0")
+app = FastAPI(
+    title="reComputer RK-CV DeepLabV3 API",
+    version="1.1.0",
+    description="RK3576/RK3588 DeepLabV3 semantic-segmentation service",
+)
 
 
 def safe_filename(filename, allowed=None):
@@ -43,8 +50,27 @@ def safe_filename(filename, allowed=None):
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,254}", name):
         raise HTTPException(status_code=400, detail="Invalid filename")
     if allowed and Path(name).suffix.lower() not in allowed:
-        raise HTTPException(status_code=400, detail=f"Allowed extensions: {sorted(allowed)}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Allowed extensions: {sorted(allowed)}",
+        )
     return name
+
+
+def validate_overlay_alpha(value):
+    try:
+        alpha = float(value)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(
+            status_code=400,
+            detail="overlay_alpha must be a number between 0 and 1",
+        ) from exc
+    if not 0 <= alpha <= 1:
+        raise HTTPException(
+            status_code=400,
+            detail="overlay_alpha must be between 0 and 1",
+        )
+    return alpha
 
 
 def set_preview(image):
@@ -67,22 +93,21 @@ def get_preview():
         if last_preview is not None:
             return last_preview
     image = np.zeros((360, 640, 3), dtype=np.uint8)
-    cv2.putText(image, "Upload a sample to start", (110, 185), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (0, 230, 118), 2)
+    cv2.putText(
+        image,
+        "Upload an image to start",
+        (135, 185),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.9,
+        (0, 230, 118),
+        2,
+    )
     return cv2.imencode(".jpg", image)[1].tobytes()
 
 
-def decode_uploaded(contents, kind):
-    if kind == "image":
-        image = cv2.imdecode(np.frombuffer(contents, np.uint8), cv2.IMREAD_COLOR)
-        if image is None:
-            raise HTTPException(status_code=400, detail="Invalid image")
-        return image
-    return contents
-
-
-def run_prediction(payload, params):
+def run_prediction(image, params):
     with runtime_lock:
-        result, preview = runtime.predict(payload, params)
+        result, preview = runtime.predict(image, params)
     set_preview(preview)
     return result
 
@@ -107,80 +132,64 @@ async def get_config():
 
 @app.post("/api/config")
 async def update_config(value: dict):
+    if "overlay_alpha" not in value:
+        raise HTTPException(
+            status_code=400,
+            detail="overlay_alpha is required",
+        )
+    alpha = validate_overlay_alpha(value["overlay_alpha"])
     with config_lock:
-        if "threshold" in value:
-            threshold = float(value["threshold"])
-            if not 0 <= threshold <= 1:
-                raise HTTPException(status_code=400, detail="threshold must be between 0 and 1")
-            runtime_config["threshold"] = threshold
-        if "topk" in value:
-            topk = int(value["topk"])
-            if not 1 <= topk <= 100:
-                raise HTTPException(status_code=400, detail="topk must be between 1 and 100")
-            runtime_config["topk"] = topk
+        runtime_config["overlay_alpha"] = alpha
         return dict(runtime_config)
 
 
-@app.post("/api/models/{model_name}/predict")
+@app.post("/api/models/deeplabv3/predict")
 async def predict(
-    model_name: str,
-    file: Optional[UploadFile] = File(None),
-    text: Optional[str] = Form(None),
-    point_coords: Optional[str] = Form(None),
-    point_labels: Optional[str] = Form(None),
-    threshold: Optional[float] = Form(None),
-    topk: Optional[int] = Form(None),
+    file: UploadFile = File(...),
+    overlay_alpha: Optional[float] = Form(None),
 ):
-    if runtime is None or model_name != runtime.name:
-        raise HTTPException(status_code=404, detail="Unknown model")
+    if runtime is None:
+        raise HTTPException(status_code=503, detail="Model not initialized")
+    contents = await file.read()
+    if not contents:
+        raise HTTPException(status_code=400, detail="Empty upload")
+    image = cv2.imdecode(np.frombuffer(contents, np.uint8), cv2.IMREAD_COLOR)
+    if image is None:
+        raise HTTPException(status_code=400, detail="Invalid image")
+
     with config_lock:
         params = dict(runtime_config)
-    if threshold is not None:
-        params["threshold"] = float(threshold)
-    if topk is not None:
-        params["topk"] = int(topk)
-    if text is not None:
-        params["text"] = text
-    if point_coords:
-        try:
-            params["point_coords"] = json.loads(point_coords)
-        except json.JSONDecodeError as exc:
-            raise HTTPException(status_code=400, detail="point_coords must be JSON") from exc
-    if point_labels:
-        try:
-            params["point_labels"] = json.loads(point_labels)
-        except json.JSONDecodeError as exc:
-            raise HTTPException(status_code=400, detail="point_labels must be JSON") from exc
-
-    if runtime.input_kind == "text":
-        if not text:
-            raise HTTPException(status_code=400, detail="text is required")
-        payload = text
-    else:
-        if file is None:
-            raise HTTPException(status_code=400, detail="file is required")
-        contents = await file.read()
-        if not contents:
-            raise HTTPException(status_code=400, detail="Empty upload")
-        payload = decode_uploaded(contents, runtime.input_kind)
+    if overlay_alpha is not None:
+        params["overlay_alpha"] = validate_overlay_alpha(overlay_alpha)
 
     started = time.perf_counter()
     try:
-        result = run_prediction(payload, params)
-    except HTTPException:
-        raise
+        result = run_prediction(image, params)
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
-    return {"success": True, "model": runtime.name, "inference_time": round(time.perf_counter() - started, 4), "result": result}
+    return {
+        "success": True,
+        "model": runtime.name,
+        "inference_time": round(time.perf_counter() - started, 4),
+        "result": result,
+    }
 
 
 @app.get("/api/video_feed")
 async def video_feed():
     def generate():
         while True:
-            yield b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + get_preview() + b"\r\n"
+            yield (
+                b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
+                + get_preview()
+                + b"\r\n"
+            )
             time.sleep(0.1)
-    return StreamingResponse(generate(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+    return StreamingResponse(
+        generate(),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
 
 
 @app.post("/api/video/upload")
@@ -202,15 +211,22 @@ def analyze_video_file(input_path, output_path):
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS) or 25
-    writer = cv2.VideoWriter(str(output_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+    writer = cv2.VideoWriter(
+        str(output_path),
+        cv2.VideoWriter_fourcc(*"mp4v"),
+        fps,
+        (width, height),
+    )
     frame_index = 0
     try:
         while True:
             ok, frame = cap.read()
             if not ok:
                 break
-            _, preview = runtime.predict(frame, dict(runtime_config))
-            writer.write(preview if preview is not None else frame)
+            with config_lock:
+                params = dict(runtime_config)
+            _, preview = runtime.predict(frame, params)
+            writer.write(preview)
             set_preview(preview)
             frame_index += 1
             analysis_state["progress"] = int(frame_index * 100 / total)
@@ -225,17 +241,22 @@ def analyze_video_file(input_path, output_path):
 
 @app.post("/api/video/analyze")
 async def analyze_video(filename: str = Form(...)):
-    if runtime.input_kind != "image":
-        raise HTTPException(status_code=400, detail="Video analysis is only available for image models")
     filename = safe_filename(filename, {".mp4"})
     source = UPLOADS / filename
     if not source.exists():
         raise HTTPException(status_code=404, detail="Video not found")
     if analysis_state["is_processing"]:
-        raise HTTPException(status_code=409, detail="Another video is being processed")
+        raise HTTPException(
+            status_code=409,
+            detail="Another video is being processed",
+        )
     output = OUTPUTS / f"{source.stem}_result.mp4"
     analysis_state["current_file"] = filename
-    threading.Thread(target=analyze_video_file, args=(source, output), daemon=True).start()
+    threading.Thread(
+        target=analyze_video_file,
+        args=(source, output),
+        daemon=True,
+    ).start()
     return {"status": "started", "output": output.name}
 
 
@@ -246,7 +267,10 @@ async def video_status():
 
 @app.get("/api/video/list")
 async def video_list():
-    return {"uploads": sorted(p.name for p in UPLOADS.glob("*.mp4")), "outputs": sorted(p.name for p in OUTPUTS.glob("*.mp4"))}
+    return {
+        "uploads": sorted(path.name for path in UPLOADS.glob("*.mp4")),
+        "outputs": sorted(path.name for path in OUTPUTS.glob("*.mp4")),
+    }
 
 
 @app.get("/api/video/download/{filename}")
@@ -260,29 +284,119 @@ async def video_download(filename: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    kind = runtime.input_kind if runtime else "file"
-    task = runtime.name if runtime else "model"
-    input_control = '<textarea id="text" placeholder="Enter text"></textarea>' if kind == "text" else '<input id="file" type="file">'
-    return f"""<!doctype html><html><head><meta charset='utf-8'><title>{task}</title>
-<style>body{{font-family:sans-serif;background:#111;color:#eee;max-width:900px;margin:30px auto}}button{{padding:10px 18px;background:#00e676;border:0}}textarea{{width:100%;height:90px}}pre{{background:#222;padding:15px;white-space:pre-wrap}}img{{max-width:100%}}</style></head>
-<body><h1>reComputer RK-CV — {task}</h1><p>Input: {kind} · <a href='/docs' style='color:#00e676'>OpenAPI</a></p>{input_control}<button onclick='run()'>Run inference</button>
-<pre id='result'>Ready</pre><audio id='audio' controls style='display:none;width:100%'></audio><img src='/api/video_feed'><script>async function run(){{let f=new FormData();let file=document.getElementById('file');let text=document.getElementById('text');if(file&&file.files.length)f.append('file',file.files[0]);if(text)f.append('text',text.value);let r=await fetch('/api/models/{task}/predict',{{method:'POST',body:f}});let body=await r.json();document.getElementById('result').textContent=JSON.stringify(body,null,2);let audio=document.getElementById('audio');let encoded=body?.result?.audio_base64;if(encoded){{audio.src='data:audio/wav;base64,'+encoded;audio.style.display='block';}}}}</script></body></html>"""
+    return """<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>DeepLabV3 Semantic Segmentation</title>
+  <style>
+    body { font-family: sans-serif; background: #111; color: #eee; max-width: 960px; margin: 30px auto; }
+    .panel { background: #222; padding: 18px; border-radius: 8px; margin-bottom: 16px; }
+    button { padding: 10px 18px; background: #00e676; border: 0; cursor: pointer; }
+    input[type=file] { margin: 10px 0; }
+    img { max-width: 100%; border: 1px solid #444; }
+    pre { background: #181818; padding: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>DeepLabV3 Semantic Segmentation</h1>
+  <p><a href="/docs" style="color:#00e676">OpenAPI documentation</a></p>
+  <div class="panel">
+    <input id="file" type="file" accept="image/*"><br>
+    <label>Mask opacity: <span id="alphaValue">0.50</span></label>
+    <input id="alpha" type="range" min="0" max="1" step="0.05" value="0.5">
+    <button onclick="run()">Run segmentation</button>
+    <pre id="result">Ready</pre>
+  </div>
+  <img src="/api/video_feed" alt="Segmentation preview">
+  <script>
+    const alpha = document.getElementById("alpha");
+    alpha.oninput = () => {
+      document.getElementById("alphaValue").innerText =
+        Number(alpha.value).toFixed(2);
+    };
+    async function run() {
+      const file = document.getElementById("file");
+      const result = document.getElementById("result");
+      if (!file.files.length) {
+        result.innerText = "Please select an image.";
+        return;
+      }
+      const form = new FormData();
+      form.append("file", file.files[0]);
+      form.append("overlay_alpha", alpha.value);
+      result.innerText = "Running inference...";
+      const response = await fetch("/api/models/deeplabv3/predict", {
+        method: "POST",
+        body: form
+      });
+      result.innerText = JSON.stringify(await response.json(), null, 2);
+    }
+  </script>
+</body>
+</html>"""
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--platform", choices=["rk3576", "rk3588"], required=True)
-    parser.add_argument("--model_dir", default="model")
-    parser.add_argument("--host", default="0.0.0.0")
-    parser.add_argument("--port", type=int, default=8000)
+    parser = argparse.ArgumentParser(
+        description="DeepLabV3 Web service on Rockchip NPU"
+    )
+    parser.add_argument(
+        "--platform",
+        choices=["rk3576", "rk3588"],
+        required=True,
+        help="Target Rockchip platform",
+    )
+    parser.add_argument(
+        "--model_path",
+        default="model/deeplabv3.rknn",
+        help="DeepLabV3 RKNN model path",
+    )
+    parser.add_argument(
+        "--sample_path",
+        default="model/test.jpg",
+        help="Warm-up preview image path",
+    )
+    parser.add_argument(
+        "--overlay_alpha",
+        type=float,
+        default=0.5,
+        help="Initial mask opacity between 0 and 1",
+    )
+    parser.add_argument(
+        "--host",
+        default="0.0.0.0",
+        help="FastAPI listen address",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="FastAPI listen port",
+    )
     args = parser.parse_args()
+
+    alpha = validate_overlay_alpha(args.overlay_alpha)
+    with config_lock:
+        runtime_config["overlay_alpha"] = alpha
+
     global runtime
-    runtime = create_runtime(args.platform, Path(args.model_dir))
+    runtime = create_runtime(
+        args.platform,
+        Path(args.model_path),
+        Path(args.sample_path),
+    )
     try:
-        runtime.warmup_preview(set_preview)
+        runtime.warmup_preview(set_preview, dict(runtime_config))
     except Exception as exc:
         print(f"Sample warmup skipped: {exc}", flush=True)
-    uvicorn.run(app, host=args.host, port=args.port, log_config=None)
+    uvicorn.run(
+        app,
+        host=args.host,
+        port=args.port,
+        log_level="info",
+        log_config=None,
+    )
 
 
 if __name__ == "__main__":

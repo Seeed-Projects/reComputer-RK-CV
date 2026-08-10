@@ -29,4 +29,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)" || exit 1
 
-CMD ["python", "web_detection.py", "--platform", "rk3576", "--model_path", "model/yolo_world_v2s_i8.rknn", "--class_path", "model/detect_classes.txt", "--video_path", "video/test.mp4"]
+CMD ["python3", "web_detection.py", "--platform", "rk3576", "--model_path", "/app/model/yolo_world_v2s_i8.rknn", "--text_model", "/app/model/clip_text_fp16.rknn", "--text_features", "/app/model/coco_text_outp.npy", "--vocab_path", "/app/model/clip_vocab.txt", "--class_path", "/app/model/detect_classes.txt", "--video_path", "/app/video/test.mp4", "--host", "0.0.0.0", "--port", "8000"]

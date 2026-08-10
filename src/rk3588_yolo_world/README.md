@@ -2,103 +2,110 @@
 
 [English] | [中文](./README_zh.md)
 
-This directory provides a standardized YOLO-World deployment for RK3588: RKNN NPU inference, browser preview, REST API, and one-command Docker startup.
+This project provides YOLO-World open-vocabulary detection on RK3588. It runs both the YOLO-World detector and CLIP text encoder on the NPU, so Web and API users can change detection categories with natural-language prompts without rebuilding the model.
+
+> The bundled CLIP model is trained primarily for English. English noun phrases such as `person`, `red bus`, or `traffic light` are recommended.
 
 ## Core Features
 
-- **NPU acceleration**: Runs the YOLO-World RKNN model on the RK3588 NPU through RKNN Toolkit Lite2.
-- **Multiple inputs**: Supports images, MP4 frames, the bundled sample video, and a camera.
-- **Web service**: Includes browser preview, MJPEG streaming, health checks, threshold configuration, and asynchronous video analysis.
-- **Standard output**: Returns class names, confidence scores, bounding boxes, and image dimensions as JSON.
-- **Vision-language detection**: Uses precomputed CLIP embeddings for the bundled 80 COCO categories.
-
-## Directory Structure
-
-- `lib/`: RK3588 RKNN runtime library.
-- `model/yolo_world_v2s_i8.rknn`: Default YOLO-World RKNN model.
-- `model/coco_text_outp.npy`: Precomputed COCO text embeddings with shape `(1, 80, 512)`.
-- `model/detect_classes.txt`: Class names corresponding to the embeddings.
-- `py_utils/`: RKNN executor and detection utilities.
-- `video/test.mp4`: Default sample input.
-- `web_detection.py`: Inference, post-processing, Web preview, and REST API service.
-- `requirements.txt` and `rknn-toolkit-lite2-packages/`: Runtime dependencies.
+- Dynamic natural-language prompts through the Web UI, startup arguments, or REST API.
+- Up to 80 prompt classes, separated by `|`.
+- Offline BPE tokenization through the bundled `clip_vocab.txt`; no Hugging Face download is needed at runtime.
+- Image, MP4-frame, sample-video, and camera inference.
+- MJPEG preview, threshold configuration, and asynchronous video analysis.
 
 ## Quick Start
 
-### Run the published image
+`/dev/dri/renderD129` is the NPU device on the supported reComputer boards. Run:
 
 ```bash
-sudo docker run --rm --privileged --net=host \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
-  -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-yolo_world:latest
-```
-
-Open `http://<BOARD_IP>:8000`. OpenAPI is available at `http://<BOARD_IP>:8000/docs`.
-
-For a camera, add `--device /dev/video0:/dev/video0` and override the command:
-
-```bash
-sudo docker run --rm --privileged --net=host \
-  --device /dev/video0:/dev/video0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+sudo docker run --rm --name rk3588-yolo_world \
+  --privileged \
+  -p 8000:8000 \
+  -v /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-yolo_world:latest \
-  python web_detection.py --platform rk3588 --model_path model/yolo_world_v2s_i8.rknn \
-  --text_features model/coco_text_outp.npy --class_path model/detect_classes.txt --camera_id 0
+  python3 web_detection.py \
+    --platform rk3588 \
+    --model_path /app/model/yolo_world_v2s_i8.rknn \
+    --text_model /app/model/clip_text_fp16.rknn \
+    --text_features /app/model/coco_text_outp.npy \
+    --vocab_path /app/model/clip_vocab.txt \
+    --class_path /app/model/detect_classes.txt \
+    --video_path /app/video/test.mp4 \
+    --host 0.0.0.0 \
+    --port 8000
 ```
 
-### Build locally
+Open `http://<BOARD_IP>:8000`. Enter prompts such as `person|bus|red car`, then apply them to the stream or upload an image for one-off search.
+
+Use `-p 8001:8000` if host port 8000 is occupied. For a camera, replace `--video_path` with `--camera_id 0` and add `--device /dev/video0:/dev/video0`.
+
+### Startup Parameters
+
+| Parameter | Required | Default | Description |
+| --- | --- | --- | --- |
+| `--platform` | Yes | — | Target NPU: `rk3588`. |
+| `--model_path` | Yes | — | Quantized YOLO-World RKNN detector. |
+| `--text_model` | No | `model/clip_text_fp16.rknn` | FP16 CLIP text encoder used for dynamic prompts. |
+| `--text_features` | No | `model/coco_text_outp.npy` | Precomputed `(1,80,512)` COCO features used before prompts are changed. |
+| `--vocab_path` | No | `model/clip_vocab.txt` | Offline CLIP BPE merge vocabulary. |
+| `--class_path` | No | built-in COCO labels | Labels matching the precomputed feature rows. |
+| `--prompts` | No | COCO 80 classes | Initial dynamic prompts, for example `"person|red bus|bicycle"`. |
+| `--video_path` | No | — | Looping local MP4 input; takes precedence over the camera. |
+| `--camera_id` | No | `1` | Camera index; `-1` enables video-analysis-only mode. |
+| `--host` | No | `0.0.0.0` | FastAPI listen address. |
+| `--port` | No | `8000` | Container service port. |
+
+Build locally:
 
 ```bash
 docker build -f docker/rk3588/yolo_world.dockerfile \
   -t rk3588-yolo_world:local src/rk3588_yolo_world
 ```
 
-## API Documentation
+## Natural-Language Prompt API
 
-### Model prediction
+### Read or replace active stream prompts
+
+```bash
+curl http://127.0.0.1:8000/api/prompts
+
+curl -X POST http://127.0.0.1:8000/api/prompts \
+  -H "Content-Type: application/json" \
+  -d '{"text":"person|red bus|traffic light"}'
+```
+
+`POST /api/prompts` encodes every phrase with the CLIP RKNN model and changes the categories used by the live stream and asynchronous video analysis. A JSON list can also be sent as `{"prompts":["person","red bus"]}`.
+
+### One-off image search
 
 **Endpoint:** `POST /api/models/yolo_world/predict`
 **Content type:** `multipart/form-data`
 
-- `file`: Optional image.
-- `video`: Optional MP4; one frame is read.
-- `timestamp`: Optional video timestamp in seconds.
-- `realtime`: Optional camera-frame mode.
-- `conf`: Optional confidence threshold; default `0.25`.
-- `iou`: Optional class-aware NMS IoU threshold; default `0.45`.
-
-Input priority is image, video, then the current camera/sample-video frame.
+- `file`: image upload.
+- `video` and `timestamp`: MP4 upload and frame time in seconds.
+- `realtime`: use the current stream frame.
+- `text`: optional pipe-separated prompts for this request only; it does not replace stream prompts.
+- `conf`: confidence threshold, default `0.25`.
+- `iou`: class-aware NMS IoU threshold, default `0.45`.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/models/yolo_world/predict \
-  -F "file=@model/bus.jpg" -F "conf=0.30" -F "iou=0.45"
+  -F "file=@model/bus.jpg" \
+  -F "text=person|bus|red vehicle" \
+  -F "conf=0.25" \
+  -F "iou=0.45"
 ```
 
-```json
-{
-  "success": true,
-  "source": "uploaded image",
-  "predictions": [
-    {"class": "bus", "confidence": 0.91,
-     "box": {"x1": 120, "y1": 80, "x2": 520, "y2": 430}}
-  ],
-  "image": {"width": 640, "height": 480}
-}
-```
+The response includes the prompts actually used and returns each matching prompt phrase as the detection class.
 
-### Configuration and video endpoints
+## Prompt Rules and Processing
 
-- `GET /api/health`: Runtime, platform, model readiness, and text-feature file.
-- `GET /api/config`: Returns `obj_thresh` and `nms_thresh`.
-- `POST /api/config`: Updates thresholds with JSON, for example `{"obj_thresh": 0.3, "nms_thresh": 0.5}`.
-- `GET /api/video_feed`: MJPEG preview stream.
-- `POST /api/video/upload` and `POST /api/video/analyze`: Upload an MP4 and start analysis using a multipart `filename` field.
-- `GET /api/video/status`, `GET /api/video/list`, `GET /api/video/download/{filename}`: Query and retrieve results.
+- At least 1 and at most 80 non-empty prompts are accepted.
+- Use `|` as the separator because commas may be part of a natural-language phrase.
+- Each CLIP prompt is truncated to a 20-token input; short noun phrases work best.
+- Dynamic embeddings fill the first rows of the detector's fixed 80-row text input. Post-processing ignores padded rows, preventing false detections from unused classes.
+- Repeated prompt sets are cached in memory.
 
-## Developer Guide
-
-`web_detection.py` performs 640×640 letterbox preprocessing, RKNN inference, YOLO-World decoding, class-aware NMS, coordinate restoration, rendering, and API serialization.
-
-The detector uses fixed COCO text embeddings. To change the vocabulary, regenerate a matching `.npy` file, keep its class order aligned with the class file, and pass it through `--text_features`.
+Other endpoints: `GET /api/health`, `GET/POST /api/config`, `GET /api/video_feed`, and the `/api/video/*` upload, analysis, status, list, and download interfaces.

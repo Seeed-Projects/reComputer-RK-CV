@@ -15,6 +15,7 @@ from typing import Optional, List
 
 # 导入共享工具
 from py_utils.coco_utils import COCO_test_helper, post_process, draw, CLASSES
+from py_utils.clip_text import ClipTokenizer, parse_prompts
 
 # 尝试导入RKNN-Toolkit-Lite2
 try:
@@ -174,14 +175,16 @@ class VideoAnalyzer:
                 # 推理流程
                 if self.model and self.co_helper:
                     processed_img = preprocess_frame(frame, local_helper)
-                    outputs = self.model.run(processed_img)
+                    outputs, active_prompts = self.model.run(processed_img)
 
                     if outputs is not None:
                         obj, nms = det_config.get()
-                        boxes, classes, scores = post_process_with_thresh(outputs, obj, nms)
+                        boxes, classes, scores = post_process_with_thresh(
+                            outputs, obj, nms, len(active_prompts)
+                        )
                         if boxes is not None:
                             real_boxes = local_helper.get_real_box(boxes)
-                            draw(frame, real_boxes, scores, classes)
+                            draw(frame, real_boxes, scores, classes, active_prompts)
 
                 out.write(frame)
                 frame_idx += 1
@@ -284,14 +287,39 @@ _global_co_helper = None
 
 @app.get("/api/health")
 async def health():
+    active_prompts = _global_model.get_prompts() if _global_model else ()
     return {
         "status": "ok",
         "model": "yolo_world",
         "platform": getattr(_global_model, "platform", None),
         "model_path": os.path.basename(getattr(_global_model, "model_path", "")),
         "text_features": os.path.basename(getattr(_global_model, "text_features_path", "")),
+        "text_model": os.path.basename(getattr(_global_model, "text_model_path", "")),
+        "prompt_count": len(active_prompts),
+        "prompts": list(active_prompts),
         "model_ready": _global_model is not None,
     }
+
+
+@app.get("/api/prompts")
+async def get_prompts():
+    if _global_model is None:
+        raise HTTPException(status_code=503, detail="Model not initialized")
+    prompts = _global_model.get_prompts()
+    return {"prompts": list(prompts), "count": len(prompts)}
+
+
+@app.post("/api/prompts")
+async def update_prompts(value: dict):
+    if _global_model is None:
+        raise HTTPException(status_code=503, detail="Model not initialized")
+    source = value.get("prompts", value.get("text"))
+    try:
+        prompts = _global_model.set_prompts(source)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"status": "success", "prompts": list(prompts), "count": len(prompts)}
+
 
 @app.post("/api/models/yolo_world/predict")
 async def predict(
@@ -299,6 +327,7 @@ async def predict(
     video: Optional[UploadFile] = File(None),
     timestamp: Optional[float] = Form(None),
     realtime: Optional[bool] = Form(False),
+    text: Optional[str] = Form(None),
     conf: Optional[float] = Form(None),
     iou: Optional[float] = Form(None)
 ):
@@ -351,7 +380,7 @@ async def predict(
         input_img = preprocess_frame(img, request_helper)
 
         # 推理
-        outputs = _global_model.run(input_img)
+        outputs, active_prompts = _global_model.run(input_img, text)
 
         # 使用请求参数或全局配置
         current_obj_thresh, current_nms_thresh = det_config.get()
@@ -359,14 +388,16 @@ async def predict(
         target_iou = iou if iou is not None else current_nms_thresh
 
         # 后处理
-        boxes, classes, scores = post_process_with_thresh(outputs, target_conf, target_iou)
+        boxes, classes, scores = post_process_with_thresh(
+            outputs, target_conf, target_iou, len(active_prompts)
+        )
 
         predictions = []
         if boxes is not None:
             real_boxes = request_helper.get_real_box(boxes)
             for box, score, cl in zip(real_boxes, scores, classes):
                 predictions.append({
-                    "class": CLASSES[cl],
+                    "class": active_prompts[cl],
                     "confidence": float(score),
                     "box": {
                         "x1": int(box[0]),
@@ -379,6 +410,7 @@ async def predict(
         return {
             "success": True,
             "source": source_info,
+            "prompts": list(active_prompts),
             "predictions": predictions,
             "image": {
                 "width": w,
@@ -461,6 +493,12 @@ async def index():
               <div class="video-analysis">
                 <h3>Analyze Local Video</h3>
                 <div class="control-group">
+                  <label>Natural-language prompts (use | to separate classes)</label>
+                  <input id="promptInput" style="width:100%;padding:8px" value="person|bus|car">
+                  <button class="btn" onclick="applyPrompts()">Apply prompts</button>
+                  <span id="promptStatus"></span>
+                </div>
+                <div class="control-group">
                   <label>Upload New Video (.mp4)</label>
                   <input type="file" id="videoUpload" accept=".mp4">
                   <button class="btn" onclick="uploadVideo()">Upload</button>
@@ -492,6 +530,19 @@ async def index():
 
             <script>
               let pollInterval = null;
+
+              async function applyPrompts() {
+                const text = document.getElementById('promptInput').value;
+                const res = await fetch('/api/prompts', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ text })
+                });
+                const data = await res.json();
+                document.getElementById('promptStatus').innerText = res.ok
+                  ? `Active: ${data.prompts.join(' | ')}`
+                  : `Error: ${data.detail || 'request failed'}`;
+              }
 
               async function uploadVideo() {
                 const fileInput = document.getElementById('videoUpload');
@@ -622,6 +673,9 @@ async def index():
           .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
           .slider-container { display: flex; align-items: center; gap: 15px; }
           input[type=range] { flex-grow: 1; cursor: pointer; }
+          input[type=text], input[type=file] { width: 100%; box-sizing: border-box; padding: 8px; margin: 5px 0; }
+          button { background: #00e676; color: #000; border: 0; padding: 9px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+          pre { background: #111; padding: 10px; white-space: pre-wrap; max-height: 220px; overflow: auto; }
           .value-display { min-width: 50px; font-family: monospace; background: #444; padding: 2px 8px; border-radius: 4px; text-align: center; }
           h1 { color: #00e676; }
         </style>
@@ -635,6 +689,20 @@ async def index():
           </div>
 
           <div class="controls">
+            <div class="control-group">
+              <label>Natural-language prompts / 自然语言检索词</label>
+              <input type="text" id="promptInput" value="person|bus|car" placeholder="person|red bus|traffic light">
+              <button onclick="applyPrompts()">Apply to video stream</button>
+              <p id="promptStatus" style="color:#9e9e9e"></p>
+            </div>
+
+            <div class="control-group">
+              <label>Search an uploaded image / 上传图片检索</label>
+              <input type="file" id="imageInput" accept="image/*">
+              <button onclick="searchImage()">Search image</button>
+              <pre id="searchResult">Select an image and enter one or more prompts.</pre>
+            </div>
+
             <div class="control-group">
               <label>Confidence Threshold (置信度阈值)</label>
               <div class="slider-container">
@@ -656,10 +724,45 @@ async def index():
         </div>
 
         <script>
+          const promptInput = document.getElementById('promptInput');
+          const promptStatus = document.getElementById('promptStatus');
           const confSlider = document.getElementById('confSlider');
           const confValue = document.getElementById('confValue');
           const iouSlider = document.getElementById('iouSlider');
           const iouValue = document.getElementById('iouValue');
+
+          async function applyPrompts() {
+            promptStatus.innerText = 'Encoding prompts on the NPU...';
+            const res = await fetch('/api/prompts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ text: promptInput.value })
+            });
+            const data = await res.json();
+            promptStatus.innerText = res.ok
+              ? `Active: ${data.prompts.join(' | ')}`
+              : `Error: ${data.detail || 'request failed'}`;
+          }
+
+          async function searchImage() {
+            const input = document.getElementById('imageInput');
+            const result = document.getElementById('searchResult');
+            if (!input.files.length) {
+              result.innerText = 'Please select an image.';
+              return;
+            }
+            result.innerText = 'Running CLIP text encoding and YOLO-World inference...';
+            const form = new FormData();
+            form.append('file', input.files[0]);
+            form.append('text', promptInput.value);
+            form.append('conf', confSlider.value);
+            form.append('iou', iouSlider.value);
+            const res = await fetch('/api/models/yolo_world/predict', {
+              method: 'POST',
+              body: form
+            });
+            result.innerText = JSON.stringify(await res.json(), null, 2);
+          }
 
           function updateConfig() {
             const obj_thresh = parseFloat(confSlider.value);
@@ -685,6 +788,10 @@ async def index():
             iouSlider.value = data.nms_thresh;
             iouValue.innerText = data.nms_thresh.toFixed(2);
           });
+          fetch('/api/prompts').then(res => res.json()).then(data => {
+            promptInput.value = data.prompts.join('|');
+            promptStatus.innerText = `Active: ${data.prompts.join(' | ')}`;
+          });
         </script>
       </body>
     </html>
@@ -705,10 +812,12 @@ def run_fastapi(host, port):
 
 # --- 推理逻辑 ---
 
-def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
+def post_process_with_thresh(outputs, obj_thresh, nms_thresh, class_count=80):
     """Decode YOLO-World outputs and apply class-aware NMS."""
     if outputs is None:
         return None, None, None
+    if not 1 <= class_count <= 80:
+        raise ValueError(f"YOLO-World class_count must be between 1 and 80, got {class_count}")
 
     if len(outputs) < 6 or len(outputs) % 3 != 0:
         raise ValueError(f"Unexpected YOLO-World output count: {len(outputs)}")
@@ -716,7 +825,7 @@ def post_process_with_thresh(outputs, obj_thresh, nms_thresh):
     decoded_boxes, class_scores = [], []
     for branch in range(3):
         base = branch * output_per_branch
-        class_scores.append(outputs[base])
+        class_scores.append(outputs[base][:, :class_count])
         decoded_boxes.append(box_process(outputs[base + 1]))
 
     def sp_flatten(_in):
@@ -774,68 +883,154 @@ def box_process(position):
 
 # removed duplicated and unused post-processing functions
 
-def post_process(input_data):
+def post_process(input_data, class_count=80):
     obj, nms = det_config.get()
-    return post_process_with_thresh(input_data, obj, nms)
+    return post_process_with_thresh(input_data, obj, nms, class_count)
 
-def draw(image, boxes, scores, classes):
+def draw(image, boxes, scores, classes, labels):
     for box, score, cl in zip(boxes, scores, classes):
         x1, y1, x2, y2 = [int(_b) for _b in box]
         cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
-        cv2.putText(image, '{0} {1:.2f}'.format(CLASSES[cl], score),
+        cv2.putText(image, '{0} {1:.2f}'.format(labels[cl], score),
                         (x1, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
 class RKNNLiteModel:
-    def __init__(self, model_path, platform, text_features_path):
+    def __init__(
+        self,
+        model_path,
+        platform,
+        text_features_path,
+        text_model_path,
+        vocab_path,
+        default_prompts,
+    ):
         if not RKNN_LITE_AVAILABLE:
             raise ImportError("RKNN-Toolkit-Lite2 is not available")
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"RKNN model file not found: {model_path}")
+        for description, path in (
+            ("YOLO-World model", model_path),
+            ("CLIP text model", text_model_path),
+            ("CLIP vocabulary", vocab_path),
+            ("default text features", text_features_path),
+        ):
+            if not os.path.exists(path):
+                raise FileNotFoundError(f"{description} not found: {path}")
+
         self.model_path = model_path
         self.platform = platform
-        if not os.path.exists(text_features_path):
-            raise FileNotFoundError(f"Text feature file not found: {text_features_path}")
         self.text_features_path = text_features_path
-        self.text_features = np.load(text_features_path).astype(np.float32)
-        if self.text_features.shape != (1, 80, 512):
+        self.text_model_path = text_model_path
+        self.vocab_path = vocab_path
+        default_features = np.load(text_features_path).astype(np.float32)
+        if default_features.shape != (1, 80, 512):
             raise ValueError(
-                f"Expected text features with shape (1, 80, 512), got {self.text_features.shape}"
+                "Expected default text features with shape (1, 80, 512), "
+                f"got {default_features.shape}"
             )
+        prompts = parse_prompts(default_prompts)
+        if len(prompts) != 80:
+            raise ValueError(
+                f"The default feature file requires exactly 80 labels, got {len(prompts)}"
+            )
+
+        self.tokenizer = ClipTokenizer(vocab_path)
         self.inference_lock = threading.Lock()
+        self.prompt_lock = threading.Lock()
+        self.text_inference_lock = threading.Lock()
+        self.text_features = default_features
+        self.prompts = prompts
+        self.prompt_cache = {}
+
         self.rknn_lite = RKNNLite()
         print(f'Loading RKNN model from {model_path}...', flush=True)
-        sys.stdout.flush()
         ret = self.rknn_lite.load_rknn(model_path)
         if ret != 0:
-            raise Exception(f"Load RKNN model failed with error code: {ret}")
-        print('Initializing runtime...', flush=True)
-        sys.stdout.flush()
-        core_mask = (
-            RKNNLite.NPU_CORE_0_1
-            if platform == "rk3576"
-            else RKNNLite.NPU_CORE_0_1_2
-        )
-        ret = self.rknn_lite.init_runtime(core_mask=core_mask)
+            raise RuntimeError(f"Load YOLO-World RKNN model failed ({ret})")
+        detector_core = RKNNLite.NPU_CORE_0
+        ret = self.rknn_lite.init_runtime(core_mask=detector_core)
         if ret != 0:
-            raise Exception(f"Init runtime failed with error code: {ret}")
-        print('RKNN model loaded successfully', flush=True)
-        sys.stdout.flush()
+            raise RuntimeError(f"Init YOLO-World runtime failed ({ret})")
 
-    def run(self, inputs):
-        try:
-            if len(inputs.shape) == 3:
-                inputs = np.expand_dims(inputs, axis=0)
-            if inputs.dtype != np.uint8:
-                inputs = inputs.astype(np.uint8)
-            with self.inference_lock:
-                return self.rknn_lite.inference(inputs=[inputs, self.text_features])
-        except Exception as e:
-            print(f"Inference error: {e}")
-            return None
+        self.text_rknn_lite = RKNNLite()
+        print(f'Loading CLIP text model from {text_model_path}...', flush=True)
+        ret = self.text_rknn_lite.load_rknn(text_model_path)
+        if ret != 0:
+            self.rknn_lite.release()
+            raise RuntimeError(f"Load CLIP text RKNN model failed ({ret})")
+        text_core = (
+            RKNNLite.NPU_CORE_1
+            if platform == "rk3576"
+            else RKNNLite.NPU_CORE_2
+        )
+        ret = self.text_rknn_lite.init_runtime(core_mask=text_core)
+        if ret != 0:
+            self.text_rknn_lite.release()
+            self.rknn_lite.release()
+            raise RuntimeError(f"Init CLIP text runtime failed ({ret})")
+        print('YOLO-World and CLIP text models loaded successfully', flush=True)
+
+    def get_prompts(self):
+        with self.prompt_lock:
+            return tuple(self.prompts)
+
+    def encode_prompts(self, value):
+        prompts = parse_prompts(value)
+        cache_key = "\n".join(prompts)
+        with self.prompt_lock:
+            cached = self.prompt_cache.get(cache_key)
+        if cached is not None:
+            return prompts, cached.copy()
+
+        features = np.zeros((1, 80, 512), dtype=np.float32)
+        with self.text_inference_lock:
+            for index, prompt in enumerate(prompts):
+                input_ids = self.tokenizer.encode(prompt)
+                output = self.text_rknn_lite.inference(inputs=[input_ids])
+                if output is None:
+                    raise RuntimeError(f"CLIP text inference failed for prompt: {prompt}")
+                embedding = np.asarray(output[0], dtype=np.float32).reshape(-1)
+                if embedding.size != 512:
+                    raise ValueError(
+                        f"Expected a 512-value CLIP embedding, got {embedding.shape}"
+                    )
+                features[0, index] = embedding
+
+        with self.prompt_lock:
+            if len(self.prompt_cache) >= 32:
+                self.prompt_cache.pop(next(iter(self.prompt_cache)))
+            self.prompt_cache[cache_key] = features.copy()
+        return prompts, features
+
+    def set_prompts(self, value):
+        prompts, features = self.encode_prompts(value)
+        with self.prompt_lock:
+            self.prompts = prompts
+            self.text_features = features
+        return prompts
+
+    def run(self, inputs, prompt_text=None):
+        if len(inputs.shape) == 3:
+            inputs = np.expand_dims(inputs, axis=0)
+        if inputs.dtype != np.uint8:
+            inputs = inputs.astype(np.uint8)
+
+        if prompt_text:
+            prompts, text_features = self.encode_prompts(prompt_text)
+        else:
+            with self.prompt_lock:
+                prompts = tuple(self.prompts)
+                text_features = self.text_features.copy()
+
+        with self.inference_lock:
+            outputs = self.rknn_lite.inference(inputs=[inputs, text_features])
+        if outputs is None:
+            raise RuntimeError("YOLO-World inference returned no output")
+        return outputs, prompts
 
     def release(self):
         if hasattr(self, 'rknn_lite'):
             self.rknn_lite.release()
+        if hasattr(self, 'text_rknn_lite'):
+            self.text_rknn_lite.release()
 
 def preprocess_frame(frame, co_helper):
     img = co_helper.letter_box(im=frame.copy(), new_shape=(IMG_SIZE[1], IMG_SIZE[0]), pad_color=(0,0,0))
@@ -846,6 +1041,9 @@ def main():
     parser = argparse.ArgumentParser(description='Web YOLO-World detection on Rockchip NPU')
     parser.add_argument('--model_path', type=str, required=True, help='RKNN model path')
     parser.add_argument('--text_features', type=str, default='model/coco_text_outp.npy', help='CLIP text feature .npy path')
+    parser.add_argument('--text_model', type=str, default='model/clip_text_fp16.rknn', help='CLIP text RKNN model path')
+    parser.add_argument('--vocab_path', type=str, default='model/clip_vocab.txt', help='Bundled CLIP BPE vocabulary path')
+    parser.add_argument('--prompts', type=str, help='Initial prompts separated by | (maximum 80)')
     parser.add_argument('--platform', choices=['rk3588', 'rk3576'], required=True, help='Target Rockchip platform')
     parser.add_argument('--camera_id', type=int, default=1, help='Camera device ID (default: 1 for /dev/video1)')
     parser.add_argument('--video_path', type=str, help='Path to video file (overrides camera_id)')
@@ -864,7 +1062,17 @@ def main():
 
     global _global_model, _global_co_helper
     # 初始化模型
-    model = RKNNLiteModel(args.model_path, args.platform, args.text_features)
+    model = RKNNLiteModel(
+        args.model_path,
+        args.platform,
+        args.text_features,
+        args.text_model,
+        args.vocab_path,
+        CLASSES,
+    )
+    if args.prompts:
+        active_prompts = model.set_prompts(args.prompts)
+        print(f"Loaded {len(active_prompts)} startup prompts: {active_prompts}", flush=True)
     co_helper = COCO_test_helper(enable_letter_box=True)
 
     # 导出模型为全局变量并设置分析器
@@ -915,14 +1123,14 @@ def main():
             # 推理流程
             processed_img = preprocess_frame(frame, co_helper)
             start_time = time.time()
-            outputs = model.run(processed_img)
+            outputs, active_prompts = model.run(processed_img)
             inference_time = time.time() - start_time
 
             if outputs is not None:
-                boxes, classes, scores = post_process(outputs)
+                boxes, classes, scores = post_process(outputs, len(active_prompts))
                 if boxes is not None:
                     real_boxes = co_helper.get_real_box(boxes)
-                    draw(frame, real_boxes, scores, classes)
+                    draw(frame, real_boxes, scores, classes, active_prompts)
 
             # 计算并显示 FPS
             inf_fps = 1.0 / inference_time if inference_time > 0 else 0
