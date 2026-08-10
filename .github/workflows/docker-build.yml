@@ -8,6 +8,12 @@ on:
       - 'src/rk3576_yolov10/**'
       - 'src/rk3588_yolox/**'
       - 'src/rk3576_yolox/**'
+      - 'src/rk3588_ppyoloe/**'
+      - 'src/rk3576_ppyoloe/**'
+      - 'src/rk3588_yolo_world/**'
+      - 'src/rk3576_yolo_world/**'
+      - 'src/rk3588_deeplabv3/**'
+      - 'src/rk3576_deeplabv3/**'
       - 'src/rk3588_yolo11/**'
       - 'src/rk3576_yolo11/**'
       - 'src/rk3588_yolov8_obb/**'
@@ -59,10 +65,12 @@ jobs:
       max-parallel: 4
       matrix:
         platform: 
-          - rk3588_yolov10
-          - rk3576_yolov10
-          - rk3588_yolox
-          - rk3576_yolox
+          - rk3588_ppyoloe
+          - rk3576_ppyoloe
+          - rk3588_yolo_world
+          - rk3576_yolo_world
+          - rk3588_deeplabv3
+          - rk3576_deeplabv3
     
     steps:
       - name: Checkout Code
