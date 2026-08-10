@@ -18,7 +18,6 @@ on:
       - 'src/rk3576_yolov8_pose/**'
       - 'src/rk3588_yolov8_seg/**'
       - 'src/rk3576_yolov8_seg/**'
-      - 'src/rk3576_yolov8_airborne/**'
       - 'src/rk3588_whisper/**'
       - 'src/rk3576_whisper/**'
       - 'docker/**'
@@ -59,7 +58,6 @@ jobs:
           - rk3576_yolov8_pose
           - rk3588_yolov8_seg
           - rk3576_yolov8_seg
-          - rk3576_yolov8_airborne
           - rk3588_whisper
           - rk3576_whisper
     
