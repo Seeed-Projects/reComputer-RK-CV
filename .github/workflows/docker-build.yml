@@ -62,14 +62,12 @@ jobs:
     strategy:
       fail-fast: false
       # Avoid starting every BuildKit container at once and overwhelming Docker Hub.
-      max-parallel: 4
+      max-parallel: 2
       matrix:
-        platform: 
-          - rk3588_yolo_world
-          - rk3576_yolo_world
+        platform:
           - rk3588_deeplabv3
           - rk3576_deeplabv3
-    
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6

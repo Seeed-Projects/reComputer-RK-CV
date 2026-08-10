@@ -35,6 +35,15 @@ analysis_state = {
     "current_file": "",
     "error": "",
 }
+source_state = {
+    "mode": "web",
+    "source": "",
+    "is_running": False,
+    "frames": 0,
+    "inference_ms": 0.0,
+    "error": "",
+}
+source_lock = threading.Lock()
 
 app = FastAPI(
     title="reComputer RK-CV DeepLabV3 API",
@@ -95,8 +104,8 @@ def get_preview():
     image = np.zeros((360, 640, 3), dtype=np.uint8)
     cv2.putText(
         image,
-        "Upload an image to start",
-        (135, 185),
+        "Waiting for camera, video, or upload",
+        (55, 185),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.9,
         (0, 230, 118),
@@ -114,6 +123,8 @@ def run_prediction(image, params):
 
 @app.get("/api/health")
 async def health():
+    with source_lock:
+        source = dict(source_state)
     return {
         "status": "ok",
         "model": runtime.name if runtime else None,
@@ -121,6 +132,7 @@ async def health():
         "input_kind": runtime.input_kind if runtime else None,
         "model_ready": runtime is not None,
         "models": runtime.model_names if runtime else [],
+        "source": source,
     }
 
 
@@ -202,7 +214,6 @@ async def upload_video(file: UploadFile = File(...)):
 
 
 def analyze_video_file(input_path, output_path):
-    analysis_state.update(is_processing=True, progress=0, error="")
     cap = cv2.VideoCapture(str(input_path))
     if not cap.isOpened():
         analysis_state.update(is_processing=False, error="Cannot open video")
@@ -217,6 +228,13 @@ def analyze_video_file(input_path, output_path):
         fps,
         (width, height),
     )
+    if not writer.isOpened():
+        cap.release()
+        analysis_state.update(
+            is_processing=False,
+            error="Cannot create output video",
+        )
+        return
     frame_index = 0
     try:
         while True:
@@ -225,7 +243,8 @@ def analyze_video_file(input_path, output_path):
                 break
             with config_lock:
                 params = dict(runtime_config)
-            _, preview = runtime.predict(frame, params)
+            with runtime_lock:
+                _, preview = runtime.predict(frame, params)
             writer.write(preview)
             set_preview(preview)
             frame_index += 1
@@ -237,6 +256,74 @@ def analyze_video_file(input_path, output_path):
         cap.release()
         writer.release()
         analysis_state["is_processing"] = False
+
+
+def process_realtime_source(video, camera_id):
+    """Continuously process a camera or local video for the MJPEG preview."""
+    is_video = video is not None
+    source = str(video) if is_video else f"/dev/video{camera_id}"
+    mode = "video" if is_video else "camera"
+    with source_lock:
+        source_state.update(
+            mode=mode,
+            source=source,
+            is_running=False,
+            frames=0,
+            inference_ms=0.0,
+            error="",
+        )
+
+    cap = cv2.VideoCapture(str(video) if is_video else camera_id)
+    if not is_video:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    if not cap.isOpened():
+        error = f"Cannot open {mode} source: {source}"
+        with source_lock:
+            source_state["error"] = error
+        print(error, flush=True)
+        return
+
+    source_fps = cap.get(cv2.CAP_PROP_FPS) if is_video else 0
+    frame_interval = 1.0 / source_fps if source_fps and source_fps > 0 else 0
+    with source_lock:
+        source_state["is_running"] = True
+    print(f"Analyzing {mode} source: {source}", flush=True)
+
+    try:
+        while True:
+            loop_started = time.perf_counter()
+            ok, frame = cap.read()
+            if not ok:
+                if is_video:
+                    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                    time.sleep(0.05)
+                    continue
+                with source_lock:
+                    source_state["error"] = f"Lost camera source: {source}"
+                break
+            with config_lock:
+                params = dict(runtime_config)
+            inference_started = time.perf_counter()
+            try:
+                run_prediction(frame, params)
+            except Exception as exc:
+                with source_lock:
+                    source_state["error"] = str(exc)
+                print(f"Realtime inference failed: {exc}", flush=True)
+                break
+            inference_ms = (time.perf_counter() - inference_started) * 1000
+            with source_lock:
+                source_state["frames"] += 1
+                source_state["inference_ms"] = round(inference_ms, 2)
+            if frame_interval:
+                remaining = frame_interval - (time.perf_counter() - loop_started)
+                if remaining > 0:
+                    time.sleep(remaining)
+    finally:
+        cap.release()
+        with source_lock:
+            source_state["is_running"] = False
 
 
 @app.post("/api/video/analyze")
@@ -251,7 +338,12 @@ async def analyze_video(filename: str = Form(...)):
             detail="Another video is being processed",
         )
     output = OUTPUTS / f"{source.stem}_result.mp4"
-    analysis_state["current_file"] = filename
+    analysis_state.update(
+        is_processing=True,
+        progress=0,
+        current_file=filename,
+        error="",
+    )
     threading.Thread(
         target=analyze_video_file,
         args=(source, output),
@@ -292,30 +384,60 @@ async def index():
   <style>
     body { font-family: sans-serif; background: #111; color: #eee; max-width: 960px; margin: 30px auto; }
     .panel { background: #222; padding: 18px; border-radius: 8px; margin-bottom: 16px; }
+    .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tab { padding: 10px 18px; background: #333; color: #eee; }
+    .tab.active { background: #00e676; color: #111; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     button { padding: 10px 18px; background: #00e676; border: 0; cursor: pointer; }
     input[type=file] { margin: 10px 0; }
     img { max-width: 100%; border: 1px solid #444; }
     pre { background: #181818; padding: 12px; white-space: pre-wrap; }
+    progress { width: 100%; }
+    a { color: #00e676; }
   </style>
 </head>
 <body>
   <h1>DeepLabV3 Semantic Segmentation</h1>
-  <p><a href="/docs" style="color:#00e676">OpenAPI documentation</a></p>
-  <div class="panel">
+  <p><a href="/docs">OpenAPI documentation</a></p>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('preview', this)">Live preview</button>
+    <button class="tab" onclick="showTab('image', this)">Image inference</button>
+    <button class="tab" onclick="showTab('video', this)">Video upload</button>
+  </div>
+  <div id="preview" class="tab-content active panel">
+    <img id="stream" src="/api/video_feed" alt="Segmentation preview">
+    <pre id="sourceStatus">Loading source status...</pre>
+  </div>
+  <div id="image" class="tab-content panel">
     <input id="file" type="file" accept="image/*"><br>
     <label>Mask opacity: <span id="alphaValue">0.50</span></label>
     <input id="alpha" type="range" min="0" max="1" step="0.05" value="0.5">
-    <button onclick="run()">Run segmentation</button>
+    <button onclick="runImage()">Run segmentation</button>
     <pre id="result">Ready</pre>
   </div>
-  <img src="/api/video_feed" alt="Segmentation preview">
+  <div id="video" class="tab-content panel">
+    <input id="videoFile" type="file" accept=".mp4,video/mp4">
+    <button onclick="uploadVideo()">Upload</button>
+    <p><progress id="progress" max="100" value="0"></progress> <span id="progressText">0%</span></p>
+    <pre id="videoStatus">Choose an MP4 file.</pre>
+    <button onclick="refreshFiles()">Refresh files</button>
+    <div id="files"></div>
+  </div>
   <script>
+    function showTab(id, button) {
+      document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      button.classList.add('active');
+      if (id === 'video') refreshFiles();
+    }
     const alpha = document.getElementById("alpha");
     alpha.oninput = () => {
       document.getElementById("alphaValue").innerText =
         Number(alpha.value).toFixed(2);
     };
-    async function run() {
+    async function runImage() {
       const file = document.getElementById("file");
       const result = document.getElementById("result");
       if (!file.files.length) {
@@ -332,6 +454,50 @@ async def index():
       });
       result.innerText = JSON.stringify(await response.json(), null, 2);
     }
+    async function uploadVideo() {
+      const input = document.getElementById('videoFile');
+      if (!input.files.length) return;
+      const form = new FormData();
+      form.append('file', input.files[0]);
+      const response = await fetch('/api/video/upload', {method: 'POST', body: form});
+      const data = await response.json();
+      if (!response.ok) {
+        document.getElementById('videoStatus').innerText = JSON.stringify(data, null, 2);
+        return;
+      }
+      await refreshFiles();
+      await analyzeVideo(data.filename);
+    }
+    async function analyzeVideo(filename) {
+      const form = new FormData();
+      form.append('filename', filename);
+      const response = await fetch('/api/video/analyze', {method: 'POST', body: form});
+      document.getElementById('videoStatus').innerText =
+        JSON.stringify(await response.json(), null, 2);
+    }
+    async function refreshFiles() {
+      const data = await (await fetch('/api/video/list')).json();
+      document.getElementById('files').innerHTML =
+        '<h3>Uploads</h3>' + data.uploads.map(f =>
+          `<p>${f} <button onclick="analyzeVideo('${f}')">Analyze</button></p>`).join('') +
+        '<h3>Results</h3>' + data.outputs.map(f =>
+          `<p><a href="/api/video/download/${f}">${f}</a></p>`).join('');
+    }
+    let wasProcessing = false;
+    async function updateStatus() {
+      const health = await (await fetch('/api/health')).json();
+      document.getElementById('sourceStatus').innerText = JSON.stringify(health.source, null, 2);
+      const state = await (await fetch('/api/video/status')).json();
+      document.getElementById('progress').value = state.progress;
+      document.getElementById('progressText').innerText = state.progress + '%';
+      if (state.is_processing || state.error) {
+        document.getElementById('videoStatus').innerText = JSON.stringify(state, null, 2);
+      }
+      if (wasProcessing && !state.is_processing && state.progress === 100) refreshFiles();
+      wasProcessing = state.is_processing;
+    }
+    setInterval(updateStatus, 1000);
+    updateStatus();
   </script>
 </body>
 </html>"""
@@ -364,6 +530,18 @@ def main():
         help="Initial mask opacity between 0 and 1",
     )
     parser.add_argument(
+        "--camera_id",
+        type=int,
+        default=-1,
+        help="Camera device ID; -1 enables Web-upload-only mode",
+    )
+    parser.add_argument(
+        "--video",
+        "--video_path",
+        dest="video",
+        help="Local video path; overrides camera_id and loops continuously",
+    )
+    parser.add_argument(
         "--host",
         default="0.0.0.0",
         help="FastAPI listen address",
@@ -390,6 +568,17 @@ def main():
         runtime.warmup_preview(set_preview, dict(runtime_config))
     except Exception as exc:
         print(f"Sample warmup skipped: {exc}", flush=True)
+    if args.video or args.camera_id >= 0:
+        threading.Thread(
+            target=process_realtime_source,
+            args=(args.video, args.camera_id),
+            daemon=True,
+        ).start()
+    else:
+        print(
+            "Running in Web-upload-only mode (camera_id=-1)",
+            flush=True,
+        )
     uvicorn.run(
         app,
         host=args.host,
