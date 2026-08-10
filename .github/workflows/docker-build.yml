@@ -4,6 +4,10 @@ on:
   push:
     branches: [main, master]
     paths:
+      - 'src/rk3588_yolov10/**'
+      - 'src/rk3576_yolov10/**'
+      - 'src/rk3588_yolox/**'
+      - 'src/rk3576_yolox/**'
       - 'src/rk3588_yolo11/**'
       - 'src/rk3576_yolo11/**'
       - 'src/rk3588_yolov8_obb/**'
@@ -55,10 +59,10 @@ jobs:
       max-parallel: 4
       matrix:
         platform: 
-          - rk3588_yolov6
-          - rk3576_yolov6
-          - rk3588_yolov7
-          - rk3576_yolov7
+          - rk3588_yolov10
+          - rk3576_yolov10
+          - rk3588_yolox
+          - rk3576_yolox
     
     steps:
       - name: Checkout Code
