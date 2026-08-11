@@ -14,13 +14,17 @@ class Runtime:
     def predict(self,image,params):
         original=image.copy(); h,w=image.shape[:2]; nh,nw=self.resized_shape(h,w)
         rgb=cv2.cvtColor(image,cv2.COLOR_BGR2RGB); rgb=cv2.resize(rgb,(nw,nh)); rgb=cv2.copyMakeBorder(rgb,0,SIZE-nh,0,SIZE-nw,cv2.BORDER_CONSTANT,value=0).astype(np.float32)[None]
-        embedding=self.encoder.run(rgb)[0]
+        embedding=np.asarray(self.encoder.run(rgb)[0])
+        if embedding.shape == (1,256,28,28):
+            embedding=np.ascontiguousarray(embedding.transpose(0,2,3,1))
+        elif embedding.shape != (1,28,28,256):
+            raise RuntimeError(f'Unexpected MobileSAM embedding shape: {embedding.shape}')
         coords=np.asarray(params.get('point_coords',[[190,70],[460,280]]),dtype=np.float32).reshape(1,-1,2)
         labels=np.asarray(params.get('point_labels',[2,3]),dtype=np.float32).reshape(1,-1)
         if coords.shape[1] != 2 or labels.shape[1] != 2: raise ValueError('This converted decoder requires exactly two prompt points')
         coords[...,0]*=nw/w; coords[...,1]*=nh/h
-        mask_input=np.zeros((1,1,112,112),dtype=np.float32); has_mask=np.zeros(1,dtype=np.float32)
-        scores,masks=self.decoder.run([embedding,coords,labels,mask_input,has_mask],data_format='nchw')[:2]
+        mask_input=np.zeros((1,112,112,1),dtype=np.float32); has_mask=np.zeros(1,dtype=np.float32)
+        scores,masks=self.decoder.run([embedding,coords,labels,mask_input,has_mask])[:2]
         best=int(np.argmax(np.asarray(scores).reshape(-1))); low=np.asarray(masks)[0,best]
         resized=cv2.resize(low,(SIZE,SIZE),interpolation=cv2.INTER_LINEAR)[:nh,:nw]
         mask=cv2.resize(resized,(w,h),interpolation=cv2.INTER_LINEAR)>0

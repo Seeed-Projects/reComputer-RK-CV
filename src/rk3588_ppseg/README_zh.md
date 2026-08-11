@@ -25,14 +25,17 @@
 
 ```bash
 sudo docker run --rm --name rk3588-ppseg \
-  --privileged \
-  -p 8000:8000 \
-  -v /dev/dri/renderD129:/dev/dri/renderD129 \
+  --privileged --net=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-ppseg:latest
+  ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-ppseg:latest \
+  python web_service.py --platform rk3588 --model_dir /app/model \
+    --camera_id -1 --host 0.0.0.0 --port 8000
 ```
 
-访问 `http://<开发板IP>:8000` 查看预览页面，访问 `http://<开发板IP>:8000/docs` 查看 OpenAPI。若宿主机 8000 端口被占用，可改用 `-p 8001:8000`。
+访问 `http://<开发板IP>:8000` 查看预览页面，访问 `http://<开发板IP>:8000/docs` 查看 OpenAPI。命令使用 `--net=host`；若 8000 端口被占用，请修改 `--port`。
 
 ### 2. 调用本地摄像头
 
@@ -40,10 +43,11 @@ sudo docker run --rm --name rk3588-ppseg \
 
 ```bash
 sudo docker run --rm --name rk3588-ppseg-camera \
-  --privileged \
-  -p 8000:8000 \
+  --privileged --net=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
   --device /dev/video0:/dev/video0 \
-  -v /dev/dri/renderD129:/dev/dri/renderD129 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-ppseg:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -56,17 +60,17 @@ sudo docker run --rm --name rk3588-ppseg-camera \
 
 ```bash
 sudo docker run --rm --name rk3588-ppseg-video \
-  --privileged \
-  -p 8000:8000 \
-  -v /dev/dri/renderD129:/dev/dri/renderD129 \
+  --privileged --net=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  -v /本机绝对路径/input.mp4:/data/input.mp4:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-ppseg:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
-    --video_path /data/input.mp4 --host 0.0.0.0 --port 8000
+    --video video/test.mp4 --host 0.0.0.0 --port 8000
 ```
 
-`--video_path` 优先于 `--camera_id`，并在视频结束后自动循环，以保持 Web 实时预览；`--video` 是等价别名。
+`--video` 与 `--video_path` 等价，均优先于 `--camera_id`，并在视频结束后自动循环，以保持 Web 实时预览。上面的命令直接使用镜像内置的 `video/test.mp4`。
 
 ### 4. 仅 Web 上传模式
 
@@ -93,6 +97,8 @@ Docker 镜像已提供以下默认参数：
 | `--video_path`、`--video` | 否 | — | 本地视频路径，优先于 `--camera_id` 并循环播放。 |
 | `--host` | 否 | `0.0.0.0` | FastAPI 监听地址。 |
 | `--port` | 否 | `8000` | 容器内部服务端口。 |
+
+`PYTHONUNBUFFERED=1` 让服务日志即时输出；`RKNN_LOG_LEVEL=0` 会隐藏已确认无害的静态模型初始化提示。排查 RKNN 初始化问题时可去掉后一个环境变量。`renderD129` 是已在 RK3588 开发板上验证的 NPU 节点；如设备节点不同，请以本机 `/dev/dri/` 为准。
 
 ## API 接口文档
 

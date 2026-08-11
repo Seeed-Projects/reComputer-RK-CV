@@ -27,14 +27,17 @@ This directory packages Mobile Segment Anything (MobileSAM) as a standard reComp
 
 ```bash
 sudo docker run --rm --name rk3576-mobilesam \
-  --privileged \
-  -p 8000:8000 \
-  -v /dev/dri/renderD129:/dev/dri/renderD129 \
+  --privileged --net=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-mobilesam:latest
+  ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-mobilesam:latest \
+  python web_service.py --platform rk3576 --model_dir /app/model \
+    --camera_id -1 --host 0.0.0.0 --port 8000
 ```
 
-Open `http://<BOARD_IP>:8000` for image upload and result preview. Open `http://<BOARD_IP>:8000/docs` to supply custom prompts through OpenAPI. If host port 8000 is occupied, use `-p 8001:8000`.
+Open `http://<BOARD_IP>:8000` for image upload and result preview. Open `http://<BOARD_IP>:8000/docs` to supply custom prompts through OpenAPI. Because `--net=host` is used, change `--port` if port 8000 is occupied.
 
 ### 2. Analyze a Local Camera
 
@@ -42,10 +45,11 @@ Map the capture node and pass its numeric ID. This example uses `/dev/video0`:
 
 ```bash
 sudo docker run --rm --name rk3576-mobilesam-camera \
-  --privileged \
-  -p 8000:8000 \
+  --privileged --net=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
   --device /dev/video0:/dev/video0 \
-  -v /dev/dri/renderD129:/dev/dri/renderD129 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-mobilesam:latest \
   python web_service.py --platform rk3576 --model_dir /app/model \
@@ -58,17 +62,17 @@ For `/dev/video1`, map that node and use `--camera_id 1`. Frames are processed c
 
 ```bash
 sudo docker run --rm --name rk3576-mobilesam-video \
-  --privileged \
-  -p 8000:8000 \
-  -v /dev/dri/renderD129:/dev/dri/renderD129 \
+  --privileged --net=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  -v /absolute/path/input.mp4:/data/input.mp4:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3576-mobilesam:latest \
   python web_service.py --platform rk3576 --model_dir /app/model \
-    --video_path /data/input.mp4 --host 0.0.0.0 --port 8000
+    --video video/test.mp4 --host 0.0.0.0 --port 8000
 ```
 
-`--video_path` takes precedence over `--camera_id` and loops the file for continuous Web preview. `--video` is an equivalent alias.
+`--video` and `--video_path` are equivalent. Either option takes precedence over `--camera_id` and loops the file for continuous Web preview. The command above uses the image's built-in `video/test.mp4`.
 
 ### 4. Web-upload-only Mode
 
@@ -91,6 +95,8 @@ docker build -f docker/rk3576/mobilesam.dockerfile \
 | `--video_path`, `--video` | No | — | Local video path. Overrides `--camera_id` and loops continuously. |
 | `--host` | No | `0.0.0.0` | FastAPI listen address. |
 | `--port` | No | `8000` | Service port inside the container. |
+
+`PYTHONUNBUFFERED=1` flushes service logs immediately. `RKNN_LOG_LEVEL=0` hides known harmless static-model initialization messages; remove it when diagnosing RKNN startup. `renderD129` is the NPU node verified on the RK3576 test board; check `/dev/dri/` if your board exposes a different node.
 
 ## API Documentation
 

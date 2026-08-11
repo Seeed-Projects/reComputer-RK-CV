@@ -55,7 +55,6 @@ def PriorBox(image_size): #image_size Support (320,320) and (640,640)
                 for cy, cx in product(dense_cy, dense_cx):
                     anchors += [cx, cy, s_kx, s_ky]
     output = np.array(anchors).reshape(-1, 4)
-    print("image_size:",image_size," num_priors=",output.shape[0])
     return output
 
 def box_decode(loc, priors):

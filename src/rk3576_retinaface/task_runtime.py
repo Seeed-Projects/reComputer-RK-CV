@@ -6,11 +6,11 @@ from py_utils.retinaface_official import PriorBox, box_decode, decode_landm, let
 class Runtime:
     name='retinaface'; input_kind='image'
     def __init__(self,platform,model_dir):
-        self.platform=platform; self.model_dir=Path(model_dir); self.model=RKNNModel(self.model_dir/'retinaface_mobile.rknn',platform); self.model_names=['retinaface_mobile.rknn','retinaface_resnet50.rknn']
+        self.platform=platform; self.model_dir=Path(model_dir); self.model=RKNNModel(self.model_dir/'retinaface_mobile.rknn',platform); self.model_names=['retinaface_mobile.rknn','retinaface_resnet50.rknn']; self.input_size=320; self.priors=PriorBox((self.input_size,self.input_size))
     def predict(self,image,params):
-        preview=image.copy(); h,w=image.shape[:2]; size=320
+        preview=image.copy(); h,w=image.shape[:2]; size=self.input_size
         letter,ratio,ox,oy=letterbox_resize(image,(size,size),114); outputs=self.model.run(letter[...,::-1][None]); loc,conf,landmarks=outputs
-        priors=PriorBox((size,size)); boxes=box_decode(loc.squeeze(0),priors)*np.array([size]*4); scores=conf.squeeze(0)[:,1]; landmarks=decode_landm(landmarks.squeeze(0),priors)*np.array([size]*10)
+        priors=self.priors; boxes=box_decode(loc.squeeze(0),priors)*np.array([size]*4); scores=conf.squeeze(0)[:,1]; landmarks=decode_landm(landmarks.squeeze(0),priors)*np.array([size]*10)
         boxes[...,0::2]=np.clip((boxes[...,0::2]-ox)/ratio,0,w); boxes[...,1::2]=np.clip((boxes[...,1::2]-oy)/ratio,0,h); landmarks[...,0::2]=np.clip((landmarks[...,0::2]-ox)/ratio,0,w); landmarks[...,1::2]=np.clip((landmarks[...,1::2]-oy)/ratio,0,h)
         threshold=float(params.get('threshold',0.25)); inds=np.where(scores>0.02)[0]; boxes,landmarks,scores=boxes[inds],landmarks[inds],scores[inds]; order=scores.argsort()[::-1]; boxes,landmarks,scores=boxes[order],landmarks[order],scores[order]; dets=np.hstack((boxes,scores[:,None])).astype(np.float32); keep=nms(dets,0.5)
         result=[]
