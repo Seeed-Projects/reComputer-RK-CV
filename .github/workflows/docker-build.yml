@@ -14,6 +14,12 @@ on:
       - 'src/rk3576_yolo_world/**'
       - 'src/rk3588_deeplabv3/**'
       - 'src/rk3576_deeplabv3/**'
+      - 'src/rk3588_ppseg/**'
+      - 'src/rk3576_ppseg/**'
+      - 'src/rk3588_mobilesam/**'
+      - 'src/rk3576_mobilesam/**'
+      - 'src/rk3588_retinaface/**'
+      - 'src/rk3576_retinaface/**'
       - 'src/rk3588_yolo11/**'
       - 'src/rk3576_yolo11/**'
       - 'src/rk3588_yolov8_obb/**'
@@ -62,11 +68,15 @@ jobs:
     strategy:
       fail-fast: false
       # Avoid starting every BuildKit container at once and overwhelming Docker Hub.
-      max-parallel: 2
+      max-parallel: 3
       matrix:
         platform:
-          - rk3588_deeplabv3
-          - rk3576_deeplabv3
+          - rk3588_ppseg
+          - rk3576_ppseg
+          - rk3588_mobilesam
+          - rk3576_mobilesam
+          - rk3588_retinaface
+          - rk3576_retinaface
 
     steps:
       - name: Checkout Code
