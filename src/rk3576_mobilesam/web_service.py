@@ -28,7 +28,12 @@ OUTPUTS.mkdir(parents=True, exist_ok=True)
 runtime = None
 runtime_lock = threading.Lock()
 config_lock = threading.Lock()
-runtime_config = {"threshold": 0.25, "topk": 5}
+runtime_config = {
+    "threshold": 0.25,
+    "topk": 5,
+    "point_coords": None,
+    "point_labels": None,
+}
 last_preview = None
 preview_lock = threading.Lock()
 analysis_state = {"is_processing": False, "progress": 0, "current_file": "", "error": ""}
@@ -43,6 +48,30 @@ source_state = {
 source_lock = threading.Lock()
 
 app = FastAPI(title="reComputer RK-CV Standard Model API", version="1.0.0")
+
+
+def validate_prompt(point_coords, point_labels):
+    if point_coords is None and point_labels is None:
+        return None, None
+    try:
+        coords = np.asarray(point_coords, dtype=np.float32)
+        labels = np.asarray(point_labels, dtype=np.int32)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("point_coords and point_labels must be numeric arrays") from exc
+    if coords.shape != (2, 2) or labels.shape != (2,):
+        raise ValueError("MobileSAM requires exactly two coordinates and two labels")
+    if not np.isfinite(coords).all() or (coords < 0).any():
+        raise ValueError("point coordinates must be finite, non-negative values")
+    label_values = labels.tolist()
+    if label_values != [2, 3] and any(label not in (-1, 0, 1) for label in label_values):
+        raise ValueError("use labels [2,3] for a box, or -1/0/1 for point prompts")
+    if label_values == [2, 3] and (
+        coords[0, 0] >= coords[1, 0] or coords[0, 1] >= coords[1, 1]
+    ):
+        raise ValueError("box coordinates must be ordered from top-left to bottom-right")
+    if label_values != [2, 3] and all(label == -1 for label in label_values):
+        raise ValueError("at least one foreground or background point is required")
+    return coords.astype(float).tolist(), label_values
 
 
 def safe_filename(filename, allowed=None):
@@ -130,6 +159,15 @@ async def update_config(value: dict):
             if not 1 <= topk <= 100:
                 raise HTTPException(status_code=400, detail="topk must be between 1 and 100")
             runtime_config["topk"] = topk
+        if "point_coords" in value or "point_labels" in value:
+            try:
+                coords, labels = validate_prompt(
+                    value.get("point_coords"), value.get("point_labels")
+                )
+            except ValueError as exc:
+                raise HTTPException(status_code=400, detail=str(exc)) from exc
+            runtime_config["point_coords"] = coords
+            runtime_config["point_labels"] = labels
         return dict(runtime_config)
 
 
@@ -163,6 +201,13 @@ async def predict(
             params["point_labels"] = json.loads(point_labels)
         except json.JSONDecodeError as exc:
             raise HTTPException(status_code=400, detail="point_labels must be JSON") from exc
+    if "point_coords" in params or "point_labels" in params:
+        try:
+            params["point_coords"], params["point_labels"] = validate_prompt(
+                params.get("point_coords"), params.get("point_labels")
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     if runtime.input_kind == "text":
         if not text:
@@ -351,13 +396,50 @@ async def video_download(filename: str):
 
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    kind = runtime.input_kind if runtime else "file"
     task = runtime.name if runtime else "model"
-    input_control = '<textarea id="text" placeholder="Enter text"></textarea>' if kind == "text" else '<input id="file" type="file">'
-    return f"""<!doctype html><html><head><meta charset='utf-8'><title>{task}</title>
-<style>body{{font-family:sans-serif;background:#111;color:#eee;max-width:900px;margin:30px auto}}button{{padding:10px 18px;background:#00e676;border:0}}textarea{{width:100%;height:90px}}pre{{background:#222;padding:15px;white-space:pre-wrap}}img{{max-width:100%}}</style></head>
-<body><h1>reComputer RK-CV — {task}</h1><p>Input: {kind} · <a href='/docs' style='color:#00e676'>OpenAPI</a></p>{input_control}<button onclick='run()'>Run inference</button>
-<pre id='result'>Ready</pre><img src='/api/video_feed'><pre id='source'>Loading source status...</pre><script>async function run(){{let f=new FormData();let file=document.getElementById('file');let text=document.getElementById('text');if(file&&file.files.length)f.append('file',file.files[0]);if(text)f.append('text',text.value);let r=await fetch('/api/models/{task}/predict',{{method:'POST',body:f}});let body=await r.json();document.getElementById('result').textContent=JSON.stringify(body,null,2);}}async function status(){{let body=await(await fetch('/api/health')).json();document.getElementById('source').textContent=JSON.stringify(body.source,null,2);}}setInterval(status,1000);status();</script></body></html>"""
+    html = """<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MobileSAM interactive segmentation</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#111;color:#eee;max-width:1080px;margin:24px auto;padding:0 16px}
+a{color:#00e676}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.toolbar button,label{padding:9px 14px;border:1px solid #444;border-radius:6px;background:#222;color:#eee;cursor:pointer}.toolbar button.active{background:#00a853;border-color:#00e676}.toolbar button.primary{background:#00c853;color:#071b0d;border:0}.viewer{position:relative;display:inline-block;max-width:100%;line-height:0;background:#222}.viewer img{display:block;max-width:100%;height:auto}.viewer canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}.hint{color:#bbb;line-height:1.5}.status{display:grid;grid-template-columns:1fr 1fr;gap:12px}pre{background:#222;padding:12px;white-space:pre-wrap;overflow:auto;min-height:56px}@media(max-width:700px){.status{grid-template-columns:1fr}}
+</style></head><body>
+<h1>MobileSAM interactive segmentation</h1>
+<p class="hint">Drag a green box around a target, or add foreground/background points. The prompt is applied immediately to camera and video frames. With no custom prompt, the full image is used.</p>
+<div class="toolbar">
+  <button id="boxMode" class="active" onclick="setMode('box')">Box / 框选</button>
+  <button id="fgMode" onclick="setMode('foreground')">Foreground point / 前景点</button>
+  <button id="bgMode" onclick="setMode('background')">Background point / 背景点</button>
+  <button onclick="useFullImage()">Full image / 全画面</button>
+</div>
+<div class="viewer"><img id="preview" src="/api/video_feed"><canvas id="promptCanvas"></canvas></div>
+<div class="toolbar">
+  <label>Upload image / 上传图片 <input id="file" type="file" accept="image/*"></label>
+  <button class="primary" onclick="runUpload()">Run uploaded image / 分析上传图片</button>
+  <a href="/docs">OpenAPI</a>
+</div>
+<p class="hint">Green point = foreground, red point = background. The converted decoder accepts two prompt slots; a single point is automatically padded.</p>
+<div class="status"><pre id="promptStatus">Loading prompt...</pre><pre id="source">Loading source status...</pre></div><pre id="result">Ready</pre>
+<script>
+const task='__TASK__', img=document.getElementById('preview'), canvas=document.getElementById('promptCanvas'), ctx=canvas.getContext('2d');
+let mode='box', dragging=false, start=null, draft=null, points=[], activePrompt=null;
+function setMode(next){mode=next;if(next==='box')points=[];document.querySelectorAll('.toolbar button[id]').forEach(b=>b.classList.remove('active'));document.getElementById(next==='box'?'boxMode':next==='foreground'?'fgMode':'bgMode').classList.add('active');draw();}
+function imagePoint(event){const r=canvas.getBoundingClientRect(),w=img.naturalWidth||canvas.width,h=img.naturalHeight||canvas.height;return [Math.max(0,Math.min(w-1,(event.clientX-r.left)*w/r.width)),Math.max(0,Math.min(h-1,(event.clientY-r.top)*h/r.height))];}
+function canvasPoint(p){const w=img.naturalWidth||1,h=img.naturalHeight||1;return [p[0]*canvas.width/w,p[1]*canvas.height/h];}
+function resizeCanvas(){const r=img.getBoundingClientRect();const w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}draw();}
+function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.lineWidth=3;ctx.font='14px sans-serif';if(draft){let a=canvasPoint(draft[0]),b=canvasPoint(draft[1]);ctx.strokeStyle='#00e676';ctx.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);}if(activePrompt&&activePrompt.point_coords){let c=activePrompt.point_coords,l=activePrompt.point_labels;if(l[0]===2&&l[1]===3){let a=canvasPoint(c[0]),b=canvasPoint(c[1]);ctx.strokeStyle='#00e676';ctx.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);}else{c.forEach((p,i)=>{if(l[i]===-1)return;let q=canvasPoint(p);ctx.beginPath();ctx.arc(q[0],q[1],7,0,Math.PI*2);ctx.fillStyle=l[i]===1?'#00e676':'#ff3d00';ctx.fill();ctx.strokeStyle='#fff';ctx.stroke();});}}}
+async function savePrompt(coords,labels){let r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point_coords:coords,point_labels:labels})});let body=await r.json();if(!r.ok)throw new Error(body.detail||'Cannot update prompt');activePrompt={point_coords:body.point_coords,point_labels:body.point_labels};showPrompt();draw();}
+async function useFullImage(){points=[];draft=null;await savePrompt(null,null);}
+function showPrompt(){document.getElementById('promptStatus').textContent=activePrompt&&activePrompt.point_coords?'Prompt: '+JSON.stringify(activePrompt):'Prompt: full image / 全画面';}
+canvas.addEventListener('pointerdown',e=>{if(mode==='box'){dragging=true;start=imagePoint(e);draft=[start,start];canvas.setPointerCapture(e.pointerId);}else{let p=imagePoint(e),label=mode==='foreground'?1:0;points.push({p,label});if(points.length>2)points.shift();let coords=points.map(x=>x.p),labels=points.map(x=>x.label);if(coords.length===1){coords.push(coords[0]);labels.push(-1);}savePrompt(coords,labels).catch(showError);}});
+canvas.addEventListener('pointermove',e=>{if(dragging){draft=[start,imagePoint(e)];draw();}});
+canvas.addEventListener('pointerup',e=>{if(!dragging)return;dragging=false;points=[];let end=imagePoint(e),x1=Math.min(start[0],end[0]),y1=Math.min(start[1],end[1]),x2=Math.max(start[0],end[0]),y2=Math.max(start[1],end[1]);draft=null;if(x2-x1<3||y2-y1<3){draw();return;}savePrompt([[x1,y1],[x2,y2]],[2,3]).catch(showError);});
+function showError(e){document.getElementById('result').textContent='Error: '+e.message;}
+async function runUpload(){let file=document.getElementById('file');if(!file.files.length){showError(new Error('Choose an image first'));return;}let f=new FormData();f.append('file',file.files[0]);let r=await fetch('/api/models/'+task+'/predict',{method:'POST',body:f}),body=await r.json();document.getElementById('result').textContent=JSON.stringify(body,null,2);if(r.ok)img.src='/api/video_feed?ts='+Date.now();}
+async function refresh(){try{let [health,config]=await Promise.all([fetch('/api/health').then(r=>r.json()),fetch('/api/config').then(r=>r.json())]);document.getElementById('source').textContent=JSON.stringify(health.source,null,2);activePrompt={point_coords:config.point_coords,point_labels:config.point_labels};showPrompt();draw();}catch(e){showError(e)}}
+document.getElementById('file').addEventListener('change',e=>{if(e.target.files.length)img.src=URL.createObjectURL(e.target.files[0]);});new ResizeObserver(resizeCanvas).observe(img);img.addEventListener('load',resizeCanvas);setInterval(refresh,1000);refresh();
+</script></body></html>"""
+    return html.replace("__TASK__", task)
 
 
 def main():

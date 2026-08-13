@@ -7,7 +7,7 @@ This directory packages Mobile Segment Anything (MobileSAM) as a standard reComp
 ## Core Features
 
 - Runs the MobileSAM encoder and decoder on the RK3576 NPU with RKNN-Toolkit-Lite2.
-- Accepts point or box prompts through `point_coords` and `point_labels`.
+- Provides browser box drawing plus foreground/background point prompts for live sources and uploaded images.
 - Returns mask quality scores, the selected mask index, and mask pixel count.
 - Supports image inference, MJPEG result preview, uploaded MP4 analysis, OpenAPI, and Docker deployment.
 
@@ -37,7 +37,17 @@ sudo docker run --rm --name rk3576-mobilesam \
     --camera_id -1 --host 0.0.0.0 --port 8000
 ```
 
-Open `http://<BOARD_IP>:8000` for image upload and result preview. Open `http://<BOARD_IP>:8000/docs` to supply custom prompts through OpenAPI. Because `--net=host` is used, change `--port` if port 8000 is occupied.
+Open `http://<BOARD_IP>:8000` for interactive segmentation or `http://<BOARD_IP>:8000/docs` for OpenAPI. Because `--net=host` is used, change `--port` if port 8000 is occupied.
+
+### Web Prompt Interaction
+
+- **Box:** select **Box**, then drag from the target's top-left to bottom-right corner.
+- **Foreground point:** select **Foreground point**, then click inside the target. Green dots mark foreground prompts.
+- **Background point:** select **Background point**, then click an area to exclude. Red dots mark background prompts. You can switch between foreground and background modes to combine two points.
+- **Full image:** clears the custom prompt. The service then uses a box matching the current frame instead of the former fixed small box.
+- **Uploaded image:** choose an image first, draw or click on its browser preview, then select **Run uploaded image**.
+
+The current prompt is shared by camera, local-video, uploaded-video, and image inference. Updating it on the Web page affects subsequent frames without restarting the container.
 
 ### 2. Analyze a Local Camera
 
@@ -109,8 +119,8 @@ docker build -f docker/rk3576/mobilesam.dockerfile \
 | Field | Required | Description |
 | --- | --- | --- |
 | `file` | Yes | Image decodable by OpenCV. |
-| `point_coords` | No | JSON array containing exactly two source-image coordinates; default `[[190,70],[460,280]]`. |
-| `point_labels` | No | JSON array containing exactly two labels; default `[2,3]`. |
+| `point_coords` | No | JSON array containing exactly two source-image coordinates. Omit it to use the full image. |
+| `point_labels` | No | Two labels corresponding to `point_coords`; defaults to a full-image box when omitted. |
 
 Prompt labels follow SAM conventions: `0` is a negative point, `1` is a positive point, `2` is the top-left box corner, `3` is the bottom-right box corner, and `-1` is padding. This converted decoder always requires exactly two coordinates and two labels.
 
@@ -123,11 +133,11 @@ curl -X POST http://127.0.0.1:8000/api/models/mobilesam/predict \
   -F 'point_labels=[2,3]'
 ```
 
-The response contains `iou_scores`, `selected_mask`, and `mask_pixels`. The selected mask is overlaid on the source image and published at `GET /api/video_feed`.
+The response contains `iou_scores`, `selected_mask`, `mask_pixels`, and the effective `prompt`. The selected mask is overlaid on the source image and published at `GET /api/video_feed`.
 
 ### 2. Configuration
 
-`GET /api/config` and `POST /api/config` are compatibility endpoints shared by the standard service. The current MobileSAM runtime takes its prompts from each prediction request; the generic `threshold` and `topk` values do not change the selected mask.
+`GET /api/config` returns the persistent prompt used for streaming sources. `POST /api/config` accepts `point_coords` and `point_labels`; send both as `null` to restore full-image mode. A prompt supplied directly to the prediction endpoint overrides the persistent prompt for that request. The generic `threshold` and `topk` values do not change the selected mask.
 
 ### 3. Video Analysis and Service Endpoints
 
@@ -139,7 +149,7 @@ The response contains `iou_scores`, `selected_mask`, and `mask_pixels`. The sele
 - `GET /api/video/list`: uploaded and generated MP4 files.
 - `GET /api/video/download/{filename}`: download the result.
 
-Uploaded videos use the default box prompt because the video-analysis endpoint currently does not accept per-job prompt fields.
+Uploaded videos use the current persistent Web prompt. Set the prompt before starting video analysis.
 
 ## Developer Guide
 

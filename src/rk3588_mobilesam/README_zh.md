@@ -7,7 +7,7 @@
 ## 核心特性
 
 - 通过 RKNN-Toolkit-Lite2 在 RK3588 NPU 上运行 MobileSAM 编码器和解码器。
-- 通过 `point_coords` 和 `point_labels` 接收点提示或框提示。
+- Web 端支持拖拽框选以及前景点、背景点提示，可用于实时画面和上传图片。
 - 返回掩码质量分数、选中掩码序号和掩码像素数。
 - 支持图片推理、MJPEG 结果预览、上传 MP4 分析、OpenAPI 和 Docker 部署。
 
@@ -37,7 +37,17 @@ sudo docker run --rm --name rk3588-mobilesam \
     --camera_id -1 --host 0.0.0.0 --port 8000
 ```
 
-访问 `http://<开发板IP>:8000` 上传图片并查看结果；访问 `http://<开发板IP>:8000/docs` 可通过 OpenAPI 传入自定义提示。命令使用 `--net=host`；若 8000 端口被占用，请修改 `--port`。
+访问 `http://<开发板IP>:8000` 进行交互式分割；访问 `http://<开发板IP>:8000/docs` 查看 OpenAPI。命令使用 `--net=host`；若 8000 端口被占用，请修改 `--port`。
+
+### Web 提示交互
+
+- **框选：** 选择“框选”，然后从目标左上角拖到右下角。
+- **前景点：** 选择“前景点”，点击目标内部；绿色圆点表示需要保留的区域。
+- **背景点：** 选择“背景点”，点击需要排除的区域；红色圆点表示背景。可在前景点和背景点模式间切换，组合两个点提示。
+- **全画面：** 清除自定义提示。服务会使用与当前画面尺寸一致的整图框，不再使用原来的固定小框。
+- **上传图片：** 先选择图片，在浏览器预览上框选或点击，再点击“分析上传图片”。
+
+摄像头、本地视频、上传视频和图片推理共用当前提示。在 Web 页面修改后，后续帧会立即使用新提示，不需要重启容器。
 
 ### 2. 调用本地摄像头
 
@@ -109,8 +119,8 @@ docker build -f docker/rk3588/mobilesam.dockerfile \
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
 | `file` | 是 | OpenCV 可解码的图片。 |
-| `point_coords` | 否 | JSON 数组，必须包含两个原图坐标；默认 `[[190,70],[460,280]]`。 |
-| `point_labels` | 否 | JSON 数组，必须包含两个标签；默认 `[2,3]`。 |
+| `point_coords` | 否 | JSON 数组，必须包含两个原图坐标；省略时使用整张图片。 |
+| `point_labels` | 否 | 与 `point_coords` 对应的两个标签；省略时默认使用全画面框。 |
 
 提示标签遵循 SAM 约定：`0` 表示负点，`1` 表示正点，`2` 表示框左上角，`3` 表示框右下角，`-1` 表示填充点。当前转换后的解码器始终要求恰好两个坐标和两个标签。
 
@@ -123,11 +133,11 @@ curl -X POST http://127.0.0.1:8000/api/models/mobilesam/predict \
   -F 'point_labels=[2,3]'
 ```
 
-响应包含 `iou_scores`、`selected_mask` 和 `mask_pixels`。选中的掩码会叠加到原图，并发布到 `GET /api/video_feed`。
+响应包含 `iou_scores`、`selected_mask`、`mask_pixels` 和实际使用的 `prompt`。选中的掩码会叠加到原图，并发布到 `GET /api/video_feed`。
 
 ### 2. 配置接口
 
-`GET /api/config` 和 `POST /api/config` 是标准服务共用的兼容接口。当前 MobileSAM 运行时从每次推理请求读取提示，通用的 `threshold` 和 `topk` 参数不会改变选中的掩码。
+`GET /api/config` 返回实时输入所使用的持久提示；`POST /api/config` 可设置 `point_coords` 和 `point_labels`，将两者同时设为 `null` 可恢复全画面模式。直接传给预测接口的提示只覆盖该次请求。通用的 `threshold` 和 `topk` 参数不会改变选中的掩码。
 
 ### 3. 视频分析与服务接口
 
@@ -139,7 +149,7 @@ curl -X POST http://127.0.0.1:8000/api/models/mobilesam/predict \
 - `GET /api/video/list`：已上传和已生成的 MP4 文件。
 - `GET /api/video/download/{filename}`：下载结果。
 
-上传视频分析使用默认框提示，因为当前视频任务接口不接收单次任务的提示字段。
+上传视频分析会使用当前 Web 持久提示，请在开始分析前完成框选或点选。
 
 ## 开发者指南
 
