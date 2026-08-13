@@ -68,21 +68,17 @@ jobs:
     strategy:
       fail-fast: false
       # Avoid starting every BuildKit container at once and overwhelming Docker Hub.
-      max-parallel: 3
+      max-parallel: 2
       matrix:
         platform:
-          - rk3588_ppseg
-          - rk3576_ppseg
           - rk3588_mobilesam
           - rk3576_mobilesam
-          - rk3588_retinaface
-          - rk3576_retinaface
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          lfs: true
+          lfs: false
 
       - name: Check if build is needed
         id: check_changes
@@ -101,6 +97,26 @@ jobs:
           else
             echo "build=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Fetch model assets with retry
+        if: steps.check_changes.outputs.build == 'true'
+        shell: bash
+        run: |
+          git lfs install --local
+          for attempt in $(seq 1 5); do
+            if git lfs pull --include="src/${{ matrix.platform }}/**" --exclude=""; then
+              exit 0
+            fi
+
+            if [[ "$attempt" -eq 5 ]]; then
+              echo "::error::Failed to fetch LFS assets for ${{ matrix.platform }} after 5 attempts"
+              exit 1
+            fi
+
+            delay=$((attempt * 15))
+            echo "::warning::LFS fetch failed for ${{ matrix.platform }} (attempt ${attempt}/5); retrying in ${delay}s"
+            sleep "$delay"
+          done
 
       - name: Prepare Image Name
         if: steps.check_changes.outputs.build == 'true'
