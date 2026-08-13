@@ -98,26 +98,6 @@ jobs:
             echo "build=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Fetch model assets with retry
-        if: steps.check_changes.outputs.build == 'true'
-        shell: bash
-        run: |
-          git lfs install --local
-          for attempt in $(seq 1 5); do
-            if git lfs pull --include="src/${{ matrix.platform }}/**" --exclude=""; then
-              exit 0
-            fi
-
-            if [[ "$attempt" -eq 5 ]]; then
-              echo "::error::Failed to fetch LFS assets for ${{ matrix.platform }} after 5 attempts"
-              exit 1
-            fi
-
-            delay=$((attempt * 15))
-            echo "::warning::LFS fetch failed for ${{ matrix.platform }} (attempt ${attempt}/5); retrying in ${delay}s"
-            sleep "$delay"
-          done
-
       - name: Prepare Image Name
         if: steps.check_changes.outputs.build == 'true'
         run: |
@@ -198,8 +178,10 @@ jobs:
           HW_PREFIX="${PLATFORM%%_*}"
           MODEL_SUFFIX="${PLATFORM#*_}"
           
-          # Special cases for older names or capitalizations if needed
-          if [[ "$MODEL_SUFFIX" == "yolo11" ]]; then
+          # Refresh MobileSAM from the previously validated image while Git LFS is unavailable.
+          if [[ "$MODEL_SUFFIX" == "mobilesam" ]]; then
+            DOCKERFILE_NAME="mobilesam-refresh.dockerfile"
+          elif [[ "$MODEL_SUFFIX" == "yolo11" ]]; then
             DOCKERFILE_NAME="Yolo11.dockerfile"
           elif [[ "$MODEL_SUFFIX" == "yolov8_obb" ]]; then
             DOCKERFILE_NAME="Yolov8-obb.dockerfile"
@@ -207,7 +189,11 @@ jobs:
             DOCKERFILE_NAME="${MODEL_SUFFIX}.dockerfile"
           fi
           
-          echo "DOCKERFILE_PATH=docker/${HW_PREFIX}/${DOCKERFILE_NAME}" >> $GITHUB_ENV
+          if [[ "$MODEL_SUFFIX" == "mobilesam" ]]; then
+            echo "DOCKERFILE_PATH=.github/workflows/${HW_PREFIX}-mobilesam-refresh.dockerfile" >> $GITHUB_ENV
+          else
+            echo "DOCKERFILE_PATH=docker/${HW_PREFIX}/${DOCKERFILE_NAME}" >> $GITHUB_ENV
+          fi
 
       - name: Build and Push (arm64 Only)
         if: steps.check_changes.outputs.build == 'true'
