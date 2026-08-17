@@ -402,20 +402,21 @@ async def index():
 <title>MobileSAM interactive segmentation</title>
 <style>
 body{font-family:system-ui,sans-serif;background:#111;color:#eee;max-width:1080px;margin:24px auto;padding:0 16px}
-a{color:#00e676}.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.toolbar button,label{padding:9px 14px;border:1px solid #444;border-radius:6px;background:#222;color:#eee;cursor:pointer}.toolbar button.active{background:#00a853;border-color:#00e676}.toolbar button.primary{background:#00c853;color:#071b0d;border:0}.viewer{position:relative;display:inline-block;max-width:100%;line-height:0;background:#222}.viewer img{display:block;max-width:100%;height:auto}.viewer canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}.hint{color:#bbb;line-height:1.5}.status{display:grid;grid-template-columns:1fr 1fr;gap:12px}pre{background:#222;padding:12px;white-space:pre-wrap;overflow:auto;min-height:56px}@media(max-width:700px){.status{grid-template-columns:1fr}}
+a{color:#00e676}.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.toolbar button,.file-picker{padding:9px 14px;border:1px solid #444;border-radius:6px;background:#222;color:#eee;cursor:pointer}.toolbar button.active{background:#00a853;border-color:#00e676}.toolbar button.primary{background:#00c853;color:#071b0d;border:0}.file-picker input{display:none}.file-name{color:#bbb}.viewer{position:relative;display:inline-block;max-width:100%;line-height:0;background:#222}.viewer img{display:block;max-width:100%;height:auto}.viewer canvas{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}.hint{color:#bbb;line-height:1.5}.status{display:grid;grid-template-columns:1fr 1fr;gap:12px}pre{background:#222;padding:12px;white-space:pre-wrap;overflow:auto;min-height:56px}@media(max-width:700px){.status{grid-template-columns:1fr}}
 </style></head><body>
 <h1>MobileSAM interactive segmentation</h1>
 <p class="hint">Drag a green box around a target, or add foreground/background points. The prompt is applied immediately to camera and video frames. With no custom prompt, the full image is used.</p>
 <div class="toolbar">
-  <button id="boxMode" class="active" onclick="setMode('box')">Box / 框选</button>
-  <button id="fgMode" onclick="setMode('foreground')">Foreground point / 前景点</button>
-  <button id="bgMode" onclick="setMode('background')">Background point / 背景点</button>
-  <button onclick="useFullImage()">Full image / 全画面</button>
+  <button id="boxMode" class="active" onclick="setMode('box')">Box prompt</button>
+  <button id="fgMode" onclick="setMode('foreground')">Foreground point</button>
+  <button id="bgMode" onclick="setMode('background')">Background point</button>
+  <button onclick="useFullImage()">Use full image</button>
 </div>
 <div class="viewer"><img id="preview" src="/api/video_feed"><canvas id="promptCanvas"></canvas></div>
 <div class="toolbar">
-  <label>Upload image / 上传图片 <input id="file" type="file" accept="image/*"></label>
-  <button class="primary" onclick="runUpload()">Run uploaded image / 分析上传图片</button>
+  <label class="file-picker">Choose image<input id="file" type="file" accept="image/*"></label>
+  <span id="fileName" class="file-name">No image selected</span>
+  <button class="primary" onclick="runUpload()">Analyze uploaded image</button>
   <a href="/docs">OpenAPI</a>
 </div>
 <p class="hint">Green point = foreground, red point = background. The converted decoder accepts two prompt slots; a single point is automatically padded.</p>
@@ -430,14 +431,14 @@ function resizeCanvas(){const r=img.getBoundingClientRect();const w=Math.max(1,M
 function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);ctx.lineWidth=3;ctx.font='14px sans-serif';if(draft){let a=canvasPoint(draft[0]),b=canvasPoint(draft[1]);ctx.strokeStyle='#00e676';ctx.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);}if(activePrompt&&activePrompt.point_coords){let c=activePrompt.point_coords,l=activePrompt.point_labels;if(l[0]===2&&l[1]===3){let a=canvasPoint(c[0]),b=canvasPoint(c[1]);ctx.strokeStyle='#00e676';ctx.strokeRect(a[0],a[1],b[0]-a[0],b[1]-a[1]);}else{c.forEach((p,i)=>{if(l[i]===-1)return;let q=canvasPoint(p);ctx.beginPath();ctx.arc(q[0],q[1],7,0,Math.PI*2);ctx.fillStyle=l[i]===1?'#00e676':'#ff3d00';ctx.fill();ctx.strokeStyle='#fff';ctx.stroke();});}}}
 async function savePrompt(coords,labels){let r=await fetch('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({point_coords:coords,point_labels:labels})});let body=await r.json();if(!r.ok)throw new Error(body.detail||'Cannot update prompt');activePrompt={point_coords:body.point_coords,point_labels:body.point_labels};showPrompt();draw();}
 async function useFullImage(){points=[];draft=null;await savePrompt(null,null);}
-function showPrompt(){document.getElementById('promptStatus').textContent=activePrompt&&activePrompt.point_coords?'Prompt: '+JSON.stringify(activePrompt):'Prompt: full image / 全画面';}
+function showPrompt(){document.getElementById('promptStatus').textContent=activePrompt&&activePrompt.point_coords?'Prompt: '+JSON.stringify(activePrompt):'Prompt: full image';}
 canvas.addEventListener('pointerdown',e=>{if(mode==='box'){dragging=true;start=imagePoint(e);draft=[start,start];canvas.setPointerCapture(e.pointerId);}else{let p=imagePoint(e),label=mode==='foreground'?1:0;points.push({p,label});if(points.length>2)points.shift();let coords=points.map(x=>x.p),labels=points.map(x=>x.label);if(coords.length===1){coords.push(coords[0]);labels.push(-1);}savePrompt(coords,labels).catch(showError);}});
 canvas.addEventListener('pointermove',e=>{if(dragging){draft=[start,imagePoint(e)];draw();}});
 canvas.addEventListener('pointerup',e=>{if(!dragging)return;dragging=false;points=[];let end=imagePoint(e),x1=Math.min(start[0],end[0]),y1=Math.min(start[1],end[1]),x2=Math.max(start[0],end[0]),y2=Math.max(start[1],end[1]);draft=null;if(x2-x1<3||y2-y1<3){draw();return;}savePrompt([[x1,y1],[x2,y2]],[2,3]).catch(showError);});
 function showError(e){document.getElementById('result').textContent='Error: '+e.message;}
 async function runUpload(){let file=document.getElementById('file');if(!file.files.length){showError(new Error('Choose an image first'));return;}let f=new FormData();f.append('file',file.files[0]);let r=await fetch('/api/models/'+task+'/predict',{method:'POST',body:f}),body=await r.json();document.getElementById('result').textContent=JSON.stringify(body,null,2);if(r.ok)img.src='/api/video_feed?ts='+Date.now();}
 async function refresh(){try{let [health,config]=await Promise.all([fetch('/api/health').then(r=>r.json()),fetch('/api/config').then(r=>r.json())]);document.getElementById('source').textContent=JSON.stringify(health.source,null,2);activePrompt={point_coords:config.point_coords,point_labels:config.point_labels};showPrompt();draw();}catch(e){showError(e)}}
-document.getElementById('file').addEventListener('change',e=>{if(e.target.files.length)img.src=URL.createObjectURL(e.target.files[0]);});new ResizeObserver(resizeCanvas).observe(img);img.addEventListener('load',resizeCanvas);setInterval(refresh,1000);refresh();
+document.getElementById('file').addEventListener('change',e=>{let file=e.target.files[0];document.getElementById('fileName').textContent=file?'Selected: '+file.name:'No image selected';if(file)img.src=URL.createObjectURL(file);});new ResizeObserver(resizeCanvas).observe(img);img.addEventListener('load',resizeCanvas);setInterval(refresh,1000);refresh();
 </script></body></html>"""
     return html.replace("__TASK__", task)
 
