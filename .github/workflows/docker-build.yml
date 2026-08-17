@@ -68,17 +68,21 @@ jobs:
     strategy:
       fail-fast: false
       # Avoid starting every BuildKit container at once and overwhelming Docker Hub.
-      max-parallel: 2
+      max-parallel: 3
       matrix:
         platform:
+          - rk3588_ppseg
+          - rk3576_ppseg
           - rk3588_mobilesam
           - rk3576_mobilesam
+          - rk3588_retinaface
+          - rk3576_retinaface
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          lfs: false
+          lfs: true
 
       - name: Check if build is needed
         id: check_changes
@@ -178,10 +182,8 @@ jobs:
           HW_PREFIX="${PLATFORM%%_*}"
           MODEL_SUFFIX="${PLATFORM#*_}"
           
-          # Refresh only the MobileSAM Web layer while Git LFS is unavailable.
-          if [[ "$MODEL_SUFFIX" == "mobilesam" ]]; then
-            DOCKERFILE_NAME="mobilesam-web-refresh.dockerfile"
-          elif [[ "$MODEL_SUFFIX" == "yolo11" ]]; then
+          # Special cases for older names or capitalizations if needed
+          if [[ "$MODEL_SUFFIX" == "yolo11" ]]; then
             DOCKERFILE_NAME="Yolo11.dockerfile"
           elif [[ "$MODEL_SUFFIX" == "yolov8_obb" ]]; then
             DOCKERFILE_NAME="Yolov8-obb.dockerfile"
@@ -189,11 +191,7 @@ jobs:
             DOCKERFILE_NAME="${MODEL_SUFFIX}.dockerfile"
           fi
           
-          if [[ "$MODEL_SUFFIX" == "mobilesam" ]]; then
-            echo "DOCKERFILE_PATH=.github/workflows/${HW_PREFIX}-mobilesam-web-refresh.dockerfile" >> $GITHUB_ENV
-          else
-            echo "DOCKERFILE_PATH=docker/${HW_PREFIX}/${DOCKERFILE_NAME}" >> $GITHUB_ENV
-          fi
+          echo "DOCKERFILE_PATH=docker/${HW_PREFIX}/${DOCKERFILE_NAME}" >> $GITHUB_ENV
 
       - name: Build and Push (arm64 Only)
         if: steps.check_changes.outputs.build == 'true'
