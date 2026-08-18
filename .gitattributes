@@ -3,3 +3,14 @@
 *.whl filter=lfs diff=lfs merge=lfs -text
 *.so filter=lfs diff=lfs merge=lfs -text
 *.bin filter=lfs diff=lfs merge=lfs -text
+
+# Keep the self-contained LPRNet runtime available when the repository LFS
+# bandwidth quota is exhausted. These files are all below GitHub's blob limit.
+src/rk3576_lprnet/lib/librknnrt.so -filter -diff -merge -text
+src/rk3576_lprnet/model/lprnet.rknn -filter -diff -merge -text
+src/rk3576_lprnet/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3576_lprnet/video/test.mp4 -filter -diff -merge -text
+src/rk3588_lprnet/lib/librknnrt.so -filter -diff -merge -text
+src/rk3588_lprnet/model/lprnet.rknn -filter -diff -merge -text
+src/rk3588_lprnet/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3588_lprnet/video/test.mp4 -filter -diff -merge -text
