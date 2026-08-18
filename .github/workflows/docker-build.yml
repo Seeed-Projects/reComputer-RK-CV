@@ -20,6 +20,8 @@ on:
       - 'src/rk3576_mobilesam/**'
       - 'src/rk3588_retinaface/**'
       - 'src/rk3576_retinaface/**'
+      - 'src/rk3588_lprnet/**'
+      - 'src/rk3576_lprnet/**'
       - 'src/rk3588_yolo11/**'
       - 'src/rk3576_yolo11/**'
       - 'src/rk3588_yolov8_obb/**'
@@ -68,15 +70,11 @@ jobs:
     strategy:
       fail-fast: false
       # Avoid starting every BuildKit container at once and overwhelming Docker Hub.
-      max-parallel: 3
+      max-parallel: 2
       matrix:
         platform:
-          - rk3588_ppseg
-          - rk3576_ppseg
-          - rk3588_mobilesam
-          - rk3576_mobilesam
-          - rk3588_retinaface
-          - rk3576_retinaface
+          - rk3588_lprnet
+          - rk3576_lprnet
 
     steps:
       - name: Checkout Code
