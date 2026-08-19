@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import re
 import shutil
@@ -26,7 +27,7 @@ OUTPUTS.mkdir(parents=True, exist_ok=True)
 runtime = None
 runtime_lock = threading.Lock()
 config_lock = threading.Lock()
-runtime_config = {"min_score": 0.0, "max_plates": 8, "min_text_length": 6}
+runtime_config = {"min_score": 0.0, "max_plates": 8, "min_text_length": 6, "plate_layout": "auto"}
 last_preview = None
 preview_lock = threading.Lock()
 latest_result = {"plates": [], "count": 0, "source_mode": "waiting", "inference_ms": 0.0}
@@ -153,6 +154,11 @@ async def update_config(value: dict):
             if not 1 <= min_text_length <= 8:
                 raise HTTPException(status_code=400, detail="min_text_length must be between 1 and 8")
             runtime_config["min_text_length"] = min_text_length
+        if "plate_layout" in value:
+            plate_layout = str(value["plate_layout"])
+            if plate_layout not in {"auto", "chinese", "international"}:
+                raise HTTPException(status_code=400, detail="plate_layout must be auto, chinese, or international")
+            runtime_config["plate_layout"] = plate_layout
         return dict(runtime_config)
 
 
@@ -162,6 +168,8 @@ async def predict(
     min_score: Optional[float] = Form(None),
     max_plates: Optional[int] = Form(None),
     min_text_length: Optional[int] = Form(None),
+    plate_layout: Optional[str] = Form(None),
+    manual_box: Optional[str] = Form(None),
     whole_image: bool = Form(False),
 ):
     contents = await file.read()
@@ -177,6 +185,13 @@ async def predict(
         params["max_plates"] = int(max_plates)
     if min_text_length is not None:
         params["min_text_length"] = int(min_text_length)
+    if plate_layout is not None:
+        params["plate_layout"] = plate_layout
+    if manual_box:
+        try:
+            params["manual_box"] = json.loads(manual_box)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail="manual_box must be JSON [x1, y1, x2, y2]") from exc
     params["whole_image"] = whole_image
     try:
         result, inference_ms = run_prediction(image, params)
@@ -372,9 +387,10 @@ HTML_PAGE = """<!doctype html>
     #stream { display:block; width:100%; min-height:260px; background:#000; border-radius:8px; object-fit:contain; }
     .status { color:var(--muted); } .good { color:var(--green); }
     .plate { border-left:4px solid var(--green); background:#20252c; border-radius:6px; padding:10px 12px; margin:8px 0; }
+    .plate.rejected { border-left-color:#ffaa00; }
     .plate strong { display:block; font-size:20px; letter-spacing:1px; color:#fff; }
     button,.button { display:inline-block; cursor:pointer; border:0; border-radius:6px; padding:9px 14px; color:#06130b; background:var(--green); font-weight:700; text-decoration:none; }
-    button:disabled { opacity:.5; cursor:not-allowed; } input[type=number] { width:90px; padding:7px; background:#0d1117; color:#fff; border:1px solid var(--border); border-radius:5px; }
+    button:disabled { opacity:.5; cursor:not-allowed; } input[type=number] { width:90px; } input[type=text] { width:220px; } input[type=number],input[type=text],select { padding:7px; background:#0d1117; color:#fff; border:1px solid var(--border); border-radius:5px; }
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:9px 0; }
     .filename { color:var(--muted); max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     progress { width:100%; height:15px; accent-color:var(--green); }
@@ -396,6 +412,7 @@ HTML_PAGE = """<!doctype html>
       <div class="row"><label class="button" for="imageFile">Choose image</label><span id="imageName" class="filename">No image selected</span></div>
       <input id="imageFile" type="file" accept="image/*" hidden>
       <div class="row"><label><input id="wholeImage" type="checkbox"> The image is already a cropped license plate</label></div>
+      <div class="row"><label>Manual box (optional) <input id="manualBox" type="text" placeholder="x1,y1,x2,y2"></label></div>
       <button id="imageButton" onclick="analyzeImage()">Run image recognition</button>
       <pre id="imageResponse"></pre>
     </div>
@@ -415,6 +432,7 @@ HTML_PAGE = """<!doctype html>
       <div class="row"><label>Minimum score <input id="minScore" type="number" min="0" max="1" step="0.01" value="0"></label></div>
       <div class="row"><label>Maximum plates <input id="maxPlates" type="number" min="1" max="32" value="8"></label></div>
       <div class="row"><label>Minimum text length <input id="minTextLength" type="number" min="1" max="8" value="6"></label></div>
+      <div class="row"><label>Plate layout <select id="plateLayout"><option value="auto">Auto</option><option value="chinese">Chinese plate</option><option value="international">International / light plate</option></select></label></div>
       <button onclick="saveConfig()">Apply settings</button><div id="configStatus" class="status"></div>
     </div>
     <div class="card"><h2>API</h2><p><a href="/docs">OpenAPI documentation</a></p><code>GET /api/video_feed</code><br><code>GET /api/results/latest</code><br><code>POST /api/models/lprnet/predict</code></div>
@@ -429,7 +447,7 @@ async function jsonRequest(url,options){const response=await fetch(url,options);
 async function analyzeImage(){
   if(!imageFile.files.length){document.getElementById('imageResponse').textContent='Choose an image first.';return;}
   const button=document.getElementById('imageButton');button.disabled=true;
-  try{const data=new FormData();data.append('file',imageFile.files[0]);data.append('whole_image',document.getElementById('wholeImage').checked);const body=await jsonRequest('/api/models/lprnet/predict',{method:'POST',body:data});document.getElementById('imageResponse').textContent=JSON.stringify(body,null,2);}
+  try{const data=new FormData();data.append('file',imageFile.files[0]);data.append('whole_image',document.getElementById('wholeImage').checked);data.append('plate_layout',document.getElementById('plateLayout').value);const manual=document.getElementById('manualBox').value.trim();if(manual){const values=manual.split(',').map(Number);if(values.length!==4||values.some(value=>!Number.isFinite(value)))throw new Error('Manual box must contain x1,y1,x2,y2');data.append('manual_box',JSON.stringify(values));}const body=await jsonRequest('/api/models/lprnet/predict',{method:'POST',body:data});document.getElementById('imageResponse').textContent=JSON.stringify(body,null,2);}
   catch(error){document.getElementById('imageResponse').textContent='Error: '+error.message;}finally{button.disabled=false;}
 }
 async function analyzeVideo(){
@@ -439,14 +457,14 @@ async function analyzeVideo(){
   catch(error){document.getElementById('progressText').textContent='Error: '+error.message;button.disabled=false;}
 }
 async function saveConfig(){
-  try{const value={min_score:Number(document.getElementById('minScore').value),max_plates:Number(document.getElementById('maxPlates').value),min_text_length:Number(document.getElementById('minTextLength').value)};const body=await jsonRequest('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});document.getElementById('configStatus').textContent='Saved: '+JSON.stringify(body);}
+  try{const value={min_score:Number(document.getElementById('minScore').value),max_plates:Number(document.getElementById('maxPlates').value),min_text_length:Number(document.getElementById('minTextLength').value),plate_layout:document.getElementById('plateLayout').value};const body=await jsonRequest('/api/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(value)});document.getElementById('configStatus').textContent='Saved: '+JSON.stringify(body);}
   catch(error){document.getElementById('configStatus').textContent='Error: '+error.message;}
 }
 async function refresh(){
   try{
     const [health,result,job]=await Promise.all([jsonRequest('/api/health'),jsonRequest('/api/results/latest'),jsonRequest('/api/video/status')]);
     const source=health.source||{};document.getElementById('sourceStatus').textContent=`Source: ${source.mode||'web'} ${source.source||''} · ${source.is_running?'running':'idle'} · ${source.inference_ms||result.inference_ms||0} ms`;
-    const plates=result.plates||[];document.getElementById('plates').innerHTML=plates.length?plates.map((plate,index)=>`<div class="plate"><strong>#${index+1} ${escapeHtml(plate.text)}</strong><span>Box: [${plate.box.join(', ')}]</span><br><span>Recognition score: ${plate.recognition_score}</span></div>`).join(''):'No plate recognized in the latest frame.';
+    const candidates=result.candidates||result.plates||[];const warnings=result.warnings||[];document.getElementById('plates').innerHTML=(candidates.length?candidates.map((plate,index)=>`<div class="plate ${plate.accepted===false?'rejected':''}"><strong>#${index+1} ${escapeHtml(plate.text||'Unrecognized candidate')}</strong><span>Box: [${plate.box.join(', ')}]</span><br><span>Style: ${escapeHtml(plate.style||'unknown')} · recognizer: ${escapeHtml(plate.recognizer||'lprnet')} · score: ${plate.recognition_score}</span>${plate.reject_reason?`<br><span>${escapeHtml(plate.reject_reason)}</span>`:''}</div>`).join(''):'No plate candidate located in the latest frame.')+(warnings.length?`<div class="status">${warnings.map(escapeHtml).join('<br>')}</div>`:'');
     document.getElementById('progress').value=job.progress||0;document.getElementById('progressText').textContent=job.error?`Error: ${job.error}`:(job.is_processing?`Processing ${job.current_file}: ${job.progress}%`:(job.output&&job.progress===100?'Analysis complete':'Idle'));
     const download=document.getElementById('download');if(!job.is_processing&&job.output&&job.progress===100){download.href='/api/video/download/'+encodeURIComponent(job.output);download.style.display='inline-block';document.getElementById('videoButton').disabled=false;}
   }catch(error){document.getElementById('sourceStatus').textContent='Service status error: '+error.message;}

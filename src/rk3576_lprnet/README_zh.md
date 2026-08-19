@@ -6,15 +6,17 @@
 
 ## 核心功能
 
-- 使用 RKNN LPRNet 模型识别已裁剪的中国车牌。
-- 在场景图像中通过 OpenCV 级联分类器、边缘和颜色特征定位多个候选车牌，再逐个识别。
+- 使用 RKNN LPRNet 识别中国彩色车牌，并将白底/国际车牌自动切换到 RKNN PP-OCR 识别。
+- 结合级联分类器、边缘、蓝/黄/绿掩膜和白底红字分析定位多个候选，并让亮色矩形车牌优先于红绿灯、尾灯候选。
 - 在 MJPEG 画面中框选每个候选车牌并显示编号/可渲染字符，Web 结果面板显示全部 Unicode 车牌内容。
 - 支持 `/dev/videoN` 摄像头、通过 `--video` 循环播放本地 MP4、图片上传和 Web 上传 MP4 分析。
-- API 返回车牌文本、坐标框、候选分数和识别分数。
+- API 返回车牌文本、坐标框、实际使用的识别器、候选分数、拒绝原因和识别分数。
 
 ## 目录结构
 
 - `model/lprnet.rknn`：为 RK3576 转换的 LPRNet 模型。
+- `model/ppocr_rec.rknn`：为 RK3576 转换的 PP-OCR 识别回退模型。
+- `model/ppocr_keys_v1.txt`：PP-OCR 字符表。
 - `model/test.jpg`：启动预热使用的车牌裁剪图。
 - `video/test.mp4`：场景测试视频。
 - `task_runtime.py`：候选定位、RKNN 字符识别和画面标注。
@@ -91,7 +93,7 @@ docker build -f docker/rk3576/lprnet.dockerfile \
 | 参数 | 必填 | 默认值 | 说明 |
 | --- | --- | --- | --- |
 | `--platform` | 是 | — | RKNN 目标平台；本目录使用 `rk3576`。 |
-| `--model_dir` | 否 | `model` | 包含 `lprnet.rknn` 和 `test.jpg` 的目录。 |
+| `--model_dir` | 否 | `model` | 包含两个 RKNN 识别模型、PP-OCR 字符表和 `test.jpg` 的目录。 |
 | `--camera_id` | 否 | `-1` | 摄像头索引 `N` 对应 `/dev/videoN`；`-1` 表示仅启用 Web 上传。 |
 | `--video`、`--video_path` | 否 | — | 本地 MP4 路径，优先于摄像头并循环播放。 |
 | `--host` | 否 | `0.0.0.0` | FastAPI 监听地址。 |
@@ -111,6 +113,8 @@ docker build -f docker/rk3576/lprnet.dockerfile \
 | --- | --- | --- |
 | `file` | 是 | OpenCV 可解码的图片。curl 本地文件路径前必须添加 `@`。 |
 | `whole_image` | 否 | 输入已经是紧密裁剪的车牌时设为 `true`；场景图片默认自动定位候选车牌。 |
+| `plate_layout` | 否 | `auto` 对中国彩色车牌使用 LPRNet、对白底/国际车牌使用 PP-OCR；`chinese` 或 `international` 可强制指定。 |
+| `manual_box` | 否 | 原图坐标 JSON 数组 `[x1,y1,x2,y2]`，用于跳过自动定位并直接识别指定区域。 |
 | `min_score` | 否 | 单次请求的识别分数过滤值，范围 `0` 至 `1`。该分数适合相对过滤，不是经过校准的概率。 |
 | `max_plates` | 否 | 最大候选车牌数，范围 `1` 至 `32`。 |
 | `min_text_length` | 否 | 最少识别字符数，范围 `1` 至 `8`；默认 `6`，用于过滤过短的误识别。 |
@@ -118,7 +122,8 @@ docker build -f docker/rk3576/lprnet.dockerfile \
 ```bash
 curl -X POST http://127.0.0.1:8000/api/models/lprnet/predict \
   -F "file=@model/test.jpg" \
-  -F "whole_image=true"
+  -F "whole_image=true" \
+  -F "plate_layout=chinese"
 ```
 
 响应中的 `result.plates` 包含：
@@ -127,6 +132,8 @@ curl -X POST http://127.0.0.1:8000/api/models/lprnet/predict \
 - `box`：原图坐标 `[x1,y1,x2,y2]`。
 - `candidate_score`：OpenCV 候选定位分数。
 - `recognition_score`：LPRNet 时间步置信度均值。
+- `recognizer`：实际使用的 `lprnet` 或 `ppocr_rec`。
+- `candidates`：包含被格式或阈值过滤的候选及 `reject_reason`；`plates` 只包含通过过滤的结果。
 
 ### 运行配置
 
@@ -134,7 +141,7 @@ curl -X POST http://127.0.0.1:8000/api/models/lprnet/predict \
 curl http://127.0.0.1:8000/api/config
 curl -X POST http://127.0.0.1:8000/api/config \
   -H "Content-Type: application/json" \
-  -d '{"min_score":0.0,"max_plates":8,"min_text_length":6}'
+  -d '{"min_score":0.0,"max_plates":8,"min_text_length":6,"plate_layout":"auto"}'
 ```
 
 该配置同时应用于摄像头、循环本地视频和 Web 上传视频。
@@ -160,6 +167,6 @@ curl http://127.0.0.1:8000/api/video/status
 
 ## 模型范围与限制
 
-随项目提供的 RKNN 模型是官方 LPRNet 字符识别模型，训练目标是已裁剪的中国车牌，它本身不是端到端车牌检测器。场景模式的框由轻量 OpenCV 方法生成，再送入 LPRNet；距离过远、模糊、大角度、遮挡或非中国车牌可能漏检或误识别。生产环境建议接入专用车牌检测模型，并将检测到的裁剪区域交给本项目的 LPRNet 运行时。
+两个模型都不是端到端车牌检测器。官方 LPRNet 面向已裁剪的中国车牌；PP-OCR 回退能改善白底/国际车牌的字母数字识别，但它是通用文字识别模型，并非车牌专用模型。场景坐标仍来自轻量 OpenCV 方法，距离过远、模糊、大角度、遮挡、双行或特殊版式仍可能漏检或误识别。可用 `manual_box` 验证已知区域；生产环境建议接入专用车牌检测模型，再将裁剪区域交给本运行时。
 
 模型转换输入和脚本保留在 `rknn_model_zoo/examples/LPRNet`。
