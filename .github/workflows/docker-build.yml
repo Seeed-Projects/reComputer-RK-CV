@@ -4,10 +4,48 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'src/rk3588_lprnet/**'
-      - 'src/rk3576_lprnet/**'
-      - 'docker/rk3588/lprnet.dockerfile'
-      - 'docker/rk3576/lprnet.dockerfile'
+      - 'src/rk3588_yolov10/**'
+      - 'src/rk3576_yolov10/**'
+      - 'src/rk3588_yolox/**'
+      - 'src/rk3576_yolox/**'
+      - 'src/rk3588_ppyoloe/**'
+      - 'src/rk3576_ppyoloe/**'
+      - 'src/rk3588_yolo_world/**'
+      - 'src/rk3576_yolo_world/**'
+      - 'src/rk3588_deeplabv3/**'
+      - 'src/rk3576_deeplabv3/**'
+      - 'src/rk3588_ppseg/**'
+      - 'src/rk3576_ppseg/**'
+      - 'src/rk3588_mobilesam/**'
+      - 'src/rk3576_mobilesam/**'
+      - 'src/rk3588_retinaface/**'
+      - 'src/rk3576_retinaface/**'
+      - 'src/rk3588_yolo11/**'
+      - 'src/rk3576_yolo11/**'
+      - 'src/rk3588_yolov8_obb/**'
+      - 'src/rk3576_yolov8_obb/**'
+      - 'src/rk3588_yolov5/**'
+      - 'src/rk3576_yolov5/**'
+      - 'src/rk3588_yolov6/**'
+      - 'src/rk3576_yolov6/**'
+      - 'src/rk3588_yolov7/**'
+      - 'src/rk3576_yolov7/**'
+      - 'src/rk3588_yolov5_seg/**'
+      - 'src/rk3576_yolov5_seg/**'
+      - 'src/rk3588_yolov8/**'
+      - 'src/rk3576_yolov8/**'
+      - 'src/rk3588_yolov8_pose/**'
+      - 'src/rk3576_yolov8_pose/**'
+      - 'src/rk3588_yolov8_seg/**'
+      - 'src/rk3576_yolov8_seg/**'
+      - 'src/rk3576_yolov8_airborne/**'
+      - 'src/rk3588_whisper/**'
+      - 'src/rk3576_whisper/**'
+      - 'src/rk3588_mobilenet/**'
+      - 'src/rk3588_resnet50v2/**'
+      - 'src/rk3576_mobilenet/**'
+      - 'src/rk3576_resnet50v2/**'
+      - 'docker/**'
     tags: ['v*.*.*']
   pull_request:
   workflow_dispatch:
@@ -30,17 +68,21 @@ jobs:
     strategy:
       fail-fast: false
       # Avoid starting every BuildKit container at once and overwhelming Docker Hub.
-      max-parallel: 2
+      max-parallel: 3
       matrix:
         platform:
-          - rk3588_lprnet
-          - rk3576_lprnet
+          - rk3588_ppseg
+          - rk3576_ppseg
+          - rk3588_mobilesam
+          - rk3576_mobilesam
+          - rk3588_retinaface
+          - rk3576_retinaface
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          lfs: false
+          lfs: true
 
       - name: Check if build is needed
         id: check_changes
