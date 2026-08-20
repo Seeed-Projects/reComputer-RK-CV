@@ -7,6 +7,7 @@ This directory packages the RKNN Model Zoo LPRNet example as a standard reComput
 ## Core features
 
 - Recognizes Chinese colored plates with RKNN LPRNet and automatically routes light/international plates to RKNN PP-OCR recognition.
+- Provides a browser four-point selection tool. Each corner can be dragged independently, and the selected quadrilateral is perspective-rectified before recognition.
 - Locates multiple plate candidates with cascade, edge, blue/yellow/green masks, and light/red-text analysis; bright plate candidates are ranked ahead of traffic lights and tail lights.
 - Draws every accepted plate box and an indexed label in the MJPEG stream; the Web panel shows every complete Unicode plate string.
 - Accepts `/dev/videoN`, a looping local MP4 through `--video`, images, and Web-uploaded MP4 files.
@@ -77,7 +78,7 @@ sudo docker run --rm --name rk3588-lprnet-video \
     --video /app/video/test.mp4 --host 0.0.0.0 --port 8000
 ```
 
-`--video` and `--video_path` are aliases. A local video takes precedence over `--camera_id` and loops continuously for live Web preview. To analyze a host file, mount it read-only, for example `-v /path/input.mp4:/data/input.mp4:ro`, and pass `--video /data/input.mp4`.
+`--video` and `--video_path` are aliases. A local video takes precedence over `--camera_id` and loops continuously for live Web preview. Every video frame must already be a cropped plate. The service processes every frame, ignores scene localization, and resizes that complete frame for recognition regardless of source frame rate. To analyze a host file, mount it read-only, for example `-v /path/input.mp4:/data/input.mp4:ro`, and pass `--video /data/input.mp4`.
 
 ### 4. Build locally
 
@@ -114,6 +115,7 @@ docker build -f docker/rk3588/lprnet.dockerfile \
 | `file` | Yes | An image decodable by OpenCV. Use `@` before a local path with curl. |
 | `whole_image` | No | Set `true` when the input is already a tightly cropped plate. Scene images use automatic candidate localization. |
 | `plate_layout` | No | `auto` selects LPRNet for Chinese colored plates and PP-OCR for light/international plates; `chinese` or `international` forces one route. |
+| `manual_quad` | No | Four original-image points as JSON: `[[x1,y1],[x2,y2],[x3,y3],[x4,y4]]`. The region is perspective-rectified and recognized as one plate. |
 | `manual_box` | No | JSON array `[x1,y1,x2,y2]` in original-image coordinates. It bypasses automatic localization. |
 | `min_score` | No | Per-request recognition-score filter from `0` to `1`. The score is useful for relative filtering, not a calibrated probability. |
 | `max_plates` | No | Maximum candidate plates, from `1` to `32`. |
@@ -121,8 +123,8 @@ docker build -f docker/rk3588/lprnet.dockerfile \
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/models/lprnet/predict \
-  -F "file=@model/test.jpg" \
-  -F "whole_image=true" \
+  -F "file=@vehicle.jpg" \
+  -F 'manual_quad=[[120,210],[410,205],[418,286],[112,292]]' \
   -F "plate_layout=chinese"
 ```
 
@@ -181,6 +183,6 @@ curl http://127.0.0.1:8000/api/video/status
 
 ## Model scope and limitations
 
-Neither bundled model is an end-to-end plate detector. The official LPRNet recognition model is trained for cropped Chinese plates; the PP-OCR fallback improves alphanumeric text on light/international plates but is general text recognition rather than a plate-specific model. Scene boxes still come from lightweight OpenCV heuristics, so small, blurred, strongly tilted, occluded, two-line, or unusual plates can be missed or misread. Use `manual_box` to verify a known region. For production, replace the heuristic locator with a dedicated plate detector and pass its crops to this runtime.
+Neither bundled model is an end-to-end plate detector. The official LPRNet recognition model is trained for cropped Chinese plates; the PP-OCR fallback improves alphanumeric text on light/international plates but is general text recognition rather than a plate-specific model. For uploaded images, use the Web four-point tool or `manual_quad` to provide an exact perspective-corrected region. Videos are intentionally treated as sequences of already-cropped plate images. Camera scene boxes still come from lightweight OpenCV heuristics and can be unreliable; production camera deployments should use a dedicated plate detector.
 
 Model conversion inputs and scripts remain in `rknn_model_zoo/examples/LPRNet`.

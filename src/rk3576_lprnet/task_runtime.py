@@ -370,11 +370,64 @@ class Runtime:
         return text, confidence, style, normalization, recognizer
 
     @staticmethod
+    def _perspective_crop(image, points):
+        image_height, image_width = image.shape[:2]
+        raw = np.asarray(points, dtype=np.float32)
+        if raw.shape != (4, 2) or not np.isfinite(raw).all():
+            raise ValueError("manual_quad must contain four finite [x, y] points")
+        raw[:, 0] = np.clip(raw[:, 0], 0, image_width - 1)
+        raw[:, 1] = np.clip(raw[:, 1], 0, image_height - 1)
+        hull = cv2.convexHull(raw, clockwise=False, returnPoints=True).reshape(-1, 2)
+        if len(hull) != 4 or abs(cv2.contourArea(hull)) < 16:
+            raise ValueError("manual_quad must form a non-crossing quadrilateral with a visible area")
+
+        center = hull.mean(axis=0)
+        angles = np.arctan2(hull[:, 1] - center[1], hull[:, 0] - center[0])
+        ordered = hull[np.argsort(angles)]
+        ordered = np.roll(ordered, -int(np.argmin(ordered.sum(axis=1))), axis=0)
+        if ordered[1, 0] < ordered[-1, 0]:
+            ordered = ordered[[0, 3, 2, 1]]
+        top_left, top_right, bottom_right, bottom_left = ordered
+
+        target_width = int(
+            round(max(np.linalg.norm(top_right - top_left), np.linalg.norm(bottom_right - bottom_left)))
+        )
+        target_height = int(
+            round(max(np.linalg.norm(bottom_left - top_left), np.linalg.norm(bottom_right - top_right)))
+        )
+        if target_width < 8 or target_height < 4:
+            raise ValueError("manual_quad is too small for recognition")
+        destination = np.float32(
+            [[0, 0], [target_width - 1, 0], [target_width - 1, target_height - 1], [0, target_height - 1]]
+        )
+        transform = cv2.getPerspectiveTransform(ordered.astype(np.float32), destination)
+        crop = cv2.warpPerspective(
+            image,
+            transform,
+            (target_width, target_height),
+            flags=cv2.INTER_CUBIC,
+            borderMode=cv2.BORDER_REPLICATE,
+        )
+        box = (
+            int(np.floor(ordered[:, 0].min())),
+            int(np.floor(ordered[:, 1].min())),
+            int(np.ceil(ordered[:, 0].max())) + 1,
+            int(np.ceil(ordered[:, 1].max())) + 1,
+        )
+        return crop, ordered, box
+
+    @staticmethod
     def _draw_result(preview, candidate, index):
         x1, y1, x2, y2 = candidate["box"]
         accepted = candidate["accepted"]
         color = (0, 220, 80) if accepted else (0, 170, 255)
-        cv2.rectangle(preview, (x1, y1), (x2, y2), color, 2)
+        if candidate.get("quad"):
+            polygon = np.asarray(candidate["quad"], dtype=np.int32).reshape(-1, 1, 2)
+            cv2.polylines(preview, [polygon], True, color, 3, cv2.LINE_AA)
+            for point in polygon.reshape(-1, 2):
+                cv2.circle(preview, tuple(point), 5, color, -1, cv2.LINE_AA)
+        else:
+            cv2.rectangle(preview, (x1, y1), (x2, y2), color, 2)
         ascii_text = "".join(character for character in candidate["text"] if ord(character) < 128)
         label = f"#{index} {ascii_text}".strip() if ascii_text else f"Candidate #{index}"
         (label_width, label_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 2)
@@ -411,8 +464,22 @@ class Runtime:
         detect = bool(params.get("detect", True))
         force_whole_image = bool(params.get("whole_image", False))
 
+        manual_quad = params.get("manual_quad")
         manual_box = params.get("manual_box")
-        if manual_box is not None:
+        if manual_quad is not None:
+            crop, ordered_quad, box = self._perspective_crop(image, manual_quad)
+            candidates = [
+                {
+                    "score": 1.0,
+                    "box": box,
+                    "quad": ordered_quad.tolist(),
+                    "crop": crop,
+                    "rectified_size": [int(crop.shape[1]), int(crop.shape[0])],
+                    "style": "auto",
+                }
+            ]
+            source_mode = "manual_quad"
+        elif manual_box is not None:
             if not isinstance(manual_box, (list, tuple)) or len(manual_box) != 4:
                 raise ValueError("manual_box must be [x1, y1, x2, y2]")
             x1, y1, x2, y2 = [int(value) for value in manual_box]
@@ -436,7 +503,9 @@ class Runtime:
         warnings = []
         for index, candidate in enumerate(candidates, start=1):
             x1, y1, x2, y2 = candidate["box"]
-            crop = image[y1:y2, x1:x2]
+            crop = candidate.get("crop")
+            if crop is None:
+                crop = image[y1:y2, x1:x2]
             if crop.size == 0:
                 continue
             text, recognition_score, style, normalization, recognizer = self._recognize(
@@ -472,6 +541,9 @@ class Runtime:
                 "normalization": normalization,
                 "accepted": accepted,
             }
+            if candidate.get("quad"):
+                record["quad"] = [[round(float(x), 2), round(float(y), 2)] for x, y in candidate["quad"]]
+                record["rectified_size"] = candidate["rectified_size"]
             if not accepted:
                 if len(text) < required_length:
                     record["reject_reason"] = f"text length {len(text)} is below {required_length}"

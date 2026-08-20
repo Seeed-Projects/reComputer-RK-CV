@@ -7,6 +7,7 @@
 ## 核心功能
 
 - 使用 RKNN LPRNet 识别中国彩色车牌，并将白底/国际车牌自动切换到 RKNN PP-OCR 识别。
+- Web 页面提供四点框选工具，四个角点可独立拖动；后端会对四边形区域做透视矫正，再作为一张完整车牌识别。
 - 结合级联分类器、边缘、蓝/黄/绿掩膜和白底红字分析定位多个候选，并让亮色矩形车牌优先于红绿灯、尾灯候选。
 - 在 MJPEG 画面中框选每个候选车牌并显示编号/可渲染字符，Web 结果面板显示全部 Unicode 车牌内容。
 - 支持 `/dev/videoN` 摄像头、通过 `--video` 循环播放本地 MP4、图片上传和 Web 上传 MP4 分析。
@@ -77,7 +78,7 @@ sudo docker run --rm --name rk3588-lprnet-video \
     --video /app/video/test.mp4 --host 0.0.0.0 --port 8000
 ```
 
-`--video` 与 `--video_path` 等价。本地视频优先于 `--camera_id`，并在结束后循环播放，以保持 Web 实时预览。分析宿主机视频时可添加 `-v /path/input.mp4:/data/input.mp4:ro`，然后传入 `--video /data/input.mp4`。
+`--video` 与 `--video_path` 等价。本地视频优先于 `--camera_id`，并在结束后循环播放，以保持 Web 实时预览。视频的每一帧必须已经是裁剪好的单张车牌；服务逐帧处理、跳过场景定位，并且不受输入帧率影响，将每帧完整缩放后送入识别模型。分析宿主机视频时可添加 `-v /path/input.mp4:/data/input.mp4:ro`，然后传入 `--video /data/input.mp4`。
 
 ### 4. 本地构建
 
@@ -114,6 +115,7 @@ docker build -f docker/rk3588/lprnet.dockerfile \
 | `file` | 是 | OpenCV 可解码的图片。curl 本地文件路径前必须添加 `@`。 |
 | `whole_image` | 否 | 输入已经是紧密裁剪的车牌时设为 `true`；场景图片默认自动定位候选车牌。 |
 | `plate_layout` | 否 | `auto` 对中国彩色车牌使用 LPRNet、对白底/国际车牌使用 PP-OCR；`chinese` 或 `international` 可强制指定。 |
+| `manual_quad` | 否 | 原图四点 JSON：`[[x1,y1],[x2,y2],[x3,y3],[x4,y4]]`。后端透视矫正该区域并将其作为一张车牌识别。 |
 | `manual_box` | 否 | 原图坐标 JSON 数组 `[x1,y1,x2,y2]`，用于跳过自动定位并直接识别指定区域。 |
 | `min_score` | 否 | 单次请求的识别分数过滤值，范围 `0` 至 `1`。该分数适合相对过滤，不是经过校准的概率。 |
 | `max_plates` | 否 | 最大候选车牌数，范围 `1` 至 `32`。 |
@@ -121,8 +123,8 @@ docker build -f docker/rk3588/lprnet.dockerfile \
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/models/lprnet/predict \
-  -F "file=@model/test.jpg" \
-  -F "whole_image=true" \
+  -F "file=@vehicle.jpg" \
+  -F 'manual_quad=[[120,210],[410,205],[418,286],[112,292]]' \
   -F "plate_layout=chinese"
 ```
 
@@ -167,6 +169,6 @@ curl http://127.0.0.1:8000/api/video/status
 
 ## 模型范围与限制
 
-两个模型都不是端到端车牌检测器。官方 LPRNet 面向已裁剪的中国车牌；PP-OCR 回退能改善白底/国际车牌的字母数字识别，但它是通用文字识别模型，并非车牌专用模型。场景坐标仍来自轻量 OpenCV 方法，距离过远、模糊、大角度、遮挡、双行或特殊版式仍可能漏检或误识别。可用 `manual_box` 验证已知区域；生产环境建议接入专用车牌检测模型，再将裁剪区域交给本运行时。
+两个模型都不是端到端车牌检测器。官方 LPRNet 面向已裁剪的中国车牌；PP-OCR 回退能改善白底/国际车牌的字母数字识别，但它是通用文字识别模型，并非车牌专用模型。上传图片应通过 Web 四点工具或 `manual_quad` 提供精确区域并完成透视矫正；视频按“每帧已经是完整车牌”处理。摄像头场景仍使用轻量 OpenCV 候选定位，可靠性有限，生产环境应接入专用车牌检测模型。
 
 模型转换输入和脚本保留在 `rknn_model_zoo/examples/LPRNet`。

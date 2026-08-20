@@ -69,6 +69,12 @@ def config_snapshot():
         return dict(runtime_config)
 
 
+def cropped_plate_frame_params():
+    params = config_snapshot()
+    params.update(whole_image=True, detect=False)
+    return params
+
+
 def set_preview(image):
     global last_preview
     if image is None:
@@ -169,6 +175,7 @@ async def predict(
     max_plates: Optional[int] = Form(None),
     min_text_length: Optional[int] = Form(None),
     plate_layout: Optional[str] = Form(None),
+    manual_quad: Optional[str] = Form(None),
     manual_box: Optional[str] = Form(None),
     whole_image: bool = Form(False),
 ):
@@ -187,6 +194,14 @@ async def predict(
         params["min_text_length"] = int(min_text_length)
     if plate_layout is not None:
         params["plate_layout"] = plate_layout
+    if manual_quad:
+        try:
+            params["manual_quad"] = json.loads(manual_quad)
+        except json.JSONDecodeError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail="manual_quad must be JSON [[x1,y1],[x2,y2],[x3,y3],[x4,y4]]",
+            ) from exc
     if manual_box:
         try:
             params["manual_box"] = json.loads(manual_box)
@@ -195,6 +210,8 @@ async def predict(
     params["whole_image"] = whole_image
     try:
         result, inference_ms = run_prediction(image, params)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
     return {
@@ -249,7 +266,7 @@ def analyze_video_file(input_path, output_path):
                 break
             _, preview = None, None
             with runtime_lock:
-                result, preview = runtime.predict(frame, config_snapshot())
+                result, preview = runtime.predict(frame, cropped_plate_frame_params())
             set_preview(preview)
             snapshot = dict(result)
             snapshot["updated_at"] = time.time()
@@ -351,7 +368,8 @@ def process_realtime_source(video, camera_id):
                     source_state["error"] = f"Lost camera source: {source}"
                 break
             try:
-                _, inference_ms = run_prediction(frame)
+                params = cropped_plate_frame_params() if is_video else None
+                _, inference_ms = run_prediction(frame, params)
             except Exception as exc:
                 with source_lock:
                     source_state["error"] = str(exc)
@@ -393,6 +411,9 @@ HTML_PAGE = """<!doctype html>
     button:disabled { opacity:.5; cursor:not-allowed; } input[type=number] { width:90px; } input[type=text] { width:220px; } input[type=number],input[type=text],select { padding:7px; background:#0d1117; color:#fff; border:1px solid var(--border); border-radius:5px; }
     .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin:9px 0; }
     .filename { color:var(--muted); max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .selection-wrap { display:none; margin:12px 0; padding:10px; background:#0b0f14; border:1px solid var(--border); border-radius:8px; }
+    #plateCanvas { display:block; max-width:100%; margin:auto; background:#000; border-radius:6px; cursor:crosshair; touch-action:none; }
+    .selection-help { margin:8px 0 0; color:var(--muted); }
     progress { width:100%; height:15px; accent-color:var(--green); }
     code { color:#7ee787; } a { color:var(--green); } pre { white-space:pre-wrap; overflow:auto; color:#c9d1d9; }
     @media(max-width:850px) { main { grid-template-columns:1fr; } }
@@ -411,13 +432,17 @@ HTML_PAGE = """<!doctype html>
       <h2>Analyze an image</h2>
       <div class="row"><label class="button" for="imageFile">Choose image</label><span id="imageName" class="filename">No image selected</span></div>
       <input id="imageFile" type="file" accept="image/*" hidden>
-      <div class="row"><label><input id="wholeImage" type="checkbox"> The image is already a cropped license plate</label></div>
-      <div class="row"><label>Manual box (optional) <input id="manualBox" type="text" placeholder="x1,y1,x2,y2"></label></div>
-      <button id="imageButton" onclick="analyzeImage()">Run image recognition</button>
+      <div id="selectionWrap" class="selection-wrap">
+        <canvas id="plateCanvas"></canvas>
+        <p class="selection-help">Drag the four numbered corner points onto the license plate. The selected quadrilateral is perspective-corrected before recognition.</p>
+        <button type="button" onclick="resetSelection()">Reset to image edges</button>
+      </div>
+      <button id="imageButton" onclick="analyzeImage()" disabled>Recognize selected plate</button>
       <pre id="imageResponse"></pre>
     </div>
     <div class="card">
       <h2>Upload and analyze an MP4 video</h2>
+      <p class="status">Every video frame must already contain one cropped plate. Each frame is resized and recognized as a complete plate image, independent of source frame rate.</p>
       <div class="row"><label class="button" for="videoFile">Choose MP4</label><span id="videoName" class="filename">No video selected</span></div>
       <input id="videoFile" type="file" accept="video/mp4,.mp4" hidden>
       <button id="videoButton" onclick="analyzeVideo()">Upload and start analysis</button>
@@ -440,14 +465,35 @@ HTML_PAGE = """<!doctype html>
 </main>
 <script>
 const imageFile=document.getElementById('imageFile'),videoFile=document.getElementById('videoFile');
-imageFile.addEventListener('change',()=>document.getElementById('imageName').textContent=imageFile.files[0]?.name||'No image selected');
+const selectionCanvas=document.getElementById('plateCanvas'),selectionContext=selectionCanvas.getContext('2d');
+const selectionImage=new Image();let selectionPoints=[],activePoint=-1,imageObjectUrl='';
+function drawSelection(){
+  if(!selectionImage.complete||!selectionCanvas.width)return;
+  selectionContext.clearRect(0,0,selectionCanvas.width,selectionCanvas.height);
+  selectionContext.drawImage(selectionImage,0,0,selectionCanvas.width,selectionCanvas.height);
+  if(selectionPoints.length!==4)return;
+  selectionContext.beginPath();selectionContext.moveTo(selectionPoints[0][0],selectionPoints[0][1]);
+  for(let index=1;index<4;index++)selectionContext.lineTo(selectionPoints[index][0],selectionPoints[index][1]);
+  selectionContext.closePath();selectionContext.fillStyle='rgba(0,230,118,.16)';selectionContext.fill();selectionContext.strokeStyle='#00e676';selectionContext.lineWidth=3;selectionContext.stroke();
+  selectionPoints.forEach((point,index)=>{selectionContext.beginPath();selectionContext.arc(point[0],point[1],10,0,Math.PI*2);selectionContext.fillStyle='#00e676';selectionContext.fill();selectionContext.strokeStyle='#06130b';selectionContext.lineWidth=2;selectionContext.stroke();selectionContext.fillStyle='#06130b';selectionContext.font='bold 12px system-ui';selectionContext.textAlign='center';selectionContext.textBaseline='middle';selectionContext.fillText(String(index+1),point[0],point[1]);});
+}
+function resetSelection(){
+  if(!selectionCanvas.width)return;const padX=Math.max(2,selectionCanvas.width*.04),padY=Math.max(2,selectionCanvas.height*.08);
+  selectionPoints=[[padX,padY],[selectionCanvas.width-padX,padY],[selectionCanvas.width-padX,selectionCanvas.height-padY],[padX,selectionCanvas.height-padY]];drawSelection();
+}
+function canvasPoint(event){const rect=selectionCanvas.getBoundingClientRect();return[(event.clientX-rect.left)*selectionCanvas.width/rect.width,(event.clientY-rect.top)*selectionCanvas.height/rect.height];}
+selectionCanvas.addEventListener('pointerdown',event=>{if(selectionPoints.length!==4)return;const point=canvasPoint(event),scale=selectionCanvas.width/selectionCanvas.getBoundingClientRect().width,limit=24*scale;let best=limit;activePoint=-1;selectionPoints.forEach((candidate,index)=>{const distance=Math.hypot(candidate[0]-point[0],candidate[1]-point[1]);if(distance<best){best=distance;activePoint=index;}});if(activePoint>=0){selectionCanvas.setPointerCapture(event.pointerId);event.preventDefault();}});
+selectionCanvas.addEventListener('pointermove',event=>{if(activePoint<0)return;const point=canvasPoint(event);selectionPoints[activePoint]=[Math.max(0,Math.min(selectionCanvas.width-1,point[0])),Math.max(0,Math.min(selectionCanvas.height-1,point[1]))];drawSelection();event.preventDefault();});
+function finishSelection(event){if(activePoint>=0&&selectionCanvas.hasPointerCapture(event.pointerId))selectionCanvas.releasePointerCapture(event.pointerId);activePoint=-1;}
+selectionCanvas.addEventListener('pointerup',finishSelection);selectionCanvas.addEventListener('pointercancel',finishSelection);
+imageFile.addEventListener('change',()=>{const file=imageFile.files[0];document.getElementById('imageName').textContent=file?.name||'No image selected';document.getElementById('imageButton').disabled=true;if(!file){document.getElementById('selectionWrap').style.display='none';return;}if(imageObjectUrl)URL.revokeObjectURL(imageObjectUrl);imageObjectUrl=URL.createObjectURL(file);selectionImage.onload=()=>{const scale=Math.min(1,1000/selectionImage.naturalWidth,620/selectionImage.naturalHeight);selectionCanvas.width=Math.max(1,Math.round(selectionImage.naturalWidth*scale));selectionCanvas.height=Math.max(1,Math.round(selectionImage.naturalHeight*scale));document.getElementById('selectionWrap').style.display='block';resetSelection();document.getElementById('imageButton').disabled=false;};selectionImage.src=imageObjectUrl;});
 videoFile.addEventListener('change',()=>document.getElementById('videoName').textContent=videoFile.files[0]?.name||'No video selected');
 const escapeHtml=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
 async function jsonRequest(url,options){const response=await fetch(url,options);const body=await response.json();if(!response.ok)throw new Error(body.detail||JSON.stringify(body));return body;}
 async function analyzeImage(){
-  if(!imageFile.files.length){document.getElementById('imageResponse').textContent='Choose an image first.';return;}
+  if(!imageFile.files.length||selectionPoints.length!==4){document.getElementById('imageResponse').textContent='Choose an image and position all four corner points first.';return;}
   const button=document.getElementById('imageButton');button.disabled=true;
-  try{const data=new FormData();data.append('file',imageFile.files[0]);data.append('whole_image',document.getElementById('wholeImage').checked);data.append('plate_layout',document.getElementById('plateLayout').value);const manual=document.getElementById('manualBox').value.trim();if(manual){const values=manual.split(',').map(Number);if(values.length!==4||values.some(value=>!Number.isFinite(value)))throw new Error('Manual box must contain x1,y1,x2,y2');data.append('manual_box',JSON.stringify(values));}const body=await jsonRequest('/api/models/lprnet/predict',{method:'POST',body:data});document.getElementById('imageResponse').textContent=JSON.stringify(body,null,2);}
+  try{const scaleX=selectionImage.naturalWidth/selectionCanvas.width,scaleY=selectionImage.naturalHeight/selectionCanvas.height;const quad=selectionPoints.map(point=>[Math.round(point[0]*scaleX*100)/100,Math.round(point[1]*scaleY*100)/100]);const data=new FormData();data.append('file',imageFile.files[0]);data.append('manual_quad',JSON.stringify(quad));data.append('plate_layout',document.getElementById('plateLayout').value);const body=await jsonRequest('/api/models/lprnet/predict',{method:'POST',body:data});document.getElementById('imageResponse').textContent=JSON.stringify(body,null,2);}
   catch(error){document.getElementById('imageResponse').textContent='Error: '+error.message;}finally{button.disabled=false;}
 }
 async function analyzeVideo(){
@@ -464,7 +510,7 @@ async function refresh(){
   try{
     const [health,result,job]=await Promise.all([jsonRequest('/api/health'),jsonRequest('/api/results/latest'),jsonRequest('/api/video/status')]);
     const source=health.source||{};document.getElementById('sourceStatus').textContent=`Source: ${source.mode||'web'} ${source.source||''} · ${source.is_running?'running':'idle'} · ${source.inference_ms||result.inference_ms||0} ms`;
-    const candidates=result.candidates||result.plates||[];const warnings=result.warnings||[];document.getElementById('plates').innerHTML=(candidates.length?candidates.map((plate,index)=>`<div class="plate ${plate.accepted===false?'rejected':''}"><strong>#${index+1} ${escapeHtml(plate.text||'Unrecognized candidate')}</strong><span>Box: [${plate.box.join(', ')}]</span><br><span>Style: ${escapeHtml(plate.style||'unknown')} · recognizer: ${escapeHtml(plate.recognizer||'lprnet')} · score: ${plate.recognition_score}</span>${plate.reject_reason?`<br><span>${escapeHtml(plate.reject_reason)}</span>`:''}</div>`).join(''):'No plate candidate located in the latest frame.')+(warnings.length?`<div class="status">${warnings.map(escapeHtml).join('<br>')}</div>`:'');
+    const candidates=result.candidates||result.plates||[];const warnings=result.warnings||[];document.getElementById('plates').innerHTML=(candidates.length?candidates.map((plate,index)=>{const location=plate.quad?`Corners: ${plate.quad.map(point=>`[${point.join(', ')}]`).join(' ')}`:`Box: [${plate.box.join(', ')}]`;return `<div class="plate ${plate.accepted===false?'rejected':''}"><strong>#${index+1} ${escapeHtml(plate.text||'Unrecognized candidate')}</strong><span>${location}</span><br><span>Style: ${escapeHtml(plate.style||'unknown')} · recognizer: ${escapeHtml(plate.recognizer||'lprnet')} · score: ${plate.recognition_score}</span>${plate.rectified_size?`<br><span>Rectified crop: ${plate.rectified_size.join(' × ')} px</span>`:''}${plate.reject_reason?`<br><span>${escapeHtml(plate.reject_reason)}</span>`:''}</div>`;}).join(''):'No plate result is available for the latest frame.')+(warnings.length?`<div class="status">${warnings.map(escapeHtml).join('<br>')}</div>`:'');
     document.getElementById('progress').value=job.progress||0;document.getElementById('progressText').textContent=job.error?`Error: ${job.error}`:(job.is_processing?`Processing ${job.current_file}: ${job.progress}%`:(job.output&&job.progress===100?'Analysis complete':'Idle'));
     const download=document.getElementById('download');if(!job.is_processing&&job.output&&job.progress===100){download.href='/api/video/download/'+encodeURIComponent(job.output);download.style.display='inline-block';document.getElementById('videoButton').disabled=false;}
   }catch(error){document.getElementById('sourceStatus').textContent='Service status error: '+error.message;}
