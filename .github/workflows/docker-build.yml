@@ -73,6 +73,12 @@ jobs:
       max-parallel: 3
       matrix:
         platform:
+          - rk3588_ppseg
+          - rk3576_ppseg
+          - rk3588_mobilesam
+          - rk3576_mobilesam
+          - rk3588_retinaface
+          - rk3576_retinaface
           - rk3588_ppocr
           - rk3576_ppocr
 
@@ -80,7 +86,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v6
         with:
-          lfs: false
+          lfs: true
 
       - name: Check if build is needed
         id: check_changes
