@@ -16,3 +16,14 @@ src/rk3588_lprnet/model/lprnet.rknn -filter -diff -merge -text
 src/rk3588_lprnet/model/ppocr_rec.rknn -filter -diff -merge -text
 src/rk3588_lprnet/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
 src/rk3588_lprnet/video/test.mp4 -filter -diff -merge -text
+
+# Keep the end-to-end PPOCR images buildable when the repository LFS
+# bandwidth quota is exhausted. Each file remains below GitHub's blob limit.
+src/rk3576_ppocr/lib/librknnrt.so -filter -diff -merge -text
+src/rk3576_ppocr/model/ppocr_det.rknn -filter -diff -merge -text
+src/rk3576_ppocr/model/ppocr_rec.rknn -filter -diff -merge -text
+src/rk3576_ppocr/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3588_ppocr/lib/librknnrt.so -filter -diff -merge -text
+src/rk3588_ppocr/model/ppocr_det.rknn -filter -diff -merge -text
+src/rk3588_ppocr/model/ppocr_rec.rknn -filter -diff -merge -text
+src/rk3588_ppocr/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
