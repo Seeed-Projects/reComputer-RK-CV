@@ -214,6 +214,8 @@ Get real-time MJPEG video stream with detection boxes drawn, can be directly emb
 - [RK3588 ResNet50V2](src/rk3588_resnet50v2/README.md)
 - [RK3576 MobileNet](src/rk3576_mobilenet/README.md)
 - [RK3576 ResNet50V2](src/rk3576_resnet50v2/README.md)
+- [RK3588 PPOCR (Det + Rec)](src/rk3588_ppocr/README.md)
+- [RK3576 PPOCR (Det + Rec)](src/rk3576_ppocr/README.md)
 - [Python model project migration standard](src/PYTHON_PROJECT_STANDARD.md)
 
 ## Automated Build
