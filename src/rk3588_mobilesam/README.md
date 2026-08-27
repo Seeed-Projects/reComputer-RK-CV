@@ -106,7 +106,7 @@ docker build -f docker/rk3588/mobilesam.dockerfile \
 | `--host` | No | `0.0.0.0` | FastAPI listen address. |
 | `--port` | No | `8000` | Service port inside the container. |
 
-`PYTHONUNBUFFERED=1` flushes service logs immediately. `RKNN_LOG_LEVEL=0` hides known harmless static-model initialization messages; remove it when diagnosing RKNN startup. `renderD129` is the NPU node verified on the RK3588 board; check `/dev/dri/` if your board exposes a different node.
+`PYTHONUNBUFFERED=1` flushes service logs immediately. `RKNN_LOG_LEVEL=0` hides known harmless static-model initialization messages; remove it when diagnosing RKNN startup. `renderD129` is the NPU node verified on the RK3588 test board; check `/dev/dri/` if your board exposes a different node.
 
 ## API Documentation
 

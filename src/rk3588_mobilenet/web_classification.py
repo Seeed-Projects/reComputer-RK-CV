@@ -687,7 +687,7 @@ def main():
     parser.add_argument(
         '--model_path',
         type=str,
-        default=str(BASE_DIR / 'model' / 'mobilenet_v2.rknn'),
+        default=str(BASE_DIR / 'model' / 'rk3588_mobilenet_v2.rknn'),
         help='RKNN model path',
     )
     parser.add_argument('--camera_id', type=int, default=1, help='Camera device ID (default: 1 for /dev/video1)')

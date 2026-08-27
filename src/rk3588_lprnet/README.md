@@ -36,7 +36,7 @@ sudo docker run --rm --name rk3588-lprnet \
   --privileged --net=host \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-lprnet:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -55,7 +55,7 @@ sudo docker run --rm --name rk3588-lprnet-camera \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
   --device /dev/video0:/dev/video0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-lprnet:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -71,7 +71,7 @@ sudo docker run --rm --name rk3588-lprnet-video \
   --privileged --net=host \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-lprnet:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -100,7 +100,7 @@ docker build -f docker/rk3588/lprnet.dockerfile \
 | `--host` | No | `0.0.0.0` | FastAPI listen address. |
 | `--port` | No | `8000` | FastAPI listen port. |
 
-`PYTHONUNBUFFERED=1` flushes logs immediately. `RKNN_LOG_LEVEL=0` suppresses confirmed harmless RKNN static-shape initialization messages. `renderD128` is the node verified on the RK3588 test device; check `/dev/dri/` if your board exposes a different node.
+`PYTHONUNBUFFERED=1` flushes logs immediately. `RKNN_LOG_LEVEL=0` suppresses confirmed harmless RKNN static-shape initialization messages. `renderD129` is the node verified on the RK3588 test device; check `/dev/dri/` if your board exposes a different node.
 
 ## API
 

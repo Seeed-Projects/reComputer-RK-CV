@@ -36,7 +36,7 @@ sudo docker run --rm --name rk3588-lprnet \
   --privileged --net=host \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-lprnet:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -55,7 +55,7 @@ sudo docker run --rm --name rk3588-lprnet-camera \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
   --device /dev/video0:/dev/video0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-lprnet:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -71,7 +71,7 @@ sudo docker run --rm --name rk3588-lprnet-video \
   --privileged --net=host \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
-  --device /dev/dri/renderD128:/dev/dri/renderD128 \
+  --device /dev/dri/renderD129:/dev/dri/renderD129 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-lprnet:latest \
   python web_service.py --platform rk3588 --model_dir /app/model \
@@ -100,7 +100,7 @@ docker build -f docker/rk3588/lprnet.dockerfile \
 | `--host` | 否 | `0.0.0.0` | FastAPI 监听地址。 |
 | `--port` | 否 | `8000` | FastAPI 监听端口。 |
 
-`PYTHONUNBUFFERED=1` 让日志立即输出；`RKNN_LOG_LEVEL=0` 隐藏已确认无害的 RKNN 静态模型初始化提示。`renderD128` 是 RK3588 测试设备上已验证的节点；若设备不同，请检查本机 `/dev/dri/`。
+`PYTHONUNBUFFERED=1` 让日志立即输出；`RKNN_LOG_LEVEL=0` 隐藏已确认无害的 RKNN 静态模型初始化提示。`renderD129` 是 RK3588 测试设备上已验证的节点；若设备不同，请检查本机 `/dev/dri/`。
 
 ## API
 

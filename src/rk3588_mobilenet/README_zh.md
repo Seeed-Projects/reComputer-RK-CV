@@ -20,7 +20,7 @@
 - `web_classification.py`：提供 RKNN 推理、Web 预览和 FastAPI 接口的主程序。
 - `requirements.txt`：Python 运行依赖。
 
-默认模型为 `model/mobilenet_v2.rknn`，输入尺寸为 `224 x 224`。
+默认模型为 `model/rk3588_mobilenet_v2.rknn`，输入尺寸为 `224 x 224`。
 
 ## 快速开始
 
@@ -47,7 +47,7 @@ sudo docker run --rm --privileged --net=host \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
     ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-mobilenet:latest \
     python3 web_classification.py \
-    --model_path model/mobilenet_v2.rknn --camera_id -1
+    --model_path model/rk3588_mobilenet_v2.rknn --camera_id -1
 ```
 
 ### 2. 本地构建镜像

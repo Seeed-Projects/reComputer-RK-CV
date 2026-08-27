@@ -29,4 +29,4 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)" || exit 1
 
-CMD ["python", "web_classification.py", "--model_path", "model/mobilenet_v2.rknn", "--video_path", "video/test.mp4"]
+CMD ["python", "web_classification.py", "--model_path", "model/rk3588_mobilenet_v2.rknn", "--video_path", "video/test.mp4"]

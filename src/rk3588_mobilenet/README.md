@@ -20,7 +20,7 @@ This directory contains a MobileNetV2 image classification service optimized for
 - `web_classification.py`: Main application providing RKNN inference, Web preview, and FastAPI endpoints.
 - `requirements.txt`: Python runtime dependencies.
 
-The default model is `model/mobilenet_v2.rknn` and its input size is `224 x 224`.
+The default model is `model/rk3588_mobilenet_v2.rknn` and its input size is `224 x 224`.
 
 ## Quick Start
 
@@ -47,7 +47,7 @@ sudo docker run --rm --privileged --net=host \
     -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
     ghcr.io/seeed-projects/recomputer-rk-cv/rk3588-mobilenet:latest \
     python3 web_classification.py \
-    --model_path model/mobilenet_v2.rknn --camera_id -1
+    --model_path model/rk3588_mobilenet_v2.rknn --camera_id -1
 ```
 
 ### 2. Build the Image Locally
