@@ -27,3 +27,24 @@ src/rk3588_ppocr/lib/librknnrt.so -filter -diff -merge -text
 src/rk3588_ppocr/model/ppocr_det.rknn -filter -diff -merge -text
 src/rk3588_ppocr/model/ppocr_rec.rknn -filter -diff -merge -text
 src/rk3588_ppocr/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+
+# Keep the RK3588 images rebuilt by the alignment audit independent of the
+# repository LFS budget. Every listed file remains below GitHub's blob limit.
+src/rk3588_mobilenet/lib/librknnrt.so -filter -diff -merge -text
+src/rk3588_mobilenet/model/rk3588_mobilenet_v2.rknn -filter -diff -merge -text
+src/rk3588_mobilenet/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3588_mobilenet/video/test.mp4 -filter -diff -merge -text
+src/rk3588_ppseg/lib/librknnrt.so -filter -diff -merge -text
+src/rk3588_ppseg/model/ppseg.rknn -filter -diff -merge -text
+src/rk3588_ppseg/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3588_ppseg/video/test.mp4 -filter -diff -merge -text
+src/rk3588_mobilesam/lib/librknnrt.so -filter -diff -merge -text
+src/rk3588_mobilesam/model/mobilesam_decoder.rknn -filter -diff -merge -text
+src/rk3588_mobilesam/model/mobilesam_encoder.rknn -filter -diff -merge -text
+src/rk3588_mobilesam/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3588_mobilesam/video/test.mp4 -filter -diff -merge -text
+src/rk3588_retinaface/lib/librknnrt.so -filter -diff -merge -text
+src/rk3588_retinaface/model/retinaface_mobile.rknn -filter -diff -merge -text
+src/rk3588_retinaface/model/retinaface_resnet50.rknn -filter -diff -merge -text
+src/rk3588_retinaface/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
+src/rk3588_retinaface/video/test.mp4 -filter -diff -merge -text
