@@ -20,6 +20,7 @@ on:
       - 'src/rk3576_mobilesam/**'
       - 'src/rk3588_retinaface/**'
       - 'src/rk3576_retinaface/**'
+      - 'src/rk3588_lprnet/**'
       - 'src/rk3588_ppocr/**'
       - 'src/rk3576_ppocr/**'
       - 'src/rk3588_yolo11/**'
@@ -74,13 +75,10 @@ jobs:
       matrix:
         platform:
           - rk3588_ppseg
-          - rk3576_ppseg
           - rk3588_mobilesam
-          - rk3576_mobilesam
           - rk3588_retinaface
-          - rk3576_retinaface
-          - rk3588_ppocr
-          - rk3576_ppocr
+          - rk3588_lprnet
+          - rk3588_mobilenet
 
     steps:
       - name: Checkout Code
