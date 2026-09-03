@@ -20,6 +20,18 @@ on:
       - 'src/rk3576_mobilesam/**'
       - 'src/rk3588_retinaface/**'
       - 'src/rk3576_retinaface/**'
+      - 'src/rk3588_lite_transformer/**'
+      - 'src/rk3576_lite_transformer/**'
+      - 'src/rk3588_clip/**'
+      - 'src/rk3576_clip/**'
+      - 'src/rk3588_wav2vec2/**'
+      - 'src/rk3576_wav2vec2/**'
+      - 'src/rk3588_zipformer/**'
+      - 'src/rk3576_zipformer/**'
+      - 'src/rk3588_yamnet/**'
+      - 'src/rk3576_yamnet/**'
+      - 'src/rk3588_mms_tts/**'
+      - 'src/rk3576_mms_tts/**'
       - 'src/rk3588_ppocr/**'
       - 'src/rk3576_ppocr/**'
       - 'src/rk3588_yolo11/**'
@@ -73,14 +85,18 @@ jobs:
       max-parallel: 3
       matrix:
         platform:
-          - rk3588_ppseg
-          - rk3576_ppseg
-          - rk3588_mobilesam
-          - rk3576_mobilesam
-          - rk3588_retinaface
-          - rk3576_retinaface
-          - rk3588_ppocr
-          - rk3576_ppocr
+          - rk3588_lite_transformer
+          - rk3576_lite_transformer
+          - rk3588_clip
+          - rk3576_clip
+          - rk3588_wav2vec2
+          - rk3576_wav2vec2
+          - rk3588_zipformer
+          - rk3576_zipformer
+          - rk3588_yamnet
+          - rk3576_yamnet
+          - rk3588_mms_tts
+          - rk3576_mms_tts
 
     steps:
       - name: Checkout Code
