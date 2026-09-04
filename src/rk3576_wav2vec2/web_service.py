@@ -131,6 +131,7 @@ async def predict(
     topk: Optional[int] = Form(None),
     threshold: Optional[float] = Form(None),
     hop_seconds: Optional[float] = Form(None),
+    beam_width: Optional[int] = Form(None),
 ):
     if runtime is None or model_name != runtime.name:
         raise HTTPException(status_code=404, detail="Unknown model")
@@ -143,6 +144,8 @@ async def predict(
         params["threshold"] = threshold
     if hop_seconds is not None:
         params["hop_seconds"] = hop_seconds
+    if beam_width is not None:
+        params["beam_width"] = beam_width
 
     if runtime.input_kind == "text":
         if not text or not text.strip():

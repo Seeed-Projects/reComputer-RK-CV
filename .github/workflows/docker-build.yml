@@ -22,6 +22,10 @@ on:
       - 'src/rk3576_retinaface/**'
       - 'src/rk3588_ppocr/**'
       - 'src/rk3576_ppocr/**'
+      - 'src/rk3588_wav2vec2/**'
+      - 'src/rk3576_wav2vec2/**'
+      - 'src/rk3588_mms_tts/**'
+      - 'src/rk3576_mms_tts/**'
       - 'src/rk3588_yolo11/**'
       - 'src/rk3576_yolo11/**'
       - 'src/rk3588_yolov8_obb/**'
@@ -73,14 +77,10 @@ jobs:
       max-parallel: 3
       matrix:
         platform:
-          - rk3588_ppseg
-          - rk3576_ppseg
-          - rk3588_mobilesam
-          - rk3576_mobilesam
-          - rk3588_retinaface
-          - rk3576_retinaface
-          - rk3588_ppocr
-          - rk3576_ppocr
+          - rk3588_wav2vec2
+          - rk3576_wav2vec2
+          - rk3588_mms_tts
+          - rk3576_mms_tts
 
     steps:
       - name: Checkout Code

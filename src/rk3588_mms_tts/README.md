@@ -7,6 +7,7 @@ English speech synthesis using `facebook/mms-tts-eng` encoder and decoder models
 ## Features
 
 - English text entry with immediate validation
+- Speaking-rate control from 0.6x to 1.4x by scaling phoneme durations, without post-resampling the WAV
 - Browser WAV playback and download
 - REST API and CLI output file
 - Generated duration, sample rate, and sample count
@@ -34,15 +35,15 @@ Open `http://<Board_IP>:8000`.
 
 ```bash
 python inference.py --platform rk3588 --model_dir model \
-    --text 'hello from the edge' --output output.wav
+    --text 'hello from the edge' --speaking_rate 0.8 --output output.wav
 ```
 
 ## API
 
 ```bash
 curl -X POST http://127.0.0.1:8000/api/models/mms_tts/predict \
-    -F 'text=hello from the edge'
+    -F 'text=hello from the edge' -F 'speaking_rate=0.8'
 curl -o speech.wav http://127.0.0.1:8000/api/audio/<audio_filename>
 ```
 
-The prediction response contains `audio_url` and `audio_filename`; generated files are retained temporarily and the newest 20 are kept. Input is English, at most 99 supported characters. Unsupported characters are rejected rather than silently dropped. OpenAPI documentation is at `/docs`.
+`speaking_rate` ranges from `0.6` to `1.4` and defaults to `1.0`; values below 1 are slower. The parameter scales phoneme durations before decoding, preserving pitch. Very long text at a slow rate can reach the decoder duration limit and returns `duration_clipped` plus a warning. The prediction response contains `audio_url` and `audio_filename`; generated files are retained temporarily and the newest 20 are kept. Input is English, at most 99 supported characters. Unsupported characters are rejected rather than silently dropped. OpenAPI documentation is at `/docs`.

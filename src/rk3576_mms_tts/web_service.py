@@ -131,6 +131,7 @@ async def predict(
     topk: Optional[int] = Form(None),
     threshold: Optional[float] = Form(None),
     hop_seconds: Optional[float] = Form(None),
+    speaking_rate: Optional[float] = Form(None),
 ):
     if runtime is None or model_name != runtime.name:
         raise HTTPException(status_code=404, detail="Unknown model")
@@ -143,6 +144,8 @@ async def predict(
         params["threshold"] = threshold
     if hop_seconds is not None:
         params["hop_seconds"] = hop_seconds
+    if speaking_rate is not None:
+        params["speaking_rate"] = speaking_rate
 
     if runtime.input_kind == "text":
         if not text or not text.strip():

@@ -8,6 +8,8 @@ from rknn_runtime import RKNNModel
 
 
 MAX_LENGTH = 200
+MIN_SPEAKING_RATE = 0.6
+MAX_SPEAKING_RATE = 1.4
 VOCAB = {' ': 19, "'": 1, '-': 14, '0': 23, '1': 15, '2': 28, '3': 11, '4': 27, '5': 35, '6': 36, '_': 30, 'a': 26, 'b': 24, 'c': 12, 'd': 5, 'e': 7, 'f': 20, 'g': 37, 'h': 6, 'i': 18, 'j': 16, 'k': 0, 'l': 21, 'm': 17, 'n': 29, 'o': 22, 'p': 13, 'q': 34, 'r': 25, 's': 8, 't': 33, 'u': 4, 'v': 32, 'w': 9, 'x': 31, 'y': 3, 'z': 2, '–': 10}
 
 
@@ -31,10 +33,11 @@ def tokenize(text):
     return np.asarray(ids, dtype=np.int64)[None], np.asarray(mask, dtype=np.int64)[None]
 
 
-def build_attention(log_duration, input_mask):
-    duration = np.ceil(np.exp(log_duration) * input_mask).astype(np.int64)
-    predicted = max(1, int(duration.sum()))
+def build_attention(log_duration, input_mask, speaking_rate=1.0):
+    duration = np.ceil(np.exp(log_duration) * input_mask / speaking_rate).astype(np.int64)
+    requested = max(1, int(duration.sum()))
     output_length = MAX_LENGTH * 2
+    predicted = min(requested, output_length)
     output_mask = (np.arange(output_length)[None, None, :] < predicted).astype(input_mask.dtype)
     attention = np.zeros((1, 1, output_length, MAX_LENGTH), dtype=np.float32)
     cursor = 0
@@ -43,7 +46,7 @@ def build_attention(log_duration, input_mask):
         attention[0, 0, cursor:end, index] = 1
         cursor = end
     attention *= input_mask[:, :, None, :] * output_mask[:, :, :, None]
-    return attention, output_mask, min(predicted, output_length)
+    return attention, output_mask, predicted, requested > output_length
 
 
 class Runtime:
@@ -56,27 +59,40 @@ class Runtime:
         self.encoder = RKNNModel(self.model_dir / "encoder.rknn", platform, core_index=0)
         self.decoder = RKNNModel(self.model_dir / "decoder.rknn", platform, core_index=1)
         self.model_names = ["encoder.rknn", "decoder.rknn"]
+        self.config = {"speaking_rate": 1.0}
 
     def describe(self):
         return {
             "task": "English text-to-speech synthesis",
             "sample_rate": 16000,
             "max_characters": 99,
+            "speaking_rate_range": [MIN_SPEAKING_RATE, MAX_SPEAKING_RATE],
             "supported_characters": "".join(sorted(VOCAB)),
         }
 
     def get_config(self):
-        return {}
+        return dict(self.config)
 
     def update_config(self, values):
-        if values:
-            raise ValueError("MMS-TTS has no runtime settings")
-        return {}
+        speaking_rate = float(values.get("speaking_rate", self.config["speaking_rate"]))
+        if not MIN_SPEAKING_RATE <= speaking_rate <= MAX_SPEAKING_RATE:
+            raise ValueError(
+                f"speaking_rate must be between {MIN_SPEAKING_RATE} and {MAX_SPEAKING_RATE}"
+            )
+        self.config["speaking_rate"] = speaking_rate
+        return self.get_config()
 
     def predict(self, text, params):
+        speaking_rate = float(params.get("speaking_rate", self.config["speaking_rate"]))
+        if not MIN_SPEAKING_RATE <= speaking_rate <= MAX_SPEAKING_RATE:
+            raise ValueError(
+                f"speaking_rate must be between {MIN_SPEAKING_RATE} and {MAX_SPEAKING_RATE}"
+            )
         input_ids, attention_mask = tokenize(text)
         log_duration, input_padding_mask, means, log_variances = self.encoder.run([input_ids, attention_mask])
-        attention, output_mask, predicted = build_attention(np.asarray(log_duration), np.asarray(input_padding_mask))
+        attention, output_mask, predicted, duration_clipped = build_attention(
+            np.asarray(log_duration), np.asarray(input_padding_mask), speaking_rate
+        )
         waveform = np.asarray(self.decoder.run([attention, output_mask, means, log_variances])[0]).reshape(-1)
         waveform = waveform[:predicted * 256]
         if not len(waveform) or not np.isfinite(waveform).all():
@@ -88,6 +104,9 @@ class Runtime:
             "sample_rate": 16000,
             "samples": len(waveform),
             "duration_seconds": round(len(waveform) / 16000.0, 3),
+            "speaking_rate": speaking_rate,
+            "duration_clipped": duration_clipped,
+            "warnings": ["The generated duration reached the decoder limit; use shorter text or a faster speaking rate"] if duration_clipped else [],
             "_audio_bytes": output.getvalue(),
         }
 

@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--topk", type=int)
     parser.add_argument("--threshold", type=float)
     parser.add_argument("--hop_seconds", type=float)
+    parser.add_argument("--beam_width", type=int, default=8, help="CTC beam width (1-32)")
     parser.add_argument("--output", default="output.wav")
     args = parser.parse_args()
 
@@ -35,6 +36,7 @@ def main():
         value = getattr(args, key)
         if value is not None:
             params[key] = value
+    params["beam_width"] = args.beam_width
 
     started = time.perf_counter()
     if args.files:

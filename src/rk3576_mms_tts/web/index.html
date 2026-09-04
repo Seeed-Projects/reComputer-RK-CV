@@ -1,1 +1,33 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MMS-TTS Speech Synthesis</title><link rel="stylesheet" href="/style.css"></head><body><header><span class="badge">Rockchip NPU · MMS-TTS English</span><h1>Text-to-Speech Studio</h1><p>Generate an English WAV file on the NPU, listen in the browser, and download the result.</p></header><main class="grid"><section class="card wide"><h2>English text</h2><label for="text">Text (maximum 99 supported characters)</label><textarea id="text" maxlength="99">hello from the recomputer edge ai platform</textarea><p><span id="count">0</span>/99 characters</p><button id="run">Generate speech</button><div id="status" class="status"></div></section><section class="card wide"><h2>Generated audio</h2><audio id="player" controls></audio><p id="meta" class="muted">The audio details will appear here.</p><a id="download" class="button" hidden download="mms_tts.wav">Download WAV</a></section><section class="card wide links"><a href="/docs">OpenAPI documentation</a><a href="/api/health">Health status</a></section></main><script>const $=id=>document.getElementById(id);$('text').oninput=()=>$('count').textContent=$('text').value.length;$('text').oninput();$('run').onclick=async()=>{const b=$('run'),s=$('status'),f=new FormData();f.append('text',$('text').value);b.disabled=true;s.textContent='Synthesizing…';s.className='status';try{const r=await fetch('/api/models/mms_tts/predict',{method:'POST',body:f}),d=await r.json();if(!r.ok)throw Error(d.detail||JSON.stringify(d));const url=d.result.audio_url;$('player').src=url;$('download').href=url;$('download').hidden=false;$('meta').textContent=`${d.result.duration_seconds} s · ${d.result.sample_rate} Hz · ${d.result.samples} samples · inference ${d.inference_time_ms} ms`;s.textContent='Speech is ready.'}catch(e){s.textContent=e.message;s.className='status error'}finally{b.disabled=false}};</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>MMS-TTS Speech Synthesis</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header><span class="badge">Rockchip NPU · MMS-TTS English</span><h1>Text-to-Speech Studio</h1><p>Generate an English WAV file on the NPU, adjust its speaking rate, listen, and download the result.</p></header>
+<main class="grid">
+  <section class="card wide">
+    <h2>English text</h2>
+    <label for="text">Text (maximum 99 supported characters)</label>
+    <textarea id="text" maxlength="99">hello from the recomputer edge ai platform</textarea>
+    <p><span id="count">0</span>/99 characters</p>
+    <label for="rate">Speaking rate: <strong id="rateValue">1.00×</strong></label>
+    <input id="rate" type="range" min="0.6" max="1.4" step="0.05" value="1.0" style="width:100%;accent-color:#14db9a">
+    <p class="muted">Lower values speak more slowly; higher values speak faster.</p>
+    <button id="run">Generate speech</button><div id="status" class="status"></div>
+  </section>
+  <section class="card wide"><h2>Generated audio</h2><audio id="player" controls></audio><p id="meta" class="muted">The audio details will appear here.</p><a id="download" class="button" hidden download="mms_tts.wav">Download WAV</a></section>
+  <section class="card wide links"><a href="/docs">OpenAPI documentation</a><a href="/api/health">Health status</a></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+$('text').oninput=()=>$('count').textContent=$('text').value.length;
+$('rate').oninput=()=>$('rateValue').textContent=Number($('rate').value).toFixed(2)+'×';
+$('text').oninput();$('rate').oninput();
+$('run').onclick=async()=>{const b=$('run'),s=$('status'),f=new FormData();f.append('text',$('text').value);f.append('speaking_rate',$('rate').value);b.disabled=true;s.textContent='Synthesizing…';s.className='status';try{const r=await fetch('/api/models/mms_tts/predict',{method:'POST',body:f}),d=await r.json();if(!r.ok)throw Error(d.detail||JSON.stringify(d));const x=d.result,url=x.audio_url;$('player').src=url;$('download').href=url;$('download').hidden=false;$('meta').textContent=`${x.duration_seconds} s · ${x.sample_rate} Hz · ${x.samples} samples · ${Number(x.speaking_rate).toFixed(2)}× · inference ${d.inference_time_ms} ms${x.duration_clipped?' · duration limit reached':''}`;s.textContent=x.duration_clipped?x.warnings[0]:'Speech is ready.';s.className=x.duration_clipped?'status error':'status'}catch(e){s.textContent=e.message;s.className='status error'}finally{b.disabled=false}};
+</script>
+</body>
+</html>

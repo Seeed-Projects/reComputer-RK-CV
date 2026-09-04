@@ -24,6 +24,7 @@ def main():
     parser.add_argument("--topk", type=int)
     parser.add_argument("--threshold", type=float)
     parser.add_argument("--hop_seconds", type=float)
+    parser.add_argument("--speaking_rate", type=float, default=1.0, help="Speech speed from 0.6 to 1.4")
     parser.add_argument("--output", default="output.wav")
     args = parser.parse_args()
 
@@ -35,6 +36,7 @@ def main():
         value = getattr(args, key)
         if value is not None:
             params[key] = value
+    params["speaking_rate"] = args.speaking_rate
 
     started = time.perf_counter()
     if args.files:
