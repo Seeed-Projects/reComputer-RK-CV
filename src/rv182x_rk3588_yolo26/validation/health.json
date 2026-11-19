@@ -1,0 +1,1 @@
+{"status":"ok","model":"yolo26n","accelerator":"rk1820","host":"rk3588","runtime":"rknn3-toolkit-lite 1.1.0","inference_count":2473,"runtime_ms":31.69,"total_ms":51.88,"preview_frames":2039,"preview_error":""}

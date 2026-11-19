@@ -48,6 +48,7 @@ on:
       - 'src/rk3576_mobilenet/**'
       - 'src/rk3576_resnet50v2/**'
       - 'docker/**'
+      - '!docker/rv182x-rk3588/**'
     tags: ['v*.*.*']
   pull_request:
   workflow_dispatch:

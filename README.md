@@ -239,3 +239,7 @@ This project supports automated multi-platform image building via GitHub Actions
 ### Modifying Models
 1. Place the trained and converted .rknn model into the `model/` directory of the corresponding platform.
 2. Add the `--model_path` argument to the running command to point to the new model (default already configured in Dockerfile).
+
+## RK182x PCIe accelerator · YOLO26
+
+The standalone [`rv182x-rk3588-yolo26`](src/rv182x_rk3588_yolo26/README.md) project runs YOLO26 on an external RK1820 M.2 accelerator with an RK3588 host and RKNN3 1.1.0. It includes Web preview, image/video APIs and offline video analysis. See its guide for host setup, Docker build and validation.

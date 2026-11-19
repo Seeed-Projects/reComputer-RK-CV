@@ -1,0 +1,250 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "yolo26n",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 905,
+    "runtime_ms": 25.38,
+    "total_ms": 36.56,
+    "preview_frames": 905,
+    "preview_error": ""
+  },
+  "image": {
+    "success": true,
+    "source": "uploaded image",
+    "predictions": [
+      {
+        "class": "person",
+        "class_id": 0,
+        "confidence": 0.8741939067840576,
+        "box": {
+          "x1": 108,
+          "y1": 237,
+          "x2": 222,
+          "y2": 534
+        }
+      },
+      {
+        "class": "person",
+        "class_id": 0,
+        "confidence": 0.810600996017456,
+        "box": {
+          "x1": 211,
+          "y1": 240,
+          "x2": 285,
+          "y2": 512
+        }
+      },
+      {
+        "class": "bus",
+        "class_id": 5,
+        "confidence": 0.810600996017456,
+        "box": {
+          "x1": 84,
+          "y1": 137,
+          "x2": 559,
+          "y2": 444
+        }
+      },
+      {
+        "class": "person",
+        "class_id": 0,
+        "confidence": 0.7249759435653687,
+        "box": {
+          "x1": 476,
+          "y1": 232,
+          "x2": 560,
+          "y2": 520
+        }
+      },
+      {
+        "class": "person",
+        "class_id": 0,
+        "confidence": 0.5,
+        "box": {
+          "x1": 79,
+          "y1": 326,
+          "x2": 118,
+          "y2": 517
+        }
+      }
+    ],
+    "image": {
+      "width": 640,
+      "height": 640
+    },
+    "timing": {
+      "runtime_ms": 36.6,
+      "total_ms": 62.06
+    }
+  },
+  "concurrent_image_requests": 8,
+  "preview": "JPEG snapshot and MJPEG stream passed",
+  "video_frame": {
+    "success": true,
+    "source": "video frame at 0.1s",
+    "predictions": [
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.6610530018806458,
+        "box": {
+          "x1": 452,
+          "y1": 317,
+          "x2": 532,
+          "y2": 359
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.5,
+        "box": {
+          "x1": 293,
+          "y1": 298,
+          "x2": 339,
+          "y2": 347
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.5,
+        "box": {
+          "x1": 213,
+          "y1": 264,
+          "x2": 258,
+          "y2": 302
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.5,
+        "box": {
+          "x1": 161,
+          "y1": 254,
+          "x2": 205,
+          "y2": 286
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.5,
+        "box": {
+          "x1": 216,
+          "y1": 224,
+          "x2": 241,
+          "y2": 244
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.46750953793525696,
+        "box": {
+          "x1": 250,
+          "y1": 226,
+          "x2": 276,
+          "y2": 250
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.37271642684936523,
+        "box": {
+          "x1": 306,
+          "y1": 225,
+          "x2": 331,
+          "y2": 250
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.3428259491920471,
+        "box": {
+          "x1": 114,
+          "y1": 191,
+          "x2": 129,
+          "y2": 201
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.33894702792167664,
+        "box": {
+          "x1": 5,
+          "y1": 299,
+          "x2": 89,
+          "y2": 357
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.33894702792167664,
+        "box": {
+          "x1": 117,
+          "y1": 251,
+          "x2": 165,
+          "y2": 285
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.3141321539878845,
+        "box": {
+          "x1": 534,
+          "y1": 223,
+          "x2": 560,
+          "y2": 241
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.2867918908596039,
+        "box": {
+          "x1": 178,
+          "y1": 224,
+          "x2": 208,
+          "y2": 247
+        }
+      }
+    ],
+    "image": {
+      "width": 640,
+      "height": 360
+    },
+    "timing": {
+      "runtime_ms": 36.81,
+      "total_ms": 56.24
+    }
+  },
+  "offline_analysis": {
+    "is_processing": false,
+    "progress": 100,
+    "current_video": "short.mp4",
+    "error": ""
+  },
+  "output_video_bytes": 778466,
+  "final_health": {
+    "status": "ok",
+    "model": "yolo26n",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 971,
+    "runtime_ms": 30.02,
+    "total_ms": 50.24,
+    "preview_frames": 930,
+    "preview_error": ""
+  }
+}

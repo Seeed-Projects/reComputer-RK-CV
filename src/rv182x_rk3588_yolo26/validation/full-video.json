@@ -1,0 +1,12 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "width": 3840,
+            "height": 2160,
+            "nb_frames": "394"
+        }
+    ]
+}

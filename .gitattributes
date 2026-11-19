@@ -49,3 +49,14 @@ src/rk3588_retinaface/model/retinaface_mobile.rknn -filter -diff -merge -text
 src/rk3588_retinaface/model/retinaface_resnet50.rknn -filter -diff -merge -text
 src/rk3588_retinaface/rknn-toolkit-lite2-packages/rknn_toolkit_lite2-2.3.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl -filter -diff -merge -text
 src/rk3588_retinaface/video/test.mp4 -filter -diff -merge -text
+
+# RK182x standalone YOLO26 assets
+src/rv182x_rk3588_yolo26/lib/*.so -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/model/*.rknn -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/model/*.weight -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/model/*.jpg -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/video/*.mp4 -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/rknn3-toolkit-lite-packages/*.whl -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/host/firmware/*.img -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/host/bin/* -filter -diff -merge -text
+src/rv182x_rk3588_yolo26/conversion/calibration/*.jpg -filter -diff -merge -text

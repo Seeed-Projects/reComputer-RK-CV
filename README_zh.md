@@ -239,3 +239,7 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 ### 修改模型
 1. 将训练好并转换完成的 .rknn 模型放入相应平台的 `model/` 目录。
 2. 运行命令时可添加 `--model_path` 参数指向新模型（默认已在 Dockerfile 中配置）。
+
+## RK182x PCIe 加速卡 · YOLO26
+
+新增独立项目 [`rv182x-rk3588-yolo26`](src/rv182x_rk3588_yolo26/README_zh.md)：RK3588 主控 + 外接 RK1820 M.2，RKNN3 1.1.0，支持 Web 预览、图片/视频 API 和离线视频分析。Host 准备、Docker 构建及测试命令见项目说明。

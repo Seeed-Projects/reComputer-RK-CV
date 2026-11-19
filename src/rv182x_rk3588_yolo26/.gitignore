@@ -1,0 +1,17 @@
+workspace/
+__pycache__/
+**/__pycache__/
+*.pyc
+verification.json
+host/pcie-rkep/*.o
+host/pcie-rkep/*.ko
+host/pcie-rkep/*.mod*
+host/pcie-rkep/.*.cmd
+host/pcie-rkep/Module.symvers
+host/pcie-rkep/modules.order
+host/pcie-rkep/.tmp_versions/
+
+model/*.pt
+model/*.onnx
+conversion/tmp/
+conversion/snapshot/
