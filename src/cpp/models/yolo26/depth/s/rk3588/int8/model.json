@@ -1,0 +1,22 @@
+{
+  "id": "yolo26s-depth-rk3588-int8",
+  "name": "yolo26s-depth",
+  "family": "yolo26",
+  "task": "depth",
+  "backend": "yolo",
+  "chip": "rk3588",
+  "size": "s",
+  "precision": "int8",
+  "tag": "rk3588-yolo26s-depth-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/depth/yolo26s-depth/rk3588/int8/model.rknn",
+  "sha256": "f09220d0f539f55f31c792d9ea61b0c09b0ec1ef0b09ad35bb2d0c3264db0899",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/depth/yolo26s-depth/rk3588/int8/metadata.yaml",
+  "metadata_sha256": "9bca789f45cea8efd35214759070143b642e2a3c6d93cf4fe15ceff2087a4180",
+  "classes": 1,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "align_corners",
+  "nms": true,
+  "conversion": "custom"
+}

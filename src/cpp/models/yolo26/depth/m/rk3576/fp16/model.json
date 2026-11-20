@@ -1,0 +1,22 @@
+{
+  "id": "yolo26m-depth-rk3576-fp16",
+  "name": "yolo26m-depth",
+  "family": "yolo26",
+  "task": "depth",
+  "backend": "yolo",
+  "chip": "rk3576",
+  "size": "m",
+  "precision": "fp16",
+  "tag": "rk3576-yolo26m-depth-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/depth/yolo26m-depth/rk3576/fp16/model.rknn",
+  "sha256": "43e118eae21100f8faa197c5b2f247c2e674292a65f7d22f8321705c2e8f7012",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/depth/yolo26m-depth/rk3576/fp16/metadata.yaml",
+  "metadata_sha256": "ec36feeedea446887f3dd38ffdfaa4d8f1382188e10eb2bdba16ee68c096eff3",
+  "classes": 1,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "align_corners",
+  "nms": true,
+  "conversion": "custom"
+}

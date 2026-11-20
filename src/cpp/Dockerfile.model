@@ -1,0 +1,3 @@
+ARG RUNTIME_IMAGE=rockchip-cv-runtime:local
+FROM ${RUNTIME_IMAGE}
+COPY package/ /opt/model/
