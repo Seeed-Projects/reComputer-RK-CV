@@ -2,10 +2,13 @@
 """Validate the catalog, generate CI matrices, and prepare model image assets."""
 
 import argparse
+from http.client import IncompleteRead
 import json
 import shutil
 import sys
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -34,14 +37,21 @@ def image_references(models):
 
 
 def download(url, target, checksum):
-    try:
-        with urllib.request.urlopen(url, timeout=120) as response:
-            if not response.url.startswith("https://"):
-                raise ValueError(f"Download redirected to an insecure URL: {url}")
-            with target.open("wb") as stream:
-                shutil.copyfileobj(response, stream)
-    except OSError as error:
-        raise ValueError(f"Could not download {url}: {error}") from error
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(url, timeout=120) as response:
+                if not response.url.startswith("https://"):
+                    raise ValueError(f"Download redirected to an insecure URL: {url}")
+                with target.open("wb") as stream:
+                    shutil.copyfileobj(response, stream)
+            break
+        except urllib.error.HTTPError as error:
+            if attempt == 2 or (error.code not in (408, 429) and error.code < 500):
+                raise ValueError(f"Could not download {url}: {error}") from error
+        except (urllib.error.URLError, TimeoutError, ConnectionError, IncompleteRead) as error:
+            if attempt == 2:
+                raise ValueError(f"Could not download {url}: {error}") from error
+        time.sleep(2 ** attempt)
     if sha256(target) != checksum:
         raise ValueError(f"Checksum mismatch: {url}")
 
