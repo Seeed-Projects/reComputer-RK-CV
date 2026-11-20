@@ -1,0 +1,20 @@
+{
+  "family": "yolov8",
+  "title": "YOLOv8",
+  "variants": [
+    "yolov8n",
+    "yolov8s",
+    "yolov8m"
+  ],
+  "default_variant": "yolov8n",
+  "labels": "coco_80_labels_list.txt",
+  "quantization": "w8a8",
+  "upstream_commit": "7f8c7d848448fa14cf16ba359ca98405c8bb94b5",
+  "runtime_version": "1.1.0",
+  "image": "rv182x-rk3588-yolov8",
+  "upstream_example": "yolov8",
+  "smoke_expected_ids": [
+    0,
+    5
+  ]
+}

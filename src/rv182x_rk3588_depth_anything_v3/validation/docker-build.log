@@ -1,0 +1,58 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from depth-anything-v3.dockerfile
+#1 transferring dockerfile: 985B done
+#1 DONE 0.1s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim-bookworm
+#2 DONE 6.8s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 182B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 2.32kB done
+#4 DONE 0.1s
+
+#5 [1/8] FROM docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+#5 resolve docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+#5 resolve docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39 0.1s done
+#5 DONE 0.2s
+
+#6 [5/8] COPY rknn3-toolkit-lite-packages/ /wheels/
+#6 CACHED
+
+#7 [6/8] RUN pip install --no-cache-dir --index-url "https://pypi.tuna.tsinghua.edu.cn/simple" -r requirements.txt /wheels/*.whl     && rm -rf /wheels
+#7 CACHED
+
+#8 [2/8] WORKDIR /app
+#8 CACHED
+
+#9 [3/8] RUN sed -i "s|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g" /etc/apt/sources.list.d/debian.sources && apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg     && rm -rf /var/lib/apt/lists/*
+#9 CACHED
+
+#10 [4/8] COPY requirements.txt .
+#10 CACHED
+
+#11 [7/8] COPY lib/ /usr/lib/
+#11 CACHED
+
+#12 [8/8] COPY . .
+#12 DONE 9.1s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 26.9s done
+#13 exporting manifest sha256:ac95219b73964e48d38a45179e821bd2f4290bcd62cae5840ce97f03a145a285 0.1s done
+#13 exporting config sha256:3586e5835cbefa358f7b0db0946db090ba398d57f9d903d20c28366f01d0beaf
+#13 exporting config sha256:3586e5835cbefa358f7b0db0946db090ba398d57f9d903d20c28366f01d0beaf 0.1s done
+#13 exporting attestation manifest sha256:8860ccac2ed90f6d0730d9552c8bbb25c4cbef0f64815749b268437658cb706f
+#13 exporting attestation manifest sha256:8860ccac2ed90f6d0730d9552c8bbb25c4cbef0f64815749b268437658cb706f 0.2s done
+#13 exporting manifest list sha256:14d215c6d205dd7d1e9531a97b77c4724c1bca1441021b1f8692ffcb2d13d037
+#13 exporting manifest list sha256:14d215c6d205dd7d1e9531a97b77c4724c1bca1441021b1f8692ffcb2d13d037 0.1s done
+#13 naming to docker.io/library/rv182x-rk3588-depth-anything-v3:local
+#13 naming to docker.io/library/rv182x-rk3588-depth-anything-v3:local 0.0s done
+#13 unpacking to docker.io/library/rv182x-rk3588-depth-anything-v3:local
+#13 unpacking to docker.io/library/rv182x-rk3588-depth-anything-v3:local 2.3s done
+#13 DONE 29.9s

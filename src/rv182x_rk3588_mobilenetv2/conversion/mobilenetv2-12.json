@@ -1,0 +1,33 @@
+{
+  "name": "mobilenetv2-12",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "input": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        123.675,
+        116.28,
+        103.53
+      ]
+    ],
+    "std_values": [
+      [
+        58.395,
+        57.120000000000005,
+        57.375
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "10c7eccc10d48a50265ed7904e00673690d56d1653a8e1e90a4b2b69e5add47a",
+  "seconds": 15.756604671478271
+}

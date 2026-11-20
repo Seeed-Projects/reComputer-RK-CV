@@ -1,0 +1,33 @@
+{
+  "name": "yolov8m",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "images": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        255,
+        255,
+        255
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "bbce4205df92975c082b4a96e7dd3f0f96f1508cc562743e21254ca3db97e1a7",
+  "seconds": 37.74345111846924
+}

@@ -1,0 +1,15 @@
+services:
+  app:
+    image: rv182x-rk3588-yolo26-segment:local
+    container_name: rv182x-rk3588-yolo26-segment
+    build:
+      context: .
+      dockerfile: ../../docker/rv182x-rk3588/yolo26-segment.dockerfile
+    privileged: true
+    network_mode: host
+    ipc: host
+    environment:
+      MODEL_VARIANT: ${MODEL_VARIANT:-yolo26n-seg}
+    volumes:
+      - ./workspace:/app/workspace
+    restart: unless-stopped

@@ -1,0 +1,26 @@
+{
+  "family": "depth-anything-v3",
+  "title": "Depth Anything V3 Base",
+  "variants": [
+    "da3-base"
+  ],
+  "default_variant": "da3-base",
+  "labels": "labels.txt",
+  "quantization": "w8a8",
+  "upstream_commit": "7f8c7d848448fa14cf16ba359ca98405c8bb94b5",
+  "runtime_version": "1.1.0",
+  "image": "rv182x-rk3588-depth-anything-v3",
+  "upstream_example": "depth_anything_v3",
+  "model_files": [
+    "da3_base_local",
+    "da3_base_global",
+    "da3_base_head"
+  ],
+  "input_shape": [
+    1,
+    280,
+    280,
+    3
+  ],
+  "views": 1
+}

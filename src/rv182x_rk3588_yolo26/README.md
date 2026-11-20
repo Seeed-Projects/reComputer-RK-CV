@@ -1,92 +1,194 @@
-# YOLO26 · RK1820 PCIe + RK3588
+# YOLO26 · RK1820 / RK3588
 
 English | [中文](README_zh.md)
 
-Standalone ARM64 Docker application named **`rv182x-rk3588-yolo26:latest`**. It follows the dark Web UI and API conventions of `rk3588_yolov8`: live MJPEG preview, confidence/IoU controls, image/video prediction and offline video analysis/download. Inference runs on the external **RK1820**, with RK3588 handling video and HTTP.
+Run **YOLO26 RKNN3** on an RK1820 M.2 accelerator connected to an RK3588 host over PCIe. This standalone Docker application provides a web preview, image/video-frame inference, video upload, offline processing and result download.
 
-## Prerequisites
+## Deployment status
 
-RK3588 Linux, a PCIe RK1820 M.2 module and Docker. The image bundles matching RKNN3 1.1.0 runtime libraries, Python Lite wheel, YOLO26n model/weight files and an exact copy of the YOLOv8 sample video. No on-device PyTorch or model conversion is required.
+Validated on RK3588 + RK1820 M.2. GitHub Actions publishes ARM64 images to GHCR; check the repository Actions for publication status.
 
-Prepare the host driver and proxy before starting the container:
+- Host: RK3588, Linux aarch64, Docker / Compose.
+- Accelerator: RK1820 M.2, PCIe, firmware / RKNN3 Lite **1.1.0**.
+- Quantization: **INT8 W8A8**, `do_quantization=True`, no manually assigned W16A16 subgraphs.
+- Variants: `yolo26n`, `yolo26s`, `yolo26m`.
+- Sample video: `video/test.mp4`, supplied `30_1080p.mp4` (traffic).
+
+## Directory layout
+
+```text
+rv182x_rk3588_yolo26/
+├── web_detection.py        # FastAPI + serialized preview/offline workers
+├── engine.py               # RKNN3 inference + task decoding/rendering
+├── index.html              # Live preview + local video analysis
+├── project.json            # Variants, task and artifact metadata
+├── model/                  # Paired .rknn/.weight files and labels
+├── video/test.mp4
+├── lib/                    # Matched ARM64 runtime libraries
+├── rknn3-toolkit-lite-packages/
+├── host/                   # Driver / proxy / matching M.2 firmware
+├── scripts/setup_host.sh
+├── conversion/             # Conversion config and provenance
+├── benchmark.py
+├── validation/             # Measured JSON + preview images
+└── compose.yaml
+```
+
+## Prepare the RK3588 host
 
 ```bash
 cd src/rv182x_rk3588_yolo26
+sudo apt-get install -y build-essential linux-headers-$(uname -r)
 sudo bash scripts/setup_host.sh
 ```
 
-Matching kernel headers, GCC and Make are needed if the driver is not loaded. The host script does not flash firmware by default. For a matching M.2 module that needs firmware, explicitly use `sudo bash scripts/setup_host.sh --flash-m2` (writes firmware and resets the accelerator). Select another PCIe BDF with `sudo RK182X_DEVICE=<BDF> bash scripts/setup_host.sh`. Continue once it reports **Online / OK**. Driver, firmware, proxy and container runtime must match SDK 1.1.0.
+Use `--flash-m2` only when the matched M.2 firmware needs updating. Normal startup does not require flashing. Inference uses the PCIe accelerator through the host RKNN3 proxy.
 
-The host script does not install an automatic boot service. Run it again after reboot; rebuild the driver after a kernel upgrade. Container restart alone cannot install a host kernel driver.
+## Quick deployment with GHCR
 
-## Build and run
+Prerequisites: Docker on Linux ARM64 RK3588, an Online RK1820 M.2 PCIe card, and the matching SDK 1.1.0 host driver / RKNN3 proxy installed using the host preparation below.
+
+#### Step A: Pull the image
+
+```bash
+sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
+```
+
+#### Step B: One-command run
+
+Stop other demos using port 8000 or the accelerator first. Run from a writable directory; `workspace` stores uploaded files and analysis results.
+
+```bash
+sudo docker run --rm --name rv182x-rk3588-yolo26 \
+  --privileged --net=host --ipc=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  -v "$(pwd)/workspace:/app/workspace" \
+  ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
+  python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --weight_path model/yolo26n.weight --video video/test.mp4
+```
+
+Open `http://<Board_IP>:8000`; API documentation: `http://<Board_IP>:8000/docs`. Press Ctrl+C to stop the foreground container; add `-d` after `run` for background operation.
+
+Available variants: `yolo26n`, `yolo26s`, `yolo26m`. Recreate the container after changing `--variant`; for single-file models, update the paired `--model_path` / `--weight_path` too.
+
+Bundled samples need no camera or DRM device mappings. Host IPC is required for RKNN3 proxy / DMA shared memory; inference runs on RK1820. For a camera, add the matching `--device /dev/video0:/dev/video0` and replace `--video video/test.mp4` with `--camera_id 0`.
+
+#### Custom display labels
+
+Defaults: 80 COCO classes. Create one name per line in `class_config.txt`, preserving the original class order and count. Renaming labels does not change recognition capabilities; new classes require a trained, converted model.
+
+```bash
+sudo docker run --rm --name rv182x-rk3588-yolo26 \
+  --privileged --net=host --ipc=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  -v "$(pwd)/class_config.txt:/app/class_config.txt:ro" \
+  -v "$(pwd)/workspace:/app/workspace" \
+  ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
+  python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --weight_path model/yolo26n.weight --video video/test.mp4 --class_path /app/class_config.txt
+```
+
+## Build the image
 
 From the repository root:
 
 ```bash
-sudo docker build --platform linux/arm64 \
+docker build --network host --platform linux/arm64 \
   -f docker/rv182x-rk3588/yolo26.dockerfile \
-  -t rv182x-rk3588-yolo26:latest src/rv182x_rk3588_yolo26
-
-sudo docker run -d --name rv182x-rk3588-yolo26 \
-  --privileged --network host --ipc host \
-  -v "$(pwd)/src/rv182x_rk3588_yolo26/workspace:/app/workspace" \
-  rv182x-rk3588-yolo26:latest
+  -t rv182x-rk3588-yolo26:local src/rv182x_rk3588_yolo26
 ```
 
-Alternatively run `sudo docker compose up -d --build` from the source directory. The SDK uses the host localhost proxy, PCIe DMA and shared memory; retain the shown network, IPC and device access settings.
+For a regional package mirror, add `--build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple --build-arg APT_MIRROR=https://mirrors.tuna.tsinghua.edu.cn`.
 
-Open `http://<RK3588_IP>:8000`; `/docs` provides OpenAPI and `/api/health` reports readiness and inference metrics. The default source is `video/test.mp4`, copied from `rk3588_yolov8`. The same sample is listed on the Local Video Analysis tab. Mounted `workspace/` stores uploads and outputs.
-
-Export/import an offline image:
+## One-command run
 
 ```bash
-sudo docker save rv182x-rk3588-yolo26:latest | gzip > rv182x-rk3588-yolo26.tar.gz
-gzip -dc rv182x-rk3588-yolo26.tar.gz | sudo docker load
+docker run -d --name rv182x-rk3588-yolo26 \
+  --privileged --network host --ipc host --restart unless-stopped \
+  -e MODEL_VARIANT=yolo26n \
+  -v "$PWD/workspace:/app/workspace" \
+  rv182x-rk3588-yolo26:local
 ```
 
-## Inputs and API
+Open **http://192.168.100.145:8000** (or your device IP).
 
-Replace the default command after the image name with:
-
-- `python web_detection.py --camera_id 1` for `/dev/video1`.
-- `python web_detection.py --rtsp rtsp://camera/stream` for RTSP.
-- `python web_detection.py --camera_id -1` for API/offline-analysis only.
-
-Also supported: `--model_path`, `--weight_path`, `--class_path`, `--core_mask`, `--video_path` / `--video`, `--host` and `--port`. This image uses OpenCV headless for browser presentation. Camera/RTSP decoding depends on the actual source and FFmpeg; tested scope is recorded in `VALIDATION.md`.
+Select a listed size using `MODEL_VARIANT` and recreate the container. Demonstrations share port 8000; stop the current demonstration before starting another.
 
 ```bash
-curl -X POST http://127.0.0.1:8000/api/models/yolo26/predict \
-  -F file=@model/bus.jpg -F conf=0.25 -F iou=0.45
-curl -X POST http://127.0.0.1:8000/api/models/yolo26/predict \
-  -F video=@video/test.mp4 -F timestamp=1
-curl -X POST http://127.0.0.1:8000/api/models/yolo26/predict -F realtime=true
+cd src/rv182x_rk3588_yolo26
+MODEL_VARIANT=yolo26m docker compose up -d --build
+docker compose logs -f
+docker compose down
 ```
 
-Video endpoints: `POST /api/video/upload`, `POST /api/video/analyze` (form `filename`), `GET /api/video/status`, `GET /api/video/list`, `GET /api/video/download/{filename}`. Preview endpoints: `/api/video_feed` (MJPEG), `/api/snapshot` (JPEG). Threshold endpoints: `GET /api/config`, `POST /api/config` (JSON `obj_thresh`, `nms_thresh`, range 0–1).
+`--privileged`, host networking and host IPC support the RKNN3 proxy, PCIe DMA and shared memory. Startup loads the model; check health before using inference.
 
-Preview, requests and offline analysis serialize access to one RKNN3 context. Each request keeps its own letterbox transform and thresholds. `runtime_ms` includes Lite inference transfer/synchronization overhead; it is not pure NPU latency. `total_ms` adds pre/postprocessing, excluding queue wait, video decode, JPEG encoding and HTTP transfer.
+## Labels and custom models
 
-## Validation and provenance
+The official model has 80 classes. To rename display labels, replace model/coco_80_labels_list.txt, one label per line with the original count/order, or use --class_path. Renaming does not retrain the model. A replacement of the same architecture requires a matching .rknn/.weight pair; use --model_path and --weight_path.
+
+## API usage
+
+Interactive API documentation: `/docs`.
 
 ```bash
-sha256sum -c SHA256SUMS
-python3 scripts/verify_api.py --url http://127.0.0.1:8000 --video short.mp4
+curl http://192.168.100.145:8000/api/health
+curl -X POST http://192.168.100.145:8000/api/models/yolo26/predict \
+  -F file=@sample.jpg -F conf=0.25 -F iou=0.45
+curl -X POST http://192.168.100.145:8000/api/predict \
+  -F video=@sample.mp4 -F timestamp=1.0
+curl -X POST http://192.168.100.145:8000/api/config \
+  -H 'Content-Type: application/json' -d '{"obj_thresh":0.25,"nms_thresh":0.45}'
 ```
 
-The hardware regression verifies COCO bus.jpg predictions, eight concurrent image requests, invalid thresholds, JPEG/MJPEG and optional video timestamp/offline processing. See `VALIDATION.md` for actual results.
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Model, runtime, call count and state |
+| `GET/POST /api/config` | Detection thresholds, range 0–1 |
+| `POST /api/predict` | Image, timestamped video frame or current preview; JSON results |
+| `GET /api/video_feed` | MJPEG preview |
+| `GET /api/snapshot` | JPEG snapshot |
+| `POST /api/video/upload` | multipart `file` |
+| `GET /api/video/list` | Input/output filenames |
+| `POST /api/video/analyze` | form `filename` |
+| `GET /api/video/status` | Progress and errors |
+| `GET /api/video/download/{filename}` | Download completed video |
 
-YOLO26 uses six box/logit heads, four distance channels per box head, sigmoid class scores and padding 114. YOLOv8 DFL postprocessing is not used. The bundled model is 640×640, COCO 80-class, one RK1820 core, W8A8 with upstream W16A16 subgraphs. Conversion scripts and source information are in `conversion/` and `NOTICE.md`.
+Provide either `file` or `video`; otherwise the current preview frame is used. Coordinates refer to the original image. Classification returns Top-5; segmentation adds `segments` polygons; pose adds 17 `keypoints` (x, y, confidence). Classification does not use detection thresholds. Invalid parameters: 422; invalid media: 400; conflicting jobs: 409; unavailable: 503.
 
-The independent RK182x workflow builds and publishes this ARM64 image on main/master pushes. After a successful workflow run, pull and tag it for the included Compose file:
+## On-device benchmark
+
+Only successful measurements from this RK3588 + RK1820 M.2 are listed. `—` means no passing measurement is available.
+
+| Variant | Quant | NHWC input | Runtime FPS | Pipeline FPS | Runtime p95 ms | Warmup / frames | Evidence / status |
+|---|---|---|---:|---:|---:|---:|---|
+| yolo26n | W8A8 | 1×640×640×3 | 33.59 | 12.87 | 36.80 | 5/30 | [JSON](validation/benchmark-yolo26n.json) |
+| yolo26s | W8A8 | 1×640×640×3 | 23.02 | 10.50 | 50.16 | 5/30 | [JSON](validation/benchmark-yolo26s.json) |
+| yolo26m | W8A8 | 1×640×640×3 | 12.50 | 7.41 | 86.17 | 5/30 | [JSON](validation/benchmark-yolo26m.json) |
+
+Conditions: RKNN3 Lite / firmware 1.1.0, core mask `0x1`, one serial process, other demonstration containers stopped. Runtime FPS = completed frames / accumulated synchronous Lite call time, including PCIe transfer and synchronization. Pipeline FPS includes video decoding, preprocessing, inference, task decoding, drawing and JPEG encoding up to 1280 pixels wide; excludes HTTP, network and source-FPS pacing. Live playback also depends on source FPS and other processing overhead.
 
 ```bash
-docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
-docker tag ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest rv182x-rk3588-yolo26:latest
+mkdir -p validation
+docker run --rm --privileged --network host --ipc host \
+  -v "$PWD/validation:/app/validation" rv182x-rk3588-yolo26:local \
+  python benchmark.py --variant yolo26n --warmup 5 --frames 30 \
+  --output validation/benchmark-yolo26n.json
 ```
 
-## overlayroot hosts
+A speed test is not a dataset accuracy evaluation. Traffic video suits detection and vehicle segmentation; ImageNet classes are not road-specific labels, and clear close-up people are needed for meaningful pose visualization.
 
-Docker/containerd snapshot storage must reside on a real writable filesystem, not the overlay root itself. An overlay mount `invalid argument` can indicate this problem. On the tested board, `/var/lib/docker` and `/var/lib/containerd` are bind-mounted from writable ext4 directories `/media/root-rw/docker` and `/media/root-rw/containerd`, with systemd mount units for subsequent boots. A normal ext4 root does not need this step. Moving only Docker data-root does not move containerd image storage; see [Docker data directory configuration](https://docs.docker.com/engine/daemon/#configure-the-data-directory-location).
+## Model provenance and conversion
 
-![RK1820 container preview](validation/preview.jpg)
+- [RKNN3 official example](https://github.com/airockchip/rknn3-model-zoo/tree/7f8c7d848448fa14cf16ba359ca98405c8bb94b5/examples/yolo26)
+- Per-variant conversion records: `conversion/*.json`.
+
+See [conversion/README.md](conversion/README.md) for reproducible conversion commands and calibration data.
+- Model and weight files must be a matched pair. Do not mix RKNN2/RKNN3 artifacts or use an unmatched 1.2 runtime with 1.1 firmware.
+- Labels: `model/coco_80_labels_list.txt`.
+- Checksums: `sha256sum -c SHA256SUMS`.
+
+## Troubleshooting
+
+On failed health checks, inspect `docker logs`, the host driver, card Online state and proxy. Verify paired model/weight files and that the selected variant has been generated. On overlayroot hosts, Docker and containerd data must reside on a writable ext4 filesystem supporting overlay2.

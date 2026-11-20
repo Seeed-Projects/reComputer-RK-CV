@@ -1,0 +1,17 @@
+{
+  "image": "rv182x-rk3588-yolo26-segment:local",
+  "build_returncode": 0,
+  "variants": {
+    "yolo26n-seg": {
+      "benchmark_returncode": 0
+    },
+    "yolo26s-seg": {
+      "benchmark_returncode": 0
+    },
+    "yolo26m-seg": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:8a33d8e78718eaad651c4d7fa935573f35407f5c67469882db46309be748c8aa",
+  "api_returncode": 0
+}

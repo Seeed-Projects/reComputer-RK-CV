@@ -1,0 +1,17 @@
+{
+  "image": "rv182x-rk3588-yolo26-pose:local",
+  "build_returncode": 0,
+  "variants": {
+    "yolo26n-pose": {
+      "benchmark_returncode": 0
+    },
+    "yolo26s-pose": {
+      "benchmark_returncode": 0
+    },
+    "yolo26m-pose": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:7ee39f0aab44af51dd448fc169049a5a14281b7fd906d91ed62ef61e2ac7c899",
+  "api_returncode": 0
+}

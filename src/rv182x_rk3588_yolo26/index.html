@@ -35,6 +35,7 @@
         <div class="container">
           <h1>YOLO26 · RK1820 PCIe / RK3588</h1>
 
+          <p id="variantStatus">Loading model status…</p>
           <div class="tabs">
             <div class="tab active" onclick="showTab(event, 'realtime')">Real-time Detection</div>
             <div class="tab" onclick="showTab(event, 'analysis')">Local Video Analysis</div>
@@ -97,7 +98,7 @@
             </div>
           </div>
 
-          <p style="color: #888; margin-top: 20px;">RKNN3 1.1.0 · YOLO26n · COCO 80 classes · <a href="/docs" style="color:#00e676">API Docs</a></p>
+          <p style="color: #888; margin-top: 20px;">RKNN3 1.1.0 · YOLO26 · INT8 W8A8 · <a href="/docs" style="color:#00e676">API Docs</a></p>
         </div>
 
         <script>
@@ -232,5 +233,5 @@
             if (data.is_processing) startStatusPolling();
           });
         </script>
-      </body>
+      <script>fetch('/api/health').then(r=>r.json()).then(s=>{document.getElementById('variantStatus').textContent=s.model+' · '+s.quantization+' · '+s.runtime;});</script></body>
     </html>

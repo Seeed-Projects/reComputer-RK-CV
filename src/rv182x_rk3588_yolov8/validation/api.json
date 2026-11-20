@@ -1,0 +1,156 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "yolov8n",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 12,
+    "runtime_ms": 31.3,
+    "total_ms": 77.19,
+    "preview_frames": 12,
+    "preview_error": ""
+  },
+  "snapshot": true,
+  "concurrent_identical_predictions": 8,
+  "invalid_threshold_status": 422,
+  "invalid_media_status": 400,
+  "mjpeg": true,
+  "predictions": [
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.6901206970214844,
+      "box": {
+        "x1": 426,
+        "y1": 525,
+        "x2": 517,
+        "y2": 605
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.6362050175666809,
+      "box": {
+        "x1": 801,
+        "y1": 482,
+        "x2": 882,
+        "y2": 564
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.5643174052238464,
+      "box": {
+        "x1": 233,
+        "y1": 506,
+        "x2": 320,
+        "y2": 566
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5431172847747803,
+      "box": {
+        "x1": 615,
+        "y1": 455,
+        "x2": 664,
+        "y2": 500
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5307031869888306,
+      "box": {
+        "x1": 703,
+        "y1": 495,
+        "x2": 762,
+        "y2": 549
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5032129883766174,
+      "box": {
+        "x1": 905,
+        "y1": 633,
+        "x2": 1061,
+        "y2": 715
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.43139031529426575,
+      "box": {
+        "x1": 743,
+        "y1": 624,
+        "x2": 858,
+        "y2": 716
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3990400731563568,
+      "box": {
+        "x1": 7,
+        "y1": 597,
+        "x2": 293,
+        "y2": 714
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.3450603485107422,
+      "box": {
+        "x1": 585,
+        "y1": 588,
+        "x2": 678,
+        "y2": 692
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3163053095340729,
+      "box": {
+        "x1": 358,
+        "y1": 447,
+        "x2": 416,
+        "y2": 489
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2552008628845215,
+      "box": {
+        "x1": 330,
+        "y1": 515,
+        "x2": 404,
+        "y2": 570
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2552008628845215,
+      "box": {
+        "x1": 585,
+        "y1": 580,
+        "x2": 677,
+        "y2": 692
+      }
+    }
+  ],
+  "prompt_update": null,
+  "offline_video_frames": 3
+}

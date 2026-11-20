@@ -1,0 +1,47 @@
+{
+  "name": "raftstereo-realtime-160x240",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "image_left": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      },
+      "image_right": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "96d9eec33481b24954b4ac4b665c237060a8c8d554d0c7c470398a7f78ab0906",
+  "seconds": 45.75883889198303
+}

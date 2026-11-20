@@ -1,0 +1,19 @@
+{
+  "stage": "da3-global",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "local_tokens": {
+        "dtype": "float32",
+        "layout": "NCHW"
+      }
+    }
+  },
+  "do_quantization": true,
+  "onnx_sha256": "f81554d6500b8b13139f19354151718f5be217cd37b138849d2724642848fdc4",
+  "calibration_preprocessing": "direct RGB resize 280x280"
+}

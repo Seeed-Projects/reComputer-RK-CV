@@ -1,0 +1,60 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from raft-stereo.dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 945B done
+#1 DONE 0.5s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim-bookworm
+#2 DONE 3.2s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 182B done
+#3 DONE 0.1s
+
+#4 [internal] load build context
+#4 ...
+
+#5 [1/8] FROM docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+#5 resolve docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39 0.2s done
+#5 DONE 0.2s
+
+#4 [internal] load build context
+#4 transferring context: 118.67MB 1.2s done
+#4 DONE 1.4s
+
+#6 [2/8] WORKDIR /app
+#6 CACHED
+
+#7 [3/8] RUN sed -i "s|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g" /etc/apt/sources.list.d/debian.sources && apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg     && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [4/8] COPY requirements.txt .
+#8 CACHED
+
+#9 [5/8] COPY rknn3-toolkit-lite-packages/ /wheels/
+#9 CACHED
+
+#10 [6/8] RUN pip install --no-cache-dir --index-url "https://pypi.tuna.tsinghua.edu.cn/simple" -r requirements.txt /wheels/*.whl     && rm -rf /wheels
+#10 CACHED
+
+#11 [7/8] COPY lib/ /usr/lib/
+#11 CACHED
+
+#12 [8/8] COPY . .
+#12 DONE 14.7s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 17.9s done
+#13 exporting manifest sha256:658ce5bfe8fbc75a17d5a68e320ef0840ab4ffddee174a45abf5756059986a02 0.1s done
+#13 exporting config sha256:a6a2aebd685363d76d10969799f77191514eedd125251201965fbef2b55b4a72 0.1s done
+#13 exporting attestation manifest sha256:93aad54ba5f34099fdf69739951f9d51c659ec02d25699bef3eb3d675d572cce
+#13 exporting attestation manifest sha256:93aad54ba5f34099fdf69739951f9d51c659ec02d25699bef3eb3d675d572cce 0.2s done
+#13 exporting manifest list sha256:f3a5ed8e5b249dd5abcf0e48752efa431632c40917b479f96d45668527c0c18b
+#13 exporting manifest list sha256:f3a5ed8e5b249dd5abcf0e48752efa431632c40917b479f96d45668527c0c18b 0.2s done
+#13 naming to docker.io/library/rv182x-rk3588-raft-stereo:local
+#13 naming to docker.io/library/rv182x-rk3588-raft-stereo:local 0.0s done
+#13 unpacking to docker.io/library/rv182x-rk3588-raft-stereo:local
+#13 unpacking to docker.io/library/rv182x-rk3588-raft-stereo:local 1.5s done
+#13 DONE 20.1s

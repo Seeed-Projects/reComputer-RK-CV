@@ -16,9 +16,11 @@ from fastapi.responses import FileResponse, JSONResponse, Response, StreamingRes
 from pydantic import BaseModel, Field
 import uvicorn
 
-from py_utils.yolo26 import YOLO26, draw
+from engine import Engine as YOLO26, draw
+import json
 
 ROOT = Path(__file__).resolve().parent
+META = json.loads((ROOT / 'project.json').read_text())
 WORKSPACE = Path(os.environ.get('WORKSPACE', str(ROOT / 'workspace')))
 UPLOADS, OUTPUTS = WORKSPACE / 'uploads', WORKSPACE / 'outputs'
 settings_lock = threading.Lock()
@@ -206,7 +208,7 @@ def index():
 @app.get('/api/health')
 def health():
     healthy = engine is not None and not (preview and preview.error)
-    data = dict(status='ok' if healthy else 'error', model='yolo26n', accelerator='rk1820',
+    data = dict(status='ok' if healthy else 'error', model=Path(options.model_path).stem, quantization='w8a8', accelerator='rk1820',
                 host='rk3588', runtime='rknn3-toolkit-lite 1.1.0',
                 inference_count=engine.calls if engine else 0,
                 runtime_ms=round(engine.last_inference_ms, 2) if engine else None,
@@ -261,6 +263,7 @@ def snapshot():
 
 
 @app.post('/api/models/yolo26/predict')
+@app.post('/api/predict')
 def predict(file: Optional[UploadFile] = File(None), video: Optional[UploadFile] = File(None),
             timestamp: float = Form(0, ge=0), realtime: bool = Form(False),
             conf: Optional[float] = Form(None, ge=0, le=1), iou: Optional[float] = Form(None, ge=0, le=1)):
@@ -347,16 +350,21 @@ def download_video(filename: str):
 def main():
     global options
     parser = argparse.ArgumentParser(description='YOLO26 on RK1820 PCIe + RK3588')
-    parser.add_argument('--model_path', default=str(ROOT / 'model/yolo26n.rknn'))
-    parser.add_argument('--weight_path', default=str(ROOT / 'model/yolo26n.weight'))
-    parser.add_argument('--class_path', default=str(ROOT / 'model/coco_80_labels_list.txt'))
+    parser.add_argument('--model_path', default=None)
+    parser.add_argument('--weight_path', default=None)
+    parser.add_argument('--class_path', default=str(ROOT / 'model' / META['labels']))
     parser.add_argument('--core_mask', type=lambda n: int(n, 0), default=1)
     parser.add_argument('--video_path', '--video', default=None)
     parser.add_argument('--camera_id', type=int, default=-1)
     parser.add_argument('--rtsp', default=None)
     parser.add_argument('--host', default='0.0.0.0')
     parser.add_argument('--port', type=int, default=8000)
+    parser.add_argument('--variant', choices=META['variants'], default=os.environ.get('MODEL_VARIANT', META['default_variant']))
     options = parser.parse_args()
+    if not options.model_path:
+        options.model_path = str(ROOT / 'model' / (options.variant + '.rknn'))
+    if not options.weight_path:
+        options.weight_path = str(Path(options.model_path).with_suffix('.weight'))
     uvicorn.run(app, host=options.host, port=options.port)
 
 

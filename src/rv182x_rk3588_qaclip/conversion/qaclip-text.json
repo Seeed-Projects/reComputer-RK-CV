@@ -1,0 +1,23 @@
+{
+  "stage": "qaclip-text",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "input_embeds": {
+        "dtype": "float32"
+      },
+      "attention_mask": {
+        "dtype": "float32"
+      },
+      "position_ids": {
+        "dtype": "int32"
+      }
+    }
+  },
+  "do_quantization": true,
+  "onnx_sha256": "f48ac2015f3d819525fe50b50de4abf2844620c659f558e3d30fc42c4a02f6b9"
+}

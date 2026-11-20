@@ -1,0 +1,11 @@
+{
+  "image": "rv182x-rk3588-resnet:local",
+  "build_returncode": 0,
+  "variants": {
+    "resnet50-v2-7": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:f36b388d18a271c78414911f1aa5222b7fe31b0d4cbc063f98909a9ac50b4ef7",
+  "api_returncode": 0
+}

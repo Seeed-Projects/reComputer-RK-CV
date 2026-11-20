@@ -1,0 +1,11 @@
+{
+  "image": "rv182x-rk3588-qaclip:local",
+  "build_returncode": 0,
+  "variants": {
+    "qaclip-vit-l14": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:e90cd0464bdeb48e1b33043c0029e19ff85ba8cc7156f196e7d3ba4c9ec24ced",
+  "api_returncode": 0
+}

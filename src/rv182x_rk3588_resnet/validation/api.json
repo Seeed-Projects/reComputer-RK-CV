@@ -1,0 +1,54 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "resnet50-v2-7",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 57,
+    "runtime_ms": 11.52,
+    "total_ms": 13.08,
+    "preview_frames": 57,
+    "preview_error": ""
+  },
+  "snapshot": true,
+  "concurrent_identical_predictions": 8,
+  "invalid_threshold_status": 422,
+  "invalid_media_status": 400,
+  "mjpeg": true,
+  "predictions": [
+    {
+      "class": "n02930766 cab, hack, taxi, taxicab",
+      "class_id": 468,
+      "confidence": 0.433631032705307,
+      "rank": 1
+    },
+    {
+      "class": "n04335435 streetcar, tram, tramcar, trolley, trolley car",
+      "class_id": 829,
+      "confidence": 0.19681207835674286,
+      "rank": 2
+    },
+    {
+      "class": "n06874185 traffic light, traffic signal, stoplight",
+      "class_id": 920,
+      "confidence": 0.07127931714057922,
+      "rank": 3
+    },
+    {
+      "class": "n03782006 monitor",
+      "class_id": 664,
+      "confidence": 0.07127931714057922,
+      "rank": 4
+    },
+    {
+      "class": "n03769881 minibus",
+      "class_id": 654,
+      "confidence": 0.0323515385389328,
+      "rank": 5
+    }
+  ],
+  "prompt_update": null,
+  "offline_video_frames": 3
+}

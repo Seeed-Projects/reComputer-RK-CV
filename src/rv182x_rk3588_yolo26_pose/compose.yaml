@@ -1,0 +1,15 @@
+services:
+  app:
+    image: rv182x-rk3588-yolo26-pose:local
+    container_name: rv182x-rk3588-yolo26-pose
+    build:
+      context: .
+      dockerfile: ../../docker/rv182x-rk3588/yolo26-pose.dockerfile
+    privileged: true
+    network_mode: host
+    ipc: host
+    environment:
+      MODEL_VARIANT: ${MODEL_VARIANT:-yolo26n-pose}
+    volumes:
+      - ./workspace:/app/workspace
+    restart: unless-stopped

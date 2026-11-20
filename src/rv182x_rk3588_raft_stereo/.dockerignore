@@ -1,0 +1,15 @@
+workspace/
+tests/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.log
+.DS_Store
+host/
+*.tar
+*.tar.gz
+
+validation/
+VALIDATION.md
+README*.md
+conversion/

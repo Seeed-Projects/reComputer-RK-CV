@@ -1,0 +1,32 @@
+{
+  "stage": "qaclip-vision",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "pixel": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        122.7709383,
+        116.7460125,
+        104.09373615000001
+      ]
+    ],
+    "std_values": [
+      [
+        68.5005327,
+        66.6321579,
+        70.32316304999999
+      ]
+    ]
+  },
+  "do_quantization": true,
+  "onnx_sha256": "46c8af31ca26cf4f47d8a0c5b2aa759ce511ba9c9c68326851ce03fc024fc249"
+}

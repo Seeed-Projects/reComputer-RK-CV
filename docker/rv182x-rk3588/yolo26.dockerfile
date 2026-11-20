@@ -3,7 +3,8 @@ WORKDIR /app
 ENV PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1 \
     LD_LIBRARY_PATH=/usr/lib RKNN_LOG_LEVEL=0
 ARG PIP_INDEX_URL=https://pypi.org/simple
-RUN apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg \
+ARG APT_MIRROR=http://deb.debian.org
+RUN sed -i "s|http://deb.debian.org|${APT_MIRROR}|g" /etc/apt/sources.list.d/debian.sources && apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 COPY rknn3-toolkit-lite-packages/ /wheels/

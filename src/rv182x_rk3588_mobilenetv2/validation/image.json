@@ -1,0 +1,11 @@
+{
+  "image": "rv182x-rk3588-mobilenetv2:local",
+  "build_returncode": 0,
+  "variants": {
+    "mobilenetv2-12": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:3b265018723d567e7087eb11f58f688ddc0d39215ae79f0091aba552a33027ec",
+  "api_returncode": 0
+}

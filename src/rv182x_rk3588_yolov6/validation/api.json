@@ -1,0 +1,442 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "yolov6n",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 16,
+    "runtime_ms": 23.27,
+    "total_ms": 37.45,
+    "preview_frames": 16,
+    "preview_error": ""
+  },
+  "snapshot": true,
+  "concurrent_identical_predictions": 8,
+  "invalid_threshold_status": 422,
+  "invalid_media_status": 400,
+  "mjpeg": true,
+  "predictions": [
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.6529903411865234,
+      "box": {
+        "x1": 327,
+        "y1": 519,
+        "x2": 404,
+        "y2": 581
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.6469720005989075,
+      "box": {
+        "x1": 500,
+        "y1": 461,
+        "x2": 551,
+        "y2": 506
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.6259077787399292,
+      "box": {
+        "x1": 420,
+        "y1": 537,
+        "x2": 516,
+        "y2": 617
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.5920354723930359,
+      "box": {
+        "x1": 586,
+        "y1": 578,
+        "x2": 677,
+        "y2": 689
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.5703756809234619,
+      "box": {
+        "x1": 794,
+        "y1": 470,
+        "x2": 877,
+        "y2": 564
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.555935800075531,
+      "box": {
+        "x1": 739,
+        "y1": 628,
+        "x2": 852,
+        "y2": 719
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5416510105133057,
+      "box": {
+        "x1": 431,
+        "y1": 457,
+        "x2": 480,
+        "y2": 496
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.5414958596229553,
+      "box": {
+        "x1": 89,
+        "y1": 619,
+        "x2": 279,
+        "y2": 717
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5386418104171753,
+      "box": {
+        "x1": 616,
+        "y1": 461,
+        "x2": 663,
+        "y2": 505
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5055409073829651,
+      "box": {
+        "x1": 747,
+        "y1": 455,
+        "x2": 788,
+        "y2": 492
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.4692964255809784,
+      "box": {
+        "x1": 700,
+        "y1": 491,
+        "x2": 758,
+        "y2": 553
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.45739418268203735,
+      "box": {
+        "x1": 356,
+        "y1": 457,
+        "x2": 415,
+        "y2": 498
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.4115368723869324,
+      "box": {
+        "x1": 227,
+        "y1": 463,
+        "x2": 356,
+        "y2": 576
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.4002198874950409,
+      "box": {
+        "x1": 588,
+        "y1": 589,
+        "x2": 676,
+        "y2": 689
+      }
+    },
+    {
+      "class": "truck",
+      "class_id": 7,
+      "confidence": 0.38265708088874817,
+      "box": {
+        "x1": 901,
+        "y1": 628,
+        "x2": 1048,
+        "y2": 717
+      }
+    },
+    {
+      "class": "truck",
+      "class_id": 7,
+      "confidence": 0.37904712557792664,
+      "box": {
+        "x1": 587,
+        "y1": 581,
+        "x2": 677,
+        "y2": 688
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3754371404647827,
+      "box": {
+        "x1": 613,
+        "y1": 458,
+        "x2": 661,
+        "y2": 506
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.37313735485076904,
+      "box": {
+        "x1": 702,
+        "y1": 493,
+        "x2": 760,
+        "y2": 553
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.37012818455696106,
+      "box": {
+        "x1": 747,
+        "y1": 384,
+        "x2": 796,
+        "y2": 423
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3573872745037079,
+      "box": {
+        "x1": 899,
+        "y1": 627,
+        "x2": 1052,
+        "y2": 715
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.33702728152275085,
+      "box": {
+        "x1": 533,
+        "y1": 415,
+        "x2": 576,
+        "y2": 452
+      }
+    },
+    {
+      "class": "truck",
+      "class_id": 7,
+      "confidence": 0.3357274532318115,
+      "box": {
+        "x1": 702,
+        "y1": 495,
+        "x2": 759,
+        "y2": 553
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3321174681186676,
+      "box": {
+        "x1": 747,
+        "y1": 456,
+        "x2": 789,
+        "y2": 493
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3321174681186676,
+      "box": {
+        "x1": 356,
+        "y1": 456,
+        "x2": 415,
+        "y2": 500
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.32489752769470215,
+      "box": {
+        "x1": 5,
+        "y1": 597,
+        "x2": 187,
+        "y2": 716
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.31897225975990295,
+      "box": {
+        "x1": 904,
+        "y1": 634,
+        "x2": 1052,
+        "y2": 716
+      }
+    },
+    {
+      "class": "truck",
+      "class_id": 7,
+      "confidence": 0.3176775872707367,
+      "box": {
+        "x1": 229,
+        "y1": 465,
+        "x2": 342,
+        "y2": 574
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.30392637848854065,
+      "box": {
+        "x1": 718,
+        "y1": 413,
+        "x2": 749,
+        "y2": 443
+      }
+    },
+    {
+      "class": "traffic light",
+      "class_id": 9,
+      "confidence": 0.30091720819473267,
+      "box": {
+        "x1": 127,
+        "y1": 499,
+        "x2": 148,
+        "y2": 545
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2924077808856964,
+      "box": {
+        "x1": 1091,
+        "y1": 495,
+        "x2": 1279,
+        "y2": 709
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.2798530161380768,
+      "box": {
+        "x1": 717,
+        "y1": 413,
+        "x2": 750,
+        "y2": 443
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2798530161380768,
+      "box": {
+        "x1": 226,
+        "y1": 510,
+        "x2": 315,
+        "y2": 573
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.2768438458442688,
+      "box": {
+        "x1": 227,
+        "y1": 512,
+        "x2": 316,
+        "y2": 572
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2743579149246216,
+      "box": {
+        "x1": 531,
+        "y1": 405,
+        "x2": 575,
+        "y2": 455
+      }
+    },
+    {
+      "class": "person",
+      "class_id": 0,
+      "confidence": 0.26480716466903687,
+      "box": {
+        "x1": 127,
+        "y1": 499,
+        "x2": 148,
+        "y2": 545
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.2617979645729065,
+      "box": {
+        "x1": 225,
+        "y1": 388,
+        "x2": 261,
+        "y2": 413
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2557796239852905,
+      "box": {
+        "x1": 671,
+        "y1": 415,
+        "x2": 696,
+        "y2": 444
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.25277045369148254,
+      "box": {
+        "x1": 616,
+        "y1": 418,
+        "x2": 644,
+        "y2": 449
+      }
+    }
+  ],
+  "prompt_update": null,
+  "offline_video_frames": 3
+}

@@ -1,113 +1,194 @@
-# YOLO26 · RK1820 PCIe + RK3588
+# YOLO26 · RK1820 / RK3588
 
 [English](README.md) | 中文
 
-独立 Docker 项目，镜像名为 **`rv182x-rk3588-yolo26:latest`**。沿用 `rk3588_yolov8` 的暗色 Web 展示、阈值调节、实时预览和离线视频分析。模型运行在外接 **RK1820**，主控 RK3588 负责视频解码、预处理、后处理和 HTTP 服务。
+在 RK3588 主机上，通过 PCIe 连接 RK1820 M.2 加速卡运行 **YOLO26 RKNN3**。独立 Docker 项目，提供 Web 预览、图片/视频帧推理、视频上传分析和结果下载。
 
-## 运行前准备
+## 部署状态
 
-需要 ARM64 RK3588 Linux 主控、PCIe RK1820 M.2 卡及 Docker。镜像包含 RKNN3 **1.1.0** Runtime、Lite Python wheel、已转换的 YOLO26n `.rknn` / `.weight` 和测试视频；不需要在板端安装 PyTorch 或转换工具。
+本项目已通过 RK3588 + RK1820 M.2 实机验证。GitHub Actions 发布 ARM64 镜像到 GHCR；下方为远程镜像部署和本地构建两种方式。镜像发布状态见仓库 Actions。
 
-Linux 内核驱动和固件不能用容器代替，必须先在 Host 准备。项目附带 SDK 1.1.0 驱动源码、工具和 M.2 固件：
+- 主机: RK3588, Linux aarch64, Docker / Compose.
+- 加速卡: RK1820 M.2, PCIe, firmware / RKNN3 Lite **1.1.0**.
+- 量化: **INT8 W8A8**, `do_quantization=True`, no manually assigned W16A16 subgraphs.
+- 模型尺寸: `yolo26n`, `yolo26s`, `yolo26m`.
+- 示例视频: `video/test.mp4`, supplied `30_1080p.mp4` (traffic).
+
+## 目录结构
+
+```text
+rv182x_rk3588_yolo26/
+├── web_detection.py        # FastAPI + serialized preview/offline workers
+├── engine.py               # RKNN3 inference + task decoding/rendering
+├── index.html              # Live preview + local video analysis
+├── project.json            # Variants, task and artifact metadata
+├── model/                  # Paired .rknn/.weight files and labels
+├── video/test.mp4
+├── lib/                    # Matched ARM64 runtime libraries
+├── rknn3-toolkit-lite-packages/
+├── host/                   # Driver / proxy / matching M.2 firmware
+├── scripts/setup_host.sh
+├── conversion/             # Conversion config and provenance
+├── benchmark.py
+├── validation/             # Measured JSON + preview images
+└── compose.yaml
+```
+
+## 主机准备（在 RK3588 上）
 
 ```bash
 cd src/rv182x_rk3588_yolo26
-# 如果尚未安装编译工具，请安装 make、gcc 及与 uname -r 匹配的内核头文件。
+sudo apt-get install -y build-essential linux-headers-$(uname -r)
 sudo bash scripts/setup_host.sh
 ```
 
-这条命令会按需编译并加载驱动、启动代理服务，已有服务不会重复启动。只有实际板型匹配、确实需要刷写时，才显式使用：
+仅在明确需要更新匹配的 M.2 固件时使用 `--flash-m2`；普通启动无需刷写。服务通过本机 RKNN3 proxy 访问 PCIe 卡，不是在 RK3588 内置 NPU 上运行。
+
+## 使用 GHCR 镜像快速部署
+
+前提：RK3588 已安装 Docker，RK1820 M.2 PCIe 卡 Online，且已按下方“主机准备”安装匹配 SDK 1.1.0 的驱动和 RKNN3 proxy。镜像面向 Linux ARM64。
+
+#### 步骤 A：拉取镜像
 
 ```bash
-# 写入固件并重置加速卡；仅适用于匹配的 RK1820 M.2 板型。
-sudo bash scripts/setup_host.sh --flash-m2
+sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
 ```
 
-默认 PCIe 地址为 `0000:01:00.0`。其他地址可用 `sudo RK182X_DEVICE=<BDF> bash scripts/setup_host.sh` 指定。确认输出 **Online / OK** 后启动容器。Host 端驱动、固件、代理服务应与容器的 1.1.0 Runtime 匹配。Host 脚本尚未安装系统级开机自启；重启后再次执行，内核升级后需重编译驱动。
+#### 步骤 B：一键运行
 
-## 构建与启动
-
-从仓库根目录构建：
+先停止占用 8000 端口或正在使用加速卡的演示容器。在可写目录执行；`workspace` 用于保存上传文件和分析结果。
 
 ```bash
-sudo docker build --platform linux/arm64 \
+sudo docker run --rm --name rv182x-rk3588-yolo26 \
+  --privileged --net=host --ipc=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  -v "$(pwd)/workspace:/app/workspace" \
+  ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
+  python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --weight_path model/yolo26n.weight --video video/test.mp4
+```
+
+访问方式：`http://<开发板IP>:8000`；接口文档：`http://<开发板IP>:8000/docs`。前台运行时按 Ctrl+C 退出。后台运行可在 `run` 后增加 `-d`。
+
+型号可选：`yolo26n`, `yolo26s`, `yolo26m`。修改 `--variant` 后重新创建容器；对于单文件模型，同步修改配套的 `--model_path` / `--weight_path`。
+
+默认样例直接使用镜像内素材，无需映射摄像头或 DRM 节点。`--ipc=host` 用于 RKNN3 proxy / DMA 共享内存；推理在 RK1820 卡上执行。如需使用摄像头，可增加对应的 `--device /dev/video0:/dev/video0`，并将 `--video video/test.mp4` 替换为 `--camera_id 0`。
+
+#### 自定义显示类别名称
+
+默认使用COCO 80 类标签。`class_config.txt` 每行一个名称，必须保留原模型的类别顺序与数量。仅修改文字不会增加或改变模型的识别类别；新类别需要训练并转换对应模型。
+
+```bash
+sudo docker run --rm --name rv182x-rk3588-yolo26 \
+  --privileged --net=host --ipc=host \
+  -e PYTHONUNBUFFERED=1 \
+  -e RKNN_LOG_LEVEL=0 \
+  -v "$(pwd)/class_config.txt:/app/class_config.txt:ro" \
+  -v "$(pwd)/workspace:/app/workspace" \
+  ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
+  python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --weight_path model/yolo26n.weight --video video/test.mp4 --class_path /app/class_config.txt
+```
+
+## 构建镜像
+
+从仓库根目录执行：
+
+```bash
+docker build --network host --platform linux/arm64 \
   -f docker/rv182x-rk3588/yolo26.dockerfile \
-  -t rv182x-rk3588-yolo26:latest src/rv182x_rk3588_yolo26
+  -t rv182x-rk3588-yolo26:local src/rv182x_rk3588_yolo26
 ```
 
-运行（默认使用从 `rk3588_yolov8` 复制的 `video/test.mp4`）：
+如果 PyPI 下载较慢，可添加 `--build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple --build-arg APT_MIRROR=https://mirrors.tuna.tsinghua.edu.cn`。
+
+## 一键运行
 
 ```bash
-sudo docker run -d --name rv182x-rk3588-yolo26 \
-  --privileged --network host --ipc host \
-  -v "$(pwd)/src/rv182x_rk3588_yolo26/workspace:/app/workspace" \
-  rv182x-rk3588-yolo26:latest
+docker run -d --name rv182x-rk3588-yolo26 \
+  --privileged --network host --ipc host --restart unless-stopped \
+  -e MODEL_VARIANT=yolo26n \
+  -v "$PWD/workspace:/app/workspace" \
+  rv182x-rk3588-yolo26:local
 ```
 
-也可以进入 `src/rv182x_rk3588_yolo26` 后运行 `sudo docker compose up -d --build`。容器通过 Host 的 localhost 代理服务和 PCIe DMA 访问加速卡，必须保留上述网络/IPC/设备访问设置。
+打开 **http://192.168.100.145:8000** (或设备 IP).
 
-访问 `http://<RK3588_IP>:8000`，API 文档为 `/docs`，健康状态为 `/api/health`。工作目录挂载保存上传视频与分析结果。自带 `test.mp4` 会出现在「Local Video Analysis」页，可直接选择 Analyze。
-
-离线镜像包可用以下命令传递给其他设备：
+通过 `MODEL_VARIANT` 选择上面列出的尺寸，重新创建容器后生效。多个演示容器不要同时占用 8000 端口；切换项目前先停止当前演示。
 
 ```bash
-sudo docker save rv182x-rk3588-yolo26:latest | gzip > rv182x-rk3588-yolo26.tar.gz
-gzip -dc rv182x-rk3588-yolo26.tar.gz | sudo docker load
+cd src/rv182x_rk3588_yolo26
+MODEL_VARIANT=yolo26m docker compose up -d --build
+docker compose logs -f
+docker compose down
 ```
 
-## 输入与 API
+`--privileged`、host 网络和 host IPC 用于 RKNN3 proxy、PCIe DMA 与共享内存。首次服务启动会加载模型，查看健康接口确认就绪。
 
-命令参数兼容原项目风格：`--model_path`、`--weight_path`、`--class_path`、`--core_mask`、`--video_path`（别名 `--video`）、`--camera_id`、`--rtsp`、`--host`、`--port`。
+## 类别名称与自定义模型
 
-示例替换容器默认命令：
+官方模型类别数为 80。可替换 `model/coco_80_labels_list.txt` 中的显示名称，每行一个名称并保留原顺序与行数；重命名不改变模型识别能力。通过 `--class_path` 指定自定义文件。同结构 RKNN 模型需要同名配套 `.rknn` / `.weight`；可通过 `--model_path` / `--weight_path` 指定。
+
+## API 使用
+
+交互式接口说明： `/docs`.
 
 ```bash
-# 摄像头 /dev/video1
-... rv182x-rk3588-yolo26:latest python web_detection.py --camera_id 1
-# RTSP
-... rv182x-rk3588-yolo26:latest python web_detection.py --rtsp rtsp://camera/stream
-# 只提供图片 API 和离线视频分析，不打开实时源
-... rv182x-rk3588-yolo26:latest python web_detection.py --camera_id -1
+curl http://192.168.100.145:8000/api/health
+curl -X POST http://192.168.100.145:8000/api/models/yolo26/predict \
+  -F file=@sample.jpg -F conf=0.25 -F iou=0.45
+curl -X POST http://192.168.100.145:8000/api/predict \
+  -F video=@sample.mp4 -F timestamp=1.0
+curl -X POST http://192.168.100.145:8000/api/config \
+  -H 'Content-Type: application/json' -d '{"obj_thresh":0.25,"nms_thresh":0.45}'
 ```
 
-Web 为主要展示方式，此镜像使用 OpenCV headless。摄像头和 RTSP 能否解码取决于实际源与 FFmpeg；本次实测范围见 `VALIDATION.md`。
+| Endpoint | 说明 |
+|---|---|
+| `GET /api/health` | 模型、运行库、调用计数与状态 |
+| `GET/POST /api/config` | 检测阈值，范围 0–1 |
+| `POST /api/predict` | 图片、指定时间的视频帧或当前预览帧；JSON 结果 |
+| `GET /api/video_feed` | MJPEG preview |
+| `GET /api/snapshot` | JPEG snapshot |
+| `POST /api/video/upload` | multipart `file` |
+| `GET /api/video/list` | 输入/输出文件列表 |
+| `POST /api/video/analyze` | form `filename` |
+| `GET /api/video/status` | 进度和错误 |
+| `GET /api/video/download/{filename}` | 下载完成的视频 |
+
+`file` 与 `video` 二选一；未传文件时使用预览帧。坐标对应原始图像。分类返回 Top-5；分割额外返回 `segments` 多边形；姿态额外返回 17 个 `keypoints`（x、y、置信度）。分类不使用检测阈值。参数错误返回 422，非法媒体 400，任务冲突 409，未就绪 503。
+
+## 实机 Benchmark
+
+仅填写这台 RK3588 + RK1820 M.2 上的成功测量。`—` 表示尚无通过的实测记录。
+
+| Variant | Quant | NHWC input | Runtime FPS | Pipeline FPS | Runtime p95 ms | Warmup / frames | Evidence / status |
+|---|---|---|---:|---:|---:|---:|---|
+| yolo26n | W8A8 | 1×640×640×3 | 33.59 | 12.87 | 36.80 | 5/30 | [JSON](validation/benchmark-yolo26n.json) |
+| yolo26s | W8A8 | 1×640×640×3 | 23.02 | 10.50 | 50.16 | 5/30 | [JSON](validation/benchmark-yolo26s.json) |
+| yolo26m | W8A8 | 1×640×640×3 | 12.50 | 7.41 | 86.17 | 5/30 | [JSON](validation/benchmark-yolo26m.json) |
+
+测试条件：RKNN3 Lite / 固件 1.1.0，core mask `0x1`，单进程串行推理，其他演示容器停止。Runtime FPS = 实际完成帧数 / 同步 Lite 调用累计耗时，包含 PCIe 传输与同步，不是纯 NPU 计算速度。Pipeline FPS = 实际完成帧数 / 整段测量耗时，包含视频解码、预处理、推理、任务后处理、绘制、最大 1280 宽 JPEG 编码；不包含 HTTP、网络或按视频原始帧率限速。Web UI 的实时播放速度受源视频 FPS 与其他处理开销影响。
 
 ```bash
-curl http://127.0.0.1:8000/api/health
-curl -X POST http://127.0.0.1:8000/api/models/yolo26/predict \
-  -F file=@model/bus.jpg -F conf=0.25 -F iou=0.45
-curl -X POST http://127.0.0.1:8000/api/models/yolo26/predict \
-  -F video=@video/test.mp4 -F timestamp=1
-curl -X POST http://127.0.0.1:8000/api/models/yolo26/predict -F realtime=true
-curl -X POST http://127.0.0.1:8000/api/video/upload -F file=@short.mp4
-curl -X POST http://127.0.0.1:8000/api/video/analyze -F filename=short.mp4
-curl http://127.0.0.1:8000/api/video/status
+mkdir -p validation
+docker run --rm --privileged --network host --ipc host \
+  -v "$PWD/validation:/app/validation" rv182x-rk3588-yolo26:local \
+  python benchmark.py --variant yolo26n --warmup 5 --frames 30 \
+  --output validation/benchmark-yolo26n.json
 ```
 
-其他接口：`GET /api/config`、`POST /api/config`（JSON `obj_thresh` / `nms_thresh`）、`GET /api/video/list`、`GET /api/video/download/{filename}`、`GET /api/video_feed`（MJPEG）、`GET /api/snapshot`（JPEG）。阈值范围 0–1，上传文件名不得包含目录。
+速度验证不等于数据集精度认证。车流视频适合检测与车辆分割；ImageNet 分类类别不等于道路业务标签，姿态展示还需包含清晰近景人物的素材。
 
-`runtime_ms` 是 Python Lite inference 调用耗时，包含输入输出同步等开销，不能当成纯 NPU 耗时；`total_ms` 还包含预处理和后处理，不含排队、视频解码、JPEG 编码或 HTTP 传输。预览、API 与离线分析串行共享同一模型，保持坐标和阈值独立。
+## 模型来源与转换
 
-## 校验与模型来源
+- [RKNN3 official example](https://github.com/airockchip/rknn3-model-zoo/tree/7f8c7d848448fa14cf16ba359ca98405c8bb94b5/examples/yolo26)
+- 逐尺寸转换记录： `conversion/*.json`.
 
-```bash
-sha256sum -c SHA256SUMS
-python3 scripts/verify_api.py --url http://127.0.0.1:8000 --video short.mp4
-```
+可复现转换命令与校准数据说明见 [conversion/README.md](conversion/README.md)。
+- 模型与 weight 必须同名配套。不要混用 RKNN2/RKNN3 模型或不匹配的 1.2 runtime 与 1.1 固件。
+- 标签文件： `model/coco_80_labels_list.txt`.
+- 校验： `sha256sum -c SHA256SUMS`.
 
-验证脚本检查真实硬件图片检测、8 个并发请求、阈值校验、JPEG/MJPEG，以及可选的短视频指定帧与离线分析下载。
+## 排错
 
-YOLO26 与 YOLOv8 的后处理不同：YOLO26 输出 3 组 box/score，box 为 4 个距离值，score 为 raw logits，需要 sigmoid。预处理 letterbox 使用 padding 114。当前模型为 COCO 80 类、640×640、单核、W8A8 与少量 W16A16 子图混合量化。
-
-转换脚本及来源见 `conversion/` 和 `NOTICE.md`。独立 CI 工作流在 main/master 推送后构建并发布 ARM64 镜像。工作流成功后可拉取并标记为 Compose 使用的本地名称：
-
-```bash
-docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
-docker tag ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest rv182x-rk3588-yolo26:latest
-```
-
-## overlayroot 系统
-
-如果 Host 的 `/var/lib/docker` 或 `/var/lib/containerd` 位于 overlay 文件系统，构建可能报 overlay mount `invalid argument`。需要先把这两个目录配置到真实可写 ext4 分区；只迁移 Docker data-root 不会迁移 containerd 的镜像存储。本次验证设备已把它们分别 bind mount 到 `/media/root-rw/docker` 与 `/media/root-rw/containerd`，并配置对应 systemd mount 单元。普通 ext4 根文件系统不需要这个额外步骤。参考：[Docker 数据目录说明](https://docs.docker.com/engine/daemon/#configure-the-data-directory-location)。
-
-![RK1820 container preview](validation/preview.jpg)
+健康检查失败时先查看 `docker logs`，确认宿主机驱动、卡 Online 状态和 proxy，再检查模型/weight 是否配套、选定尺寸是否已经生成。镜像加载失败且宿主机使用 overlayroot 时，Docker 和 containerd 的数据目录需落在支持 overlay2 的可写 ext4 分区。

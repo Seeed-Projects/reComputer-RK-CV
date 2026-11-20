@@ -1,0 +1,43 @@
+{
+  "name": "yolo26n-pose",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "images": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        255,
+        255,
+        255
+      ]
+    ]
+  },
+  "outputs": [
+    "/model.23/one2one_cv2.0/one2one_cv2.0.2/Conv_output_0",
+    "/model.23/one2one_cv3.0/one2one_cv3.0.2/Conv_output_0",
+    "/model.23/one2one_cv4_kpts.0/Conv_output_0",
+    "/model.23/one2one_cv2.1/one2one_cv2.1.2/Conv_output_0",
+    "/model.23/one2one_cv3.1/one2one_cv3.1.2/Conv_output_0",
+    "/model.23/one2one_cv4_kpts.1/Conv_output_0",
+    "/model.23/one2one_cv2.2/one2one_cv2.2.2/Conv_output_0",
+    "/model.23/one2one_cv3.2/one2one_cv3.2.2/Conv_output_0",
+    "/model.23/one2one_cv4_kpts.2/Conv_output_0"
+  ],
+  "source_sha256": "5cee4c6bcf0ad2b9775f45735a7c6099421aa01d7f6485a7172a2569ab51a43a",
+  "seconds": 15.60921049118042
+}

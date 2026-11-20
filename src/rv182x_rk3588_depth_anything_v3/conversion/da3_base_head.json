@@ -1,0 +1,31 @@
+{
+  "stage": "da3-head",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "feat_5": {
+        "dtype": "float16",
+        "layout": "NCHW"
+      },
+      "feat_7": {
+        "dtype": "float16",
+        "layout": "NCHW"
+      },
+      "feat_9": {
+        "dtype": "float16",
+        "layout": "NCHW"
+      },
+      "feat_11": {
+        "dtype": "float16",
+        "layout": "NCHW"
+      }
+    }
+  },
+  "do_quantization": true,
+  "onnx_sha256": "b9f23b86a4a79f5d2ac5eebbb095e6f8a372319eabe40d72b9903c14601b40eb",
+  "calibration_preprocessing": "direct RGB resize 280x280"
+}

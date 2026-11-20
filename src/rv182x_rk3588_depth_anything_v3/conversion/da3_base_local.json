@@ -1,0 +1,32 @@
+{
+  "stage": "da3-local",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "images": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        123.675,
+        116.28,
+        103.53
+      ]
+    ],
+    "std_values": [
+      [
+        58.395,
+        57.120000000000005,
+        57.375
+      ]
+    ]
+  },
+  "do_quantization": true,
+  "onnx_sha256": "80116165bdb08080200be35e7fea4f2635c6c89f4668287130dd42a597831e0e"
+}

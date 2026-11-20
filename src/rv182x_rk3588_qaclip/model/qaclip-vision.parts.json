@@ -1,0 +1,27 @@
+{
+  "filename": "qaclip-vision.weight",
+  "size": 311514624,
+  "sha256": "b503f8cc7d8a770fed04edbda35dc6ab00fc1fe13eecba28e6aeaf19502c5f96",
+  "parts": [
+    {
+      "filename": "qaclip-vision.weight.part-000",
+      "size": 83886080,
+      "sha256": "2ad08df1060cafac7019741aa6eb823379432eea93139c0c7c0ef54bee7b3f04"
+    },
+    {
+      "filename": "qaclip-vision.weight.part-001",
+      "size": 83886080,
+      "sha256": "21e27076cb2b0c4df93d940ee19108f72bbe5502f1b5aa29b1deff4405630373"
+    },
+    {
+      "filename": "qaclip-vision.weight.part-002",
+      "size": 83886080,
+      "sha256": "0cff4e1f083d984f9843233153334651c7f8e664ee1240795b2e039f3d81afce"
+    },
+    {
+      "filename": "qaclip-vision.weight.part-003",
+      "size": 59856384,
+      "sha256": "136e9fba3203a249d72f93a7980e45147a79afd758d04c9c5c909d4055585827"
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+
+    <html>
+      <head>
+        <title>reComputer RK-CV · ResNet50-v2 · RK1820</title>
+        <style>
+          body { background-color: #1a1a1a; color: white; text-align: center; font-family: sans-serif; margin: 0; padding: 20px; }
+          .container { max-width: 1200px; margin: 0 auto; }
+          .video-box { margin: 20px auto; display: inline-block; border: 5px solid #333; border-radius: 10px; overflow: hidden; background: #000; width: 100%; max-width: 800px; }
+          .controls { background: #2a2a2a; padding: 20px; border-radius: 10px; display: inline-block; text-align: left; min-width: min(400px, 80vw); vertical-align: top; margin: 10px; }
+          .control-group { margin-bottom: 15px; }
+          .control-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+          .slider-container { display: flex; align-items: center; gap: 15px; }
+          input[type=range] { flex-grow: 1; cursor: pointer; }
+          .value-display { min-width: 50px; font-family: monospace; background: #444; padding: 2px 8px; border-radius: 4px; text-align: center; }
+          h1 { color: #00e676; }
+          .tab-container { margin-top: 30px; }
+          .tabs { display: flex; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #333; }
+          .tab { padding: 10px 30px; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; font-weight: bold; }
+          .tab.active { border-bottom-color: #00e676; color: #00e676; }
+          .tab-content { display: none; }
+          .tab-content.active { display: block; }
+          .video-analysis { text-align: left; background: #2a2a2a; padding: 20px; border-radius: 10px; margin: 10px; }
+          .btn { background: #00e676; color: #000; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 5px; }
+          .btn:hover { background: #00c853; }
+          .btn:disabled { background: #555; cursor: not-allowed; }
+          .progress-container { width: 100%; background: #444; border-radius: 10px; margin: 15px 0; height: 20px; position: relative; overflow: hidden; }
+          .progress-bar { height: 100%; background: #00e676; width: 0%; transition: 0.3s; }
+          .progress-text { position: absolute; width: 100%; text-align: center; top: 0; left: 0; line-height: 20px; font-size: 12px; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px #000; }
+          table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+          th, td { text-align: left; padding: 10px; border-bottom: 1px solid #444; }
+          th { color: #888; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>ResNet50-v2 · RK1820 PCIe / RK3588</h1>
+
+          <p id="variantStatus">Loading model status…</p>
+          <div class="tabs">
+            <div class="tab active" onclick="showTab(event, 'realtime')">Real-time Classification</div>
+            <div class="tab" onclick="showTab(event, 'analysis')">Local Video Analysis</div>
+          </div>
+
+          <div id="realtime" class="tab-content active">
+            <div class="video-box">
+              <img id="streamImg" src="/api/video_feed" style="max-width: 100%; height: auto;">
+            </div>
+
+            <div class="controls" style="display:none">
+              <div class="control-group">
+                <label>Confidence Threshold (置信度阈值)</label>
+                <div class="slider-container">
+                  <input type="range" id="confSlider" min="0.01" max="1.0" step="0.01" value="0.25">
+                  <span id="confValue" class="value-display">0.25</span>
+                </div>
+              </div>
+
+              <div class="control-group">
+                <label>IOU Threshold (NMS 阈值)</label>
+                <div class="slider-container">
+                  <input type="range" id="iouSlider" min="0.01" max="1.0" step="0.01" value="0.45">
+                  <span id="iouValue" class="value-display">0.45</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="analysis" class="tab-content">
+            <div class="video-analysis">
+              <h3>Analyze Local Video</h3>
+              <div class="control-group">
+                <label>Upload New Video (.mp4)</label>
+                <input type="file" id="videoUpload" accept=".mp4">
+                <button class="btn" onclick="uploadVideo(event)">Upload</button>
+              </div>
+
+              <div id="processingArea" style="display: none;">
+                <p id="statusText">Processing: <span id="currentFileName">-</span></p>
+                <div class="progress-container">
+                  <div id="progressBar" class="progress-bar"></div>
+                  <div id="progressText" class="progress-text">0%</div>
+                </div>
+                <p id="errorText" style="color: #ff5252;"></p>
+              </div>
+
+              <div class="control-group">
+                <label>File Management</label>
+                <button class="btn" onclick="refreshFileList()">Refresh List</button>
+                <table>
+                  <thead>
+                    <tr><th>File Name</th><th>Action</th></tr>
+                  </thead>
+                  <tbody id="fileTableBody">
+                    <!-- Files will be listed here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <p style="color: #888; margin-top: 20px;">RKNN3 1.1.0 · ResNet50-v2 · INT8 W8A8 · <a href="/docs" style="color:#00e676">API Docs</a></p>
+        </div>
+
+        <script>
+          function showTab(event, tabId) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+
+            // 如果是实时流，确保图片 src 正确
+            if (tabId === 'realtime') {
+                document.getElementById('streamImg').src = '/api/video_feed';
+            } else {
+                document.getElementById('streamImg').src = '';
+                refreshFileList();
+            }
+          }
+
+          const confSlider = document.getElementById('confSlider');
+          const iouSlider = document.getElementById('iouSlider');
+          const confValue = document.getElementById('confValue');
+          const iouValue = document.getElementById('iouValue');
+
+          function updateConfig() {
+            const obj_thresh = parseFloat(confSlider.value);
+            const nms_thresh = parseFloat(iouSlider.value);
+            confValue.innerText = obj_thresh.toFixed(2);
+            iouValue.innerText = nms_thresh.toFixed(2);
+
+            fetch('/api/config', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ obj_thresh, nms_thresh })
+            });
+          }
+
+          confSlider.oninput = updateConfig;
+          iouSlider.oninput = updateConfig;
+
+          // 初始化获取当前值
+          fetch('/api/config').then(res => res.json()).then(data => {
+            confSlider.value = data.obj_thresh;
+            iouSlider.value = data.nms_thresh;
+            confValue.innerText = data.obj_thresh.toFixed(2);
+            iouValue.innerText = data.nms_thresh.toFixed(2);
+          });
+
+          // 视频分析逻辑
+          async function uploadVideo(event) {
+            const fileInput = document.getElementById('videoUpload');
+            if (!fileInput.files[0]) return alert('Please select a file');
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.innerText = 'Uploading...';
+
+            try {
+                await fetch('/api/video/upload', { method: 'POST', body: formData });
+                alert('Upload successful');
+                refreshFileList();
+            } catch (e) {
+                alert('Upload failed');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Upload';
+            }
+          }
+
+          async function refreshFileList() {
+            const res = await fetch('/api/video/list');
+            const data = await res.json();
+            const tbody = document.getElementById('fileTableBody');
+            tbody.innerHTML = '';
+
+            function addRow(filename, analyzed) {
+                const tr = document.createElement('tr');
+                const name = document.createElement('td');
+                name.textContent = filename + (analyzed ? ' (Analyzed)' : ' (Original)');
+                const action = document.createElement('td');
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.textContent = analyzed ? 'Download' : 'Analyze';
+                btn.onclick = () => analyzed ? window.open('/api/video/download/' + encodeURIComponent(filename)) : analyzeVideo(filename);
+                action.appendChild(btn); tr.append(name, action); tbody.appendChild(tr);
+            }
+            data.uploads.forEach(f => addRow(f, false));
+            data.outputs.forEach(f => addRow(f, true));
+          }
+
+          async function analyzeVideo(filename) {
+            const formData = new FormData();
+            formData.append('filename', filename);
+            const res = await fetch('/api/video/analyze', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (data.status === 'started') {
+                startStatusPolling();
+            } else {
+                alert(data.message || 'Error starting analysis');
+            }
+          }
+
+          let pollInterval;
+          function startStatusPolling() {
+            document.getElementById('processingArea').style.display = 'block';
+            if (pollInterval) clearInterval(pollInterval);
+
+            pollInterval = setInterval(async () => {
+                const res = await fetch('/api/video/status');
+                const data = await res.json();
+
+                document.getElementById('currentFileName').innerText = data.current_video;
+                document.getElementById('progressBar').style.width = data.progress + '%';
+                document.getElementById('progressText').innerText = data.progress + '%';
+                document.getElementById('errorText').innerText = data.error || '';
+
+                if (!data.is_processing && data.progress === 100) {
+                    clearInterval(pollInterval);
+                    alert('Analysis completed!');
+                    refreshFileList();
+                } else if (!data.is_processing && data.error) {
+                    clearInterval(pollInterval);
+                }
+            }, 1000);
+          }
+
+          // 页面加载时检查状态
+          fetch('/api/video/status').then(res => res.json()).then(data => {
+            if (data.is_processing) startStatusPolling();
+          });
+        </script>
+      <script>fetch('/api/health').then(r=>r.json()).then(s=>{document.getElementById('variantStatus').textContent=s.model+' · '+s.quantization+' · '+s.runtime;});</script></body>
+    </html>

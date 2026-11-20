@@ -1,0 +1,47 @@
+{
+  "name": "raftstereo-eth3d-160x240",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "image_left": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      },
+      "image_right": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "4640d5fcba422c233e3165abb28e80008d970e1d5caa79bfe68594477e2b9b36",
+  "seconds": 202.42822647094727
+}

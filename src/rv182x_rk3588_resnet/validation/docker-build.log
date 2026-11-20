@@ -1,0 +1,60 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from resnet.dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 974B done
+#1 DONE 0.3s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim-bookworm
+#2 DONE 2.0s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 182B done
+#3 DONE 0.1s
+
+#4 [internal] load build context
+#4 ...
+
+#5 [1/8] FROM docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+#5 resolve docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39 0.1s done
+#5 DONE 0.1s
+
+#4 [internal] load build context
+#4 transferring context: 56.36MB 0.6s done
+#4 DONE 0.8s
+
+#6 [3/8] RUN sed -i "s|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g" /etc/apt/sources.list.d/debian.sources && apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg     && rm -rf /var/lib/apt/lists/*
+#6 CACHED
+
+#7 [4/8] COPY requirements.txt .
+#7 CACHED
+
+#8 [5/8] COPY rknn3-toolkit-lite-packages/ /wheels/
+#8 CACHED
+
+#9 [6/8] RUN pip install --no-cache-dir --index-url "https://pypi.tuna.tsinghua.edu.cn/simple" -r requirements.txt /wheels/*.whl     && rm -rf /wheels
+#9 CACHED
+
+#10 [2/8] WORKDIR /app
+#10 CACHED
+
+#11 [7/8] COPY lib/ /usr/lib/
+#11 CACHED
+
+#12 [8/8] COPY . .
+#12 DONE 7.3s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 9.3s done
+#13 exporting manifest sha256:6ea34cd6691b649d64e6c37bb72ceea2856d32a18711f798ce54395962e2fa19 0.1s done
+#13 exporting config sha256:f1b69f68bb505ef71d16037c33d2dce6e912623214a44d36150db7aaf2d937e4 0.1s done
+#13 exporting attestation manifest sha256:6f57778afe7a3ee353578ad6b8a0dd930452b93f8f827d7e6839e085e50e5529
+#13 exporting attestation manifest sha256:6f57778afe7a3ee353578ad6b8a0dd930452b93f8f827d7e6839e085e50e5529 0.2s done
+#13 exporting manifest list sha256:f36b388d18a271c78414911f1aa5222b7fe31b0d4cbc063f98909a9ac50b4ef7
+#13 exporting manifest list sha256:f36b388d18a271c78414911f1aa5222b7fe31b0d4cbc063f98909a9ac50b4ef7 0.1s done
+#13 naming to docker.io/library/rv182x-rk3588-resnet:local
+#13 naming to docker.io/library/rv182x-rk3588-resnet:local 0.0s done
+#13 unpacking to docker.io/library/rv182x-rk3588-resnet:local
+#13 unpacking to docker.io/library/rv182x-rk3588-resnet:local 0.9s done
+#13 DONE 10.9s

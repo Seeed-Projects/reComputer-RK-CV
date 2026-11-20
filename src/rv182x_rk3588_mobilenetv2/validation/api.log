@@ -1,0 +1,1 @@
+PASS mobilenetv2-12 health/snapshot/MJPEG/8 concurrent requests/invalid inputs

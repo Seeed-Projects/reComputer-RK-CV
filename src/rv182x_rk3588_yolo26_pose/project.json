@@ -1,0 +1,19 @@
+{
+  "family": "yolo26-pose",
+  "title": "YOLO26 Pose",
+  "variants": [
+    "yolo26n-pose",
+    "yolo26s-pose",
+    "yolo26m-pose"
+  ],
+  "default_variant": "yolo26n-pose",
+  "labels": "pose_labels.txt",
+  "quantization": "w8a8",
+  "upstream_commit": "7f8c7d848448fa14cf16ba359ca98405c8bb94b5",
+  "runtime_version": "1.1.0",
+  "image": "rv182x-rk3588-yolo26-pose",
+  "upstream_example": "yolo26_pose",
+  "smoke_expected_ids": [
+    0
+  ]
+}

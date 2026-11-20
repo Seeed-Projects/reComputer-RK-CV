@@ -1,0 +1,25 @@
+{
+  "family": "raft-stereo",
+  "title": "RAFT-Stereo",
+  "variants": [
+    "raftstereo-eth3d-160x240",
+    "raftstereo-middlebury-160x240",
+    "raftstereo-sceneflow-160x240",
+    "raftstereo-realtime-160x240"
+  ],
+  "default_variant": "raftstereo-eth3d-160x240",
+  "labels": "labels.txt",
+  "quantization": "w8a8",
+  "upstream_commit": "7f8c7d848448fa14cf16ba359ca98405c8bb94b5",
+  "runtime_version": "1.1.0",
+  "image": "rv182x-rk3588-raft-stereo",
+  "upstream_example": "RAFT-Stereo",
+  "input_shape": [
+    1,
+    160,
+    240,
+    3
+  ],
+  "paired_inputs": 2,
+  "iterations": 1
+}

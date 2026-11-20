@@ -1,0 +1,47 @@
+{
+  "name": "raftstereo-middlebury-160x240",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "image_left": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      },
+      "image_right": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "2a409acce9365813e241ccafd6f46fe7c29a3a34bf80c042441e1ddb365eb4c2",
+  "seconds": 208.61092162132263
+}

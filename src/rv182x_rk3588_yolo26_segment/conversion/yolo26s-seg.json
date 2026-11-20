@@ -1,0 +1,44 @@
+{
+  "name": "yolo26s-seg",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "images": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        255,
+        255,
+        255
+      ]
+    ]
+  },
+  "outputs": [
+    "/model.23/one2one_cv2.0/one2one_cv2.0.2/Conv_output_0",
+    "/model.23/one2one_cv3.0/one2one_cv3.0.2/Conv_output_0",
+    "/model.23/one2one_cv4.0/one2one_cv4.0.2/Conv_output_0",
+    "/model.23/one2one_cv2.1/one2one_cv2.1.2/Conv_output_0",
+    "/model.23/one2one_cv3.1/one2one_cv3.1.2/Conv_output_0",
+    "/model.23/one2one_cv4.1/one2one_cv4.1.2/Conv_output_0",
+    "/model.23/one2one_cv2.2/one2one_cv2.2.2/Conv_output_0",
+    "/model.23/one2one_cv3.2/one2one_cv3.2.2/Conv_output_0",
+    "/model.23/one2one_cv4.2/one2one_cv4.2.2/Conv_output_0",
+    "output1"
+  ],
+  "source_sha256": "a84dbf7d37399af782a18c2e5206cd9b4e872299a2399801f9b55bb93c382bec",
+  "seconds": 30.69420313835144
+}

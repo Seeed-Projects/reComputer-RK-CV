@@ -1,0 +1,266 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "yolov5n",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 13,
+    "runtime_ms": 41.97,
+    "total_ms": 64.77,
+    "preview_frames": 12,
+    "preview_error": ""
+  },
+  "snapshot": true,
+  "concurrent_identical_predictions": 8,
+  "invalid_threshold_status": 422,
+  "invalid_media_status": 400,
+  "mjpeg": true,
+  "predictions": [
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.7665053009986877,
+      "box": {
+        "x1": 912,
+        "y1": 629,
+        "x2": 1066,
+        "y2": 720
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.6977009773254395,
+      "box": {
+        "x1": 745,
+        "y1": 616,
+        "x2": 866,
+        "y2": 718
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.584067702293396,
+      "box": {
+        "x1": 13,
+        "y1": 590,
+        "x2": 285,
+        "y2": 719
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5746424794197083,
+      "box": {
+        "x1": 616,
+        "y1": 455,
+        "x2": 664,
+        "y2": 500
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5713034272193909,
+      "box": {
+        "x1": 332,
+        "y1": 509,
+        "x2": 404,
+        "y2": 571
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5405306220054626,
+      "box": {
+        "x1": 594,
+        "y1": 590,
+        "x2": 683,
+        "y2": 692
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.5380761027336121,
+      "box": {
+        "x1": 803,
+        "y1": 482,
+        "x2": 882,
+        "y2": 563
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.525351881980896,
+      "box": {
+        "x1": 420,
+        "y1": 523,
+        "x2": 514,
+        "y2": 615
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5071896314620972,
+      "box": {
+        "x1": 701,
+        "y1": 486,
+        "x2": 762,
+        "y2": 547
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.5029604434967041,
+      "box": {
+        "x1": 235,
+        "y1": 491,
+        "x2": 328,
+        "y2": 569
+      }
+    },
+    {
+      "class": "train",
+      "class_id": 6,
+      "confidence": 0.3917263150215149,
+      "box": {
+        "x1": 796,
+        "y1": 467,
+        "x2": 883,
+        "y2": 564
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.38692814111709595,
+      "box": {
+        "x1": 748,
+        "y1": 449,
+        "x2": 791,
+        "y2": 486
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3574625551700592,
+      "box": {
+        "x1": 361,
+        "y1": 451,
+        "x2": 416,
+        "y2": 496
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3358708620071411,
+      "box": {
+        "x1": 532,
+        "y1": 401,
+        "x2": 578,
+        "y2": 452
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.3300730884075165,
+      "box": {
+        "x1": 501,
+        "y1": 454,
+        "x2": 556,
+        "y2": 506
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.31126493215560913,
+      "box": {
+        "x1": 426,
+        "y1": 445,
+        "x2": 482,
+        "y2": 494
+      }
+    },
+    {
+      "class": "person",
+      "class_id": 0,
+      "confidence": 0.2933286726474762,
+      "box": {
+        "x1": 1229,
+        "y1": 421,
+        "x2": 1246,
+        "y2": 459
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.2830296456813812,
+      "box": {
+        "x1": 470,
+        "y1": 382,
+        "x2": 527,
+        "y2": 434
+      }
+    },
+    {
+      "class": "train",
+      "class_id": 6,
+      "confidence": 0.2822299301624298,
+      "box": {
+        "x1": 1020,
+        "y1": 460,
+        "x2": 1280,
+        "y2": 703
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.26588237285614014,
+      "box": {
+        "x1": 499,
+        "y1": 456,
+        "x2": 556,
+        "y2": 507
+      }
+    },
+    {
+      "class": "traffic light",
+      "class_id": 9,
+      "confidence": 0.2598772943019867,
+      "box": {
+        "x1": 270,
+        "y1": 405,
+        "x2": 298,
+        "y2": 453
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.25038066506385803,
+      "box": {
+        "x1": 224,
+        "y1": 372,
+        "x2": 263,
+        "y2": 411
+      }
+    }
+  ],
+  "prompt_update": null,
+  "offline_video_frames": 3
+}

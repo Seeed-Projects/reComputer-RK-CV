@@ -1,0 +1,35 @@
+{
+  "family": "qaclip",
+  "title": "QA-CLIP ViT-L/14",
+  "variants": [
+    "qaclip-vit-l14"
+  ],
+  "default_variant": "qaclip-vit-l14",
+  "labels": "labels.txt",
+  "quantization": "w8a8",
+  "upstream_commit": "7f8c7d848448fa14cf16ba359ca98405c8bb94b5",
+  "runtime_version": "1.1.0",
+  "image": "rv182x-rk3588-qaclip",
+  "upstream_example": "QAClip",
+  "model_files": [
+    "qaclip-text",
+    "qaclip-vision"
+  ],
+  "input_shape": [
+    1,
+    224,
+    224,
+    3
+  ],
+  "prompts": [
+    "一辆汽车",
+    "一辆卡车",
+    "一辆公交车",
+    "一辆摩托车",
+    "一辆自行车",
+    "一个行人",
+    "一条公路",
+    "一栋房子"
+  ],
+  "logit_scale": 99.99456787109375
+}

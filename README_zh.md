@@ -37,6 +37,18 @@ reComputer-RK-CV/
 | RK3576 | MobileNet | `POST /api/models/mobilenet/predict` | `docker/rk3576/mobilenet.dockerfile` |
 | RK3576 | ResNet50V2 | `POST /api/models/resnet50v2/predict` | `docker/rk3576/resnet50v2.dockerfile` |
 
+以下标准服务均提供 RK3588 和 RK3576 两个平台版本：
+
+| 类别 | 模型 |
+| :--- | :--- |
+| 图像分割 | DeepLabV3、PPSeg、MobileSAM |
+| 视觉与 OCR | RetinaFace、LPRNet、PPOCR（检测 + 识别）、CLIP |
+| 文本 | Lite Transformer、MMS-TTS |
+| 语音与音频 | Wav2Vec2、Whisper、Zipformer、YAMNet |
+
+每个服务均提供 Web 页面、`GET /api/health`、`/docs` OpenAPI 文档和
+`POST /api/models/<模型>/predict` 推理接口。
+
 ## 快速开始
 
 ### 1. 安装 Docker
@@ -216,13 +228,27 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 - [RK3576 ResNet50V2](src/rk3576_resnet50v2/README_zh.md)
 - [RK3588 PPOCR（检测 + 识别）](src/rk3588_ppocr/README_zh.md)
 - [RK3576 PPOCR（检测 + 识别）](src/rk3576_ppocr/README_zh.md)
+- [RK3588 YOLOv6](src/rk3588_yolov6/README_zh.md)
+- [RK3576 YOLOv6](src/rk3576_yolov6/README_zh.md)
+- [RK3588 YOLOv7](src/rk3588_yolov7/README_zh.md)
+- [RK3576 YOLOv7](src/rk3576_yolov7/README_zh.md)
+- [RK3588 YOLOv10](src/rk3588_yolov10/README_zh.md)
+- [RK3576 YOLOv10](src/rk3576_yolov10/README_zh.md)
+- [RK3588 YOLOX](src/rk3588_yolox/README_zh.md)
+- [RK3576 YOLOX](src/rk3576_yolox/README_zh.md)
+- [RK3588 PP-YOLOE](src/rk3588_ppyoloe/README_zh.md)
+- [RK3576 PP-YOLOE](src/rk3576_ppyoloe/README_zh.md)
+- [RK3588 YOLO-World](src/rk3588_yolo_world/README_zh.md)
+- [RK3576 YOLO-World](src/rk3576_yolo_world/README_zh.md)
+- [RK3576 分割、OCR、文本与音频标准服务](src/rk3576_deeplabv3/README_zh.md)
+- [RK3588 分割、OCR、文本与音频标准服务](src/rk3588_deeplabv3/README_zh.md)
 - [Python 模型项目迁移规范](src/PYTHON_PROJECT_STANDARD.md)
 
 ## 自动化构建
 
 本项目支持通过 GitHub Actions 自动构建多平台镜像。
 - 每个 `src/rk<平台>_<模型>/` 目录都是独立的 Docker 构建上下文。
-- MobileNet 和 ResNet50V2 已加入 RK3588、RK3576 构建矩阵。
+- 上述标准服务均已加入 RK3588、RK3576 构建矩阵。
 - 支持手动触发构建，并可指定 `image_tag`。
 
 ---
@@ -240,6 +266,39 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 1. 将训练好并转换完成的 .rknn 模型放入相应平台的 `model/` 目录。
 2. 运行命令时可添加 `--model_path` 参数指向新模型（默认已在 Dockerfile 中配置）。
 
-## RK182x PCIe 加速卡 · YOLO26
+## RK182x PCIe 加速卡 · RKNN3 CV
 
-新增独立项目 [`rv182x-rk3588-yolo26`](src/rv182x_rk3588_yolo26/README_zh.md)：RK3588 主控 + 外接 RK1820 M.2，RKNN3 1.1.0，支持 Web 预览、图片/视频 API 和离线视频分析。Host 准备、Docker 构建及测试命令见项目说明。
+以下 **11 个独立 Docker 项目、26 个型号配置** 已在 RK3588 + RK1820 M.2 上完成实机验证，均使用 RKNN3 1.1.0、INT8 W8A8。每个项目的中英文 README 包含全部型号的实测 benchmark FPS、测试条件和原始 JSON 链接。
+
+**已通过 RK3588 + RK1820 M.2 实机验证。** GitHub Actions 构建全部 11 个 ARM64 镜像，发布 `latest` 和提交号标签到 GHCR；发布状态见 Actions。各项目文档均包含 GHCR 一键部署、本地构建和实测 benchmark。
+
+| 项目 | 覆盖型号 | 镜像名称 | 文档 |
+|---|---|---|---|
+| Depth Anything V3 Base | `da3-base` | `rv182x-rk3588-depth-anything-v3` | [README](src/rv182x_rk3588_depth_anything_v3/README_zh.md) |
+| MobileNetV2 | `mobilenetv2-12` | `rv182x-rk3588-mobilenetv2` | [README](src/rv182x_rk3588_mobilenetv2/README_zh.md) |
+| QA-CLIP ViT-L/14 | `qaclip-vit-l14` | `rv182x-rk3588-qaclip` | [README](src/rv182x_rk3588_qaclip/README_zh.md) |
+| RAFT-Stereo | `raftstereo-eth3d-160x240`, `raftstereo-middlebury-160x240`, `raftstereo-sceneflow-160x240`, `raftstereo-realtime-160x240` | `rv182x-rk3588-raft-stereo` | [README](src/rv182x_rk3588_raft_stereo/README_zh.md) |
+| ResNet50-v2 | `resnet50-v2-7` | `rv182x-rk3588-resnet` | [README](src/rv182x_rk3588_resnet/README_zh.md) |
+| YOLO26 | `yolo26n`, `yolo26s`, `yolo26m` | `rv182x-rk3588-yolo26` | [README](src/rv182x_rk3588_yolo26/README_zh.md) |
+| YOLO26 Pose | `yolo26n-pose`, `yolo26s-pose`, `yolo26m-pose` | `rv182x-rk3588-yolo26-pose` | [README](src/rv182x_rk3588_yolo26_pose/README_zh.md) |
+| YOLO26 Segment | `yolo26n-seg`, `yolo26s-seg`, `yolo26m-seg` | `rv182x-rk3588-yolo26-segment` | [README](src/rv182x_rk3588_yolo26_segment/README_zh.md) |
+| YOLOv5 | `yolov5n`, `yolov5s`, `yolov5m` | `rv182x-rk3588-yolov5` | [README](src/rv182x_rk3588_yolov5/README_zh.md) |
+| YOLOv6 | `yolov6n`, `yolov6s`, `yolov6m` | `rv182x-rk3588-yolov6` | [README](src/rv182x_rk3588_yolov6/README_zh.md) |
+| YOLOv8 | `yolov8n`, `yolov8s`, `yolov8m` | `rv182x-rk3588-yolov8` | [README](src/rv182x_rk3588_yolov8/README_zh.md) |
+
+主机先安装匹配的 PCIe 驱动、固件和 RKNN3 proxy，并确认加速卡 Online。普通启动不刷写固件。以 YOLO26 为例：
+
+```bash
+sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
+sudo docker run --rm --privileged --net=host --ipc=host \
+  -e PYTHONUNBUFFERED=1 -e RKNN_LOG_LEVEL=0 \
+  -v "$PWD/workspace:/app/workspace" \
+  ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
+  python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --video video/test.mp4
+```
+
+访问 `http://<开发板IP>:8000`，API 文档 `/docs`。通过 `MODEL_VARIANT` 选择该项目中的型号；多个演示共用 8000 端口，切换前先停止当前容器。新测试视频统一为用户提供的 `30_1080p.mp4`；RAFT 使用官方真实左右目图片对。若要进行姿态视频效果验收，建议补充近景人物视频；道路双目视频需要同步、校正的左右目素材。
+
+QAClip 先缓存文本向量并释放文本编码器，再运行视觉编码器；其 FPS 对应缓存文本后的逐帧处理。Depth Anything V3 固定单 view、280×280，并串行运行三段模型。RAFT 固定 1 次迭代，FPS 按左右目图片对计数。每个项目区分同步推理调用 FPS 与包含解码、后处理和展示编码的 Pipeline FPS。
+
+专用工作流 `.github/workflows/docker-build-rv182x.yml` 在 push 后构建全部 11 个模型，支持通过 workflow_dispatch 手动选择单个模型。

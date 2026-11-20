@@ -1,0 +1,20 @@
+{
+  "family": "yolo26-segment",
+  "title": "YOLO26 Segment",
+  "variants": [
+    "yolo26n-seg",
+    "yolo26s-seg",
+    "yolo26m-seg"
+  ],
+  "default_variant": "yolo26n-seg",
+  "labels": "coco_80_labels_list.txt",
+  "quantization": "w8a8",
+  "upstream_commit": "7f8c7d848448fa14cf16ba359ca98405c8bb94b5",
+  "runtime_version": "1.1.0",
+  "image": "rv182x-rk3588-yolo26-segment",
+  "upstream_example": "yolo26_segment",
+  "smoke_expected_ids": [
+    0,
+    5
+  ]
+}

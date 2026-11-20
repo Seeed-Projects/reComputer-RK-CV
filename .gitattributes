@@ -60,3 +60,20 @@ src/rv182x_rk3588_yolo26/rknn3-toolkit-lite-packages/*.whl -filter -diff -merge 
 src/rv182x_rk3588_yolo26/host/firmware/*.img -filter -diff -merge -text
 src/rv182x_rk3588_yolo26/host/bin/* -filter -diff -merge -text
 src/rv182x_rk3588_yolo26/conversion/calibration/*.jpg -filter -diff -merge -text
+
+# RK182x CV batch runtime assets
+src/rv182x_rk3588_*/lib/*.so -filter -diff -merge -text
+src/rv182x_rk3588_*/model/*.rknn -filter -diff -merge -text
+src/rv182x_rk3588_*/model/*.weight -filter -diff -merge -text
+src/rv182x_rk3588_*/model/*.npy -filter -diff -merge -text
+src/rv182x_rk3588_*/model/*.jpg -filter -diff -merge -text
+src/rv182x_rk3588_*/video/*.mp4 -filter -diff -merge -text
+src/rv182x_rk3588_*/rknn3-toolkit-lite-packages/*.whl -filter -diff -merge -text
+src/rv182x_rk3588_*/host/firmware/*.img -filter -diff -merge -text
+src/rv182x_rk3588_*/host/bin/* -filter -diff -merge -text
+src/rv182x_rk3588_*/conversion/calibration/*.jpg -filter -diff -merge -text
+# QAClip vision weight is reconstructed from regular Git chunks, each below 100 MiB.
+src/rv182x_rk3588_qaclip/model/qaclip-vision.weight.part-* -filter -diff -merge -text
+
+# Preserve meaningful blank context lines and the mail signature in the upstream patch.
+src/rv182x_rk3588_raft_stereo/conversion/raft-performance.patch whitespace=-blank-at-eol,-blank-at-eof

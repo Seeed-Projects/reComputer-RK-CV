@@ -1,0 +1,1 @@
+PASS yolov5n health/snapshot/MJPEG/8 concurrent requests/invalid inputs

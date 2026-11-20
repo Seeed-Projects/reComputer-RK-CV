@@ -1,0 +1,33 @@
+{
+  "name": "yolov6n",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "image_arrays": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        0,
+        0,
+        0
+      ]
+    ],
+    "std_values": [
+      [
+        255,
+        255,
+        255
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "fe2eed9e6f3e0f66acfd5a9a3eaf257664208e91df093ec6437eb2a94cd7fd95",
+  "seconds": 11.560749292373657
+}

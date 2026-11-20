@@ -1,0 +1,58 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from yolo26-pose.dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 979B done
+#1 DONE 0.4s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim-bookworm
+#2 DONE 1.6s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 182B 0.0s done
+#3 DONE 0.1s
+
+#4 [internal] load build context
+#4 ...
+
+#5 [1/8] FROM docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+#5 resolve docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39 0.1s done
+#5 DONE 0.1s
+
+#4 [internal] load build context
+#4 transferring context: 67.07MB 0.7s done
+#4 DONE 0.9s
+
+#6 [6/8] RUN pip install --no-cache-dir --index-url "https://pypi.tuna.tsinghua.edu.cn/simple" -r requirements.txt /wheels/*.whl     && rm -rf /wheels
+#6 CACHED
+
+#7 [2/8] WORKDIR /app
+#7 CACHED
+
+#8 [3/8] RUN sed -i "s|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g" /etc/apt/sources.list.d/debian.sources && apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg     && rm -rf /var/lib/apt/lists/*
+#8 CACHED
+
+#9 [4/8] COPY requirements.txt .
+#9 CACHED
+
+#10 [5/8] COPY rknn3-toolkit-lite-packages/ /wheels/
+#10 CACHED
+
+#11 [7/8] COPY lib/ /usr/lib/
+#11 CACHED
+
+#12 [8/8] COPY . .
+#12 DONE 8.9s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 11.3s done
+#13 exporting manifest sha256:4bbd35d25cacb31f56326cf03362f5d5d6abfee8a83a39546d93f0a9fef21783 0.1s done
+#13 exporting config sha256:6abbbad55f5a49528380e7606ebbe3434abfc7c6d32cb992b941db0f8c0bbb29 0.1s done
+#13 exporting attestation manifest sha256:4a1614cc90c80f9008f723e6a5edccd84e0be44b5bcc381cf86bb788338d2e4d
+#13 exporting attestation manifest sha256:4a1614cc90c80f9008f723e6a5edccd84e0be44b5bcc381cf86bb788338d2e4d 0.2s done
+#13 exporting manifest list sha256:7ee39f0aab44af51dd448fc169049a5a14281b7fd906d91ed62ef61e2ac7c899 0.1s done
+#13 naming to docker.io/library/rv182x-rk3588-yolo26-pose:local 0.0s done
+#13 unpacking to docker.io/library/rv182x-rk3588-yolo26-pose:local
+#13 unpacking to docker.io/library/rv182x-rk3588-yolo26-pose:local 1.0s done
+#13 DONE 13.0s

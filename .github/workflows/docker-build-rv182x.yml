@@ -1,20 +1,71 @@
 name: Build RK182x CV Images
+
 on:
   push:
     branches: [main, master]
     paths:
-      - 'src/rv182x_rk3588_yolo26/**'
+      - 'src/rv182x_rk3588_*/**'
       - 'docker/rv182x-rk3588/**'
       - '.github/workflows/docker-build-rv182x.yml'
   pull_request:
     paths:
-      - 'src/rv182x_rk3588_yolo26/**'
+      - 'src/rv182x_rk3588_*/**'
       - 'docker/rv182x-rk3588/**'
       - '.github/workflows/docker-build-rv182x.yml'
   workflow_dispatch:
+    inputs:
+      model:
+        description: Model project to build
+        type: choice
+        default: all
+        options:
+          - all
+          - mobilenetv2
+          - resnet
+          - yolov5
+          - yolov6
+          - yolov8
+          - yolo26
+          - yolo26-segment
+          - yolo26-pose
+          - qaclip
+          - depth-anything-v3
+          - raft-stereo
+
 jobs:
-  build:
+  prepare:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - id: matrix
+        env:
+          SELECTED_MODEL: ${{ inputs.model || 'all' }}
+        run: |
+          python - <<'PY'
+          import json, os
+          models = ['mobilenetv2', 'resnet', 'yolov5', 'yolov6', 'yolov8', 'yolo26',
+                    'yolo26-segment', 'yolo26-pose', 'qaclip', 'depth-anything-v3', 'raft-stereo']
+          selected = os.environ['SELECTED_MODEL']
+          if selected != 'all':
+              if selected not in models:
+                  raise SystemExit('Unknown model project')
+              models = [selected]
+          matrix = {'include': [{'model': model, 'project': 'rv182x_rk3588_' + model.replace('-', '_')}
+                                for model in models]}
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('matrix=' + json.dumps(matrix) + '\n')
+          PY
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     permissions:
       contents: read
       packages: write
@@ -23,12 +74,29 @@ jobs:
         with:
           lfs: false
           sparse-checkout: |
-            src/rv182x_rk3588_yolo26
+            src/${{ matrix.project }}
             docker/rv182x-rk3588
+      - name: Fetch only this project's runtime LFS assets
+        env:
+          PROJECT: ${{ matrix.project }}
+        run: |
+          if ! git lfs version >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y git-lfs
+          fi
+          git lfs install --local
+          git lfs pull --include="src/$PROJECT/model/**,src/$PROJECT/lib/**,src/$PROJECT/rknn3-toolkit-lite-packages/**,src/$PROJECT/video/**" --exclude=""
+          cd "src/$PROJECT"
+          if [ -f scripts/prepare_assets.py ]; then
+            python3 scripts/prepare_assets.py
+          fi
+          sha256sum -c SHA256SUMS
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
       - name: Image name
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/rv182x-rk3588-yolo26" >> "$GITHUB_ENV"
+        env:
+          MODEL: ${{ matrix.model }}
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/rv182x-rk3588-$MODEL" >> "$GITHUB_ENV"
       - uses: docker/login-action@v4
         if: github.event_name != 'pull_request'
         with:
@@ -37,8 +105,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: docker/build-push-action@v7
         with:
-          context: src/rv182x_rk3588_yolo26
-          file: docker/rv182x-rk3588/yolo26.dockerfile
+          context: src/${{ matrix.project }}
+          file: docker/rv182x-rk3588/${{ matrix.model }}.dockerfile
           platforms: linux/arm64
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -47,5 +115,5 @@ jobs:
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=rv182x-${{ matrix.model }}
+          cache-to: type=gha,mode=max,scope=rv182x-${{ matrix.model }}

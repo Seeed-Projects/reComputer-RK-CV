@@ -1,0 +1,20 @@
+{
+  "image": "rv182x-rk3588-raft-stereo:local",
+  "build_returncode": 0,
+  "variants": {
+    "raftstereo-eth3d-160x240": {
+      "benchmark_returncode": 0
+    },
+    "raftstereo-middlebury-160x240": {
+      "benchmark_returncode": 0
+    },
+    "raftstereo-sceneflow-160x240": {
+      "benchmark_returncode": 0
+    },
+    "raftstereo-realtime-160x240": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:f3a5ed8e5b249dd5abcf0e48752efa431632c40917b479f96d45668527c0c18b",
+  "api_returncode": 0
+}

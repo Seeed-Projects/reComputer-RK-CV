@@ -1,0 +1,17 @@
+{
+  "source": "TencentARC/QA-CLIP-ViT-L-14",
+  "sequence_length": 128,
+  "prompts": [
+    "\u4e00\u8f86\u6c7d\u8f66",
+    "\u4e00\u8f86\u5361\u8f66",
+    "\u4e00\u8f86\u516c\u4ea4\u8f66",
+    "\u4e00\u8f86\u6469\u6258\u8f66",
+    "\u4e00\u8f86\u81ea\u884c\u8f66",
+    "\u4e00\u4e2a\u884c\u4eba",
+    "\u4e00\u6761\u516c\u8def",
+    "\u4e00\u680b\u623f\u5b50"
+  ],
+  "vision_size": 224,
+  "host_word_embeddings": true,
+  "logit_scale": 99.99456787109375
+}

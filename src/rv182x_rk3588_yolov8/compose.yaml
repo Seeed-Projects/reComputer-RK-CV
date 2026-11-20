@@ -1,0 +1,15 @@
+services:
+  app:
+    image: rv182x-rk3588-yolov8:local
+    container_name: rv182x-rk3588-yolov8
+    build:
+      context: .
+      dockerfile: ../../docker/rv182x-rk3588/yolov8.dockerfile
+    privileged: true
+    network_mode: host
+    ipc: host
+    environment:
+      MODEL_VARIANT: ${MODEL_VARIANT:-yolov8n}
+    volumes:
+      - ./workspace:/app/workspace
+    restart: unless-stopped

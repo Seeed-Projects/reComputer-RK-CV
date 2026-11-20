@@ -37,6 +37,18 @@ Image-classification services:
 | RK3576 | MobileNet | `POST /api/models/mobilenet/predict` | `docker/rk3576/mobilenet.dockerfile` |
 | RK3576 | ResNet50V2 | `POST /api/models/resnet50v2/predict` | `docker/rk3576/resnet50v2.dockerfile` |
 
+New standard services are available for both RK3588 and RK3576:
+
+| Category | Models |
+| :--- | :--- |
+| Segmentation | DeepLabV3, PPSeg, MobileSAM |
+| Vision/OCR | RetinaFace, LPRNet, PPOCR (Det + Rec), CLIP |
+| Text | Lite Transformer, MMS-TTS |
+| Speech/audio | Wav2Vec2, Whisper, Zipformer, YAMNet |
+
+Every service provides a browser page, `GET /api/health`, OpenAPI at `/docs`,
+and `POST /api/models/<model>/predict`.
+
 ## Quick Start
 
 ### 1. Install Docker
@@ -216,13 +228,27 @@ Get real-time MJPEG video stream with detection boxes drawn, can be directly emb
 - [RK3576 ResNet50V2](src/rk3576_resnet50v2/README.md)
 - [RK3588 PPOCR (Det + Rec)](src/rk3588_ppocr/README.md)
 - [RK3576 PPOCR (Det + Rec)](src/rk3576_ppocr/README.md)
+- [RK3588 YOLOv6](src/rk3588_yolov6/README.md)
+- [RK3576 YOLOv6](src/rk3576_yolov6/README.md)
+- [RK3588 YOLOv7](src/rk3588_yolov7/README.md)
+- [RK3576 YOLOv7](src/rk3576_yolov7/README.md)
+- [RK3588 YOLOv10](src/rk3588_yolov10/README.md)
+- [RK3576 YOLOv10](src/rk3576_yolov10/README.md)
+- [RK3588 YOLOX](src/rk3588_yolox/README.md)
+- [RK3576 YOLOX](src/rk3576_yolox/README.md)
+- [RK3588 PP-YOLOE](src/rk3588_ppyoloe/README.md)
+- [RK3576 PP-YOLOE](src/rk3576_ppyoloe/README.md)
+- [RK3588 YOLO-World](src/rk3588_yolo_world/README.md)
+- [RK3576 YOLO-World](src/rk3576_yolo_world/README.md)
+- [RK3576 standard segmentation, OCR, text and audio services](src/rk3576_deeplabv3/README.md)
+- [RK3588 standard segmentation, OCR, text and audio services](src/rk3588_deeplabv3/README.md)
 - [Python model project migration standard](src/PYTHON_PROJECT_STANDARD.md)
 
 ## Automated Build
 
 This project supports automated multi-platform image building via GitHub Actions.
 - Each `src/rk<platform>_<model>/` directory is an independent Docker build context.
-- MobileNet and ResNet50V2 are included in both RK3588 and RK3576 build matrices.
+- All standard services listed above are included in both RK3588 and RK3576 build matrices.
 - Manual trigger is supported, with the option to specify `image_tag`.
 
 ---
@@ -240,6 +266,39 @@ This project supports automated multi-platform image building via GitHub Actions
 1. Place the trained and converted .rknn model into the `model/` directory of the corresponding platform.
 2. Add the `--model_path` argument to the running command to point to the new model (default already configured in Dockerfile).
 
-## RK182x PCIe accelerator · YOLO26
+## RK182x PCIe accelerator · RKNN3 CV
 
-The standalone [`rv182x-rk3588-yolo26`](src/rv182x_rk3588_yolo26/README.md) project runs YOLO26 on an external RK1820 M.2 accelerator with an RK3588 host and RKNN3 1.1.0. It includes Web preview, image/video APIs and offline video analysis. See its guide for host setup, Docker build and validation.
+These **11 standalone Docker projects and 26 variant configurations** have been validated on an RK3588 + RK1820 M.2 using RKNN3 1.1.0 and INT8 W8A8. Each bilingual project README includes measured FPS for every variant, methodology and raw JSON evidence.
+
+**Validated on RK3588 + RK1820 M.2.** GitHub Actions builds all 11 ARM64 images and publishes `latest` and commit tags to GHCR. Check Actions for publication status. Each project guide includes GHCR deployment, local builds and measured benchmarks.
+
+| Project | Variants | Image | Guide |
+|---|---|---|---|
+| Depth Anything V3 Base | `da3-base` | `rv182x-rk3588-depth-anything-v3` | [README](src/rv182x_rk3588_depth_anything_v3/README.md) |
+| MobileNetV2 | `mobilenetv2-12` | `rv182x-rk3588-mobilenetv2` | [README](src/rv182x_rk3588_mobilenetv2/README.md) |
+| QA-CLIP ViT-L/14 | `qaclip-vit-l14` | `rv182x-rk3588-qaclip` | [README](src/rv182x_rk3588_qaclip/README.md) |
+| RAFT-Stereo | `raftstereo-eth3d-160x240`, `raftstereo-middlebury-160x240`, `raftstereo-sceneflow-160x240`, `raftstereo-realtime-160x240` | `rv182x-rk3588-raft-stereo` | [README](src/rv182x_rk3588_raft_stereo/README.md) |
+| ResNet50-v2 | `resnet50-v2-7` | `rv182x-rk3588-resnet` | [README](src/rv182x_rk3588_resnet/README.md) |
+| YOLO26 | `yolo26n`, `yolo26s`, `yolo26m` | `rv182x-rk3588-yolo26` | [README](src/rv182x_rk3588_yolo26/README.md) |
+| YOLO26 Pose | `yolo26n-pose`, `yolo26s-pose`, `yolo26m-pose` | `rv182x-rk3588-yolo26-pose` | [README](src/rv182x_rk3588_yolo26_pose/README.md) |
+| YOLO26 Segment | `yolo26n-seg`, `yolo26s-seg`, `yolo26m-seg` | `rv182x-rk3588-yolo26-segment` | [README](src/rv182x_rk3588_yolo26_segment/README.md) |
+| YOLOv5 | `yolov5n`, `yolov5s`, `yolov5m` | `rv182x-rk3588-yolov5` | [README](src/rv182x_rk3588_yolov5/README.md) |
+| YOLOv6 | `yolov6n`, `yolov6s`, `yolov6m` | `rv182x-rk3588-yolov6` | [README](src/rv182x_rk3588_yolov6/README.md) |
+| YOLOv8 | `yolov8n`, `yolov8s`, `yolov8m` | `rv182x-rk3588-yolov8` | [README](src/rv182x_rk3588_yolov8/README.md) |
+
+Prepare the matching PCIe driver, firmware and RKNN3 proxy and confirm the card is Online. Normal startup does not flash firmware. YOLO26 example:
+
+```bash
+sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
+sudo docker run --rm --privileged --net=host --ipc=host \
+  -e PYTHONUNBUFFERED=1 -e RKNN_LOG_LEVEL=0 \
+  -v "$PWD/workspace:/app/workspace" \
+  ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
+  python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --video video/test.mp4
+```
+
+Open http://<Board_IP>:8000; API documentation is /docs. Select a project variant using MODEL_VARIANT. Demonstrations share port 8000; stop the current one before switching. The supplied 30_1080p.mp4 is used throughout, while RAFT uses a genuine official stereo pair. Clear close-up people are recommended for pose-video evaluation; road stereo video requires synchronized, rectified left/right material.
+
+QAClip caches text vectors and releases the text encoder before vision inference; its FPS measures frame processing with cached text. Depth Anything V3 uses one 280×280 view and three serial partitions. RAFT exports one iteration and counts stereo pairs. Each project separates synchronous runtime-call FPS from pipeline FPS including decode, task processing and preview encoding.
+
+The dedicated workflow `.github/workflows/docker-build-rv182x.yml` builds an 11-model matrix on push and supports selecting one model with workflow_dispatch.

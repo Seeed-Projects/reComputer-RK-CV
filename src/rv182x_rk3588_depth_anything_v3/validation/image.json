@@ -1,0 +1,11 @@
+{
+  "image": "rv182x-rk3588-depth-anything-v3:local",
+  "build_returncode": 0,
+  "variants": {
+    "da3-base": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:14d215c6d205dd7d1e9531a97b77c4724c1bca1441021b1f8692ffcb2d13d037",
+  "api_returncode": 0
+}

@@ -1,0 +1,33 @@
+{
+  "name": "resnet50-v2-7",
+  "config": {
+    "target_platform": "rk1820",
+    "core_num": 1,
+    "quantized_dtype": "w8a8",
+    "quantized_algorithm": "normal",
+    "quantized_method": "channel",
+    "input_attrs": {
+      "data": {
+        "dtype": "uint8",
+        "layout": "NHWC"
+      }
+    },
+    "mean_values": [
+      [
+        123.675,
+        116.28,
+        103.53
+      ]
+    ],
+    "std_values": [
+      [
+        58.395,
+        57.120000000000005,
+        57.375
+      ]
+    ]
+  },
+  "outputs": null,
+  "source_sha256": "868b9232278efd4da8f10b9a99070eeaa983cd32ffbb2883b111219114242bb1",
+  "seconds": 12.216887474060059
+}

@@ -1,0 +1,6 @@
+W rknn3-toolkit-lite version: 1.1.0
+W rknn3_dup_context not found in SO; legacy context duplication is disabled.
+W rknn3_create_mem_from_phys not found in SO; physical-address memory import is disabled.
+W rknn3_run_async not found in SO; non-LLM async inference is disabled.
+W rknn3_wait not found in SO; non-LLM async wait is disabled.
+{"variant": "yolov8n", "frames": 30, "runtime_fps": 28.98130669364608, "pipeline_fps": 12.566018478912556}

@@ -1,0 +1,15 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "raftstereo-eth3d-160x240",
+    "quantization": "w8a8",
+    "runtime": "RKNN3 Lite 1.1.0",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "inference_count": 0,
+    "iterations": 1
+  },
+  "paired_upload": true,
+  "sample_jpeg": true,
+  "missing_input_status": 422
+}

@@ -1,0 +1,17 @@
+{
+  "image": "rv182x-rk3588-yolov8:local",
+  "build_returncode": 0,
+  "variants": {
+    "yolov8n": {
+      "benchmark_returncode": 0
+    },
+    "yolov8s": {
+      "benchmark_returncode": 0
+    },
+    "yolov8m": {
+      "benchmark_returncode": 0
+    }
+  },
+  "image_id": "sha256:8157025bae6c0607ffeee95c5e91914aa489481a8d68b2e3cf6f22aac588ebff",
+  "api_returncode": 0
+}

@@ -1,0 +1,59 @@
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from yolov8.dockerfile
+#1 transferring dockerfile:
+#1 transferring dockerfile: 974B 0.0s done
+#1 DONE 0.5s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim-bookworm
+#2 DONE 1.8s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 182B done
+#3 DONE 0.1s
+
+#4 [internal] load build context
+#4 ...
+
+#5 [1/8] FROM docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39
+#5 resolve docker.io/library/python:3.11-slim-bookworm@sha256:a83ba18aef0f865b1a4a611c2cf460fe446f2795673bbb9fe43be570439e3b39 0.2s done
+#5 DONE 0.2s
+
+#4 [internal] load build context
+#4 transferring context: 71.96MB 0.7s done
+#4 DONE 0.8s
+
+#6 [2/8] WORKDIR /app
+#6 CACHED
+
+#7 [3/8] RUN sed -i "s|http://deb.debian.org|https://mirrors.tuna.tsinghua.edu.cn|g" /etc/apt/sources.list.d/debian.sources && apt-get update && apt-get install -y --no-install-recommends libglib2.0-0 libgomp1 ffmpeg     && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [4/8] COPY requirements.txt .
+#8 CACHED
+
+#9 [5/8] COPY rknn3-toolkit-lite-packages/ /wheels/
+#9 CACHED
+
+#10 [6/8] RUN pip install --no-cache-dir --index-url "https://pypi.tuna.tsinghua.edu.cn/simple" -r requirements.txt /wheels/*.whl     && rm -rf /wheels
+#10 CACHED
+
+#11 [7/8] COPY lib/ /usr/lib/
+#11 CACHED
+
+#12 [8/8] COPY . .
+#12 DONE 9.7s
+
+#13 exporting to image
+#13 exporting layers
+#13 exporting layers 13.7s done
+#13 exporting manifest sha256:456d3f96775e2739addf929b41346f1f0d2b0bba5cdfa0896a27eb9b84c0f21f 0.1s done
+#13 exporting config sha256:f90ae209889ee29970f6e9620ffe3c54718b7abc540e6c6d14b5f58b275d3f94 0.1s done
+#13 exporting attestation manifest sha256:dae0be77bcd45a70df378f0abcc4950581c498a602075e03ca8cfe433994fac4
+#13 exporting attestation manifest sha256:dae0be77bcd45a70df378f0abcc4950581c498a602075e03ca8cfe433994fac4 0.2s done
+#13 exporting manifest list sha256:8157025bae6c0607ffeee95c5e91914aa489481a8d68b2e3cf6f22aac588ebff 0.1s done
+#13 naming to docker.io/library/rv182x-rk3588-yolov8:local
+#13 naming to docker.io/library/rv182x-rk3588-yolov8:local 0.0s done
+#13 unpacking to docker.io/library/rv182x-rk3588-yolov8:local
+#13 unpacking to docker.io/library/rv182x-rk3588-yolov8:local 1.2s done
+#13 DONE 15.5s

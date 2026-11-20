@@ -1,0 +1,90 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "yolo26n",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 14,
+    "runtime_ms": 28.8,
+    "total_ms": 50.79,
+    "preview_frames": 14,
+    "preview_error": ""
+  },
+  "snapshot": true,
+  "concurrent_identical_predictions": 8,
+  "invalid_threshold_status": 422,
+  "invalid_media_status": 400,
+  "mjpeg": true,
+  "predictions": [
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.5,
+      "box": {
+        "x1": 740,
+        "y1": 624,
+        "x2": 863,
+        "y2": 720
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.46750953793525696,
+      "box": {
+        "x1": 1067,
+        "y1": 445,
+        "x2": 1120,
+        "y2": 483
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.33894702792167664,
+      "box": {
+        "x1": 905,
+        "y1": 630,
+        "x2": 1068,
+        "y2": 717
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.33894702792167664,
+      "box": {
+        "x1": 587,
+        "y1": 593,
+        "x2": 679,
+        "y2": 694
+      }
+    },
+    {
+      "class": "bus",
+      "class_id": 5,
+      "confidence": 0.33894702792167664,
+      "box": {
+        "x1": 94,
+        "y1": 609,
+        "x2": 287,
+        "y2": 716
+      }
+    },
+    {
+      "class": "car",
+      "class_id": 2,
+      "confidence": 0.26092591881752014,
+      "box": {
+        "x1": 701,
+        "y1": 493,
+        "x2": 763,
+        "y2": 549
+      }
+    }
+  ],
+  "prompt_update": null,
+  "offline_video_frames": 3
+}

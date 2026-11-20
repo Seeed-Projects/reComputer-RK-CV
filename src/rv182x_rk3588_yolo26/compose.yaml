@@ -1,15 +1,15 @@
 services:
-  yolo26:
-    image: rv182x-rk3588-yolo26:latest
+  app:
+    image: rv182x-rk3588-yolo26:local
     container_name: rv182x-rk3588-yolo26
     build:
       context: .
       dockerfile: ../../docker/rv182x-rk3588/yolo26.dockerfile
-    platform: linux/arm64
-    # The SDK host proxy uses localhost TCP and PCIe DMA/shared memory.
+    privileged: true
     network_mode: host
     ipc: host
-    privileged: true
-    restart: unless-stopped
+    environment:
+      MODEL_VARIANT: ${MODEL_VARIANT:-yolo26n}
     volumes:
       - ./workspace:/app/workspace
+    restart: unless-stopped

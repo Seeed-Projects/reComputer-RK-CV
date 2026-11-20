@@ -1,0 +1,78 @@
+{
+  "health": {
+    "status": "ok",
+    "model": "qaclip-vit-l14",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 4,
+    "runtime_ms": 154.7,
+    "total_ms": 157.23,
+    "preview_frames": 4,
+    "preview_error": ""
+  },
+  "snapshot": true,
+  "concurrent_identical_predictions": 8,
+  "invalid_threshold_status": 422,
+  "invalid_media_status": 400,
+  "mjpeg": true,
+  "predictions": [
+    {
+      "class": "\u4e00\u8f86\u6c7d\u8f66",
+      "class_id": 0,
+      "confidence": 0.47412949800491333,
+      "cosine_similarity": 0.1919100433588028
+    },
+    {
+      "class": "\u4e00\u680b\u623f\u5b50",
+      "class_id": 7,
+      "confidence": 0.2822341024875641,
+      "cosine_similarity": 0.18672233819961548
+    },
+    {
+      "class": "\u4e00\u6761\u516c\u8def",
+      "class_id": 6,
+      "confidence": 0.13978666067123413,
+      "cosine_similarity": 0.1796957552433014
+    },
+    {
+      "class": "\u4e00\u8f86\u516c\u4ea4\u8f66",
+      "class_id": 2,
+      "confidence": 0.05342055857181549,
+      "cosine_similarity": 0.17007601261138916
+    },
+    {
+      "class": "\u4e00\u8f86\u5361\u8f66",
+      "class_id": 1,
+      "confidence": 0.04330363869667053,
+      "cosine_similarity": 0.16797631978988647
+    },
+    {
+      "class": "\u4e00\u8f86\u81ea\u884c\u8f66",
+      "class_id": 4,
+      "confidence": 0.004750573076307774,
+      "cosine_similarity": 0.14587539434432983
+    },
+    {
+      "class": "\u4e00\u4e2a\u884c\u4eba",
+      "class_id": 5,
+      "confidence": 0.0016753742238506675,
+      "cosine_similarity": 0.135452538728714
+    },
+    {
+      "class": "\u4e00\u8f86\u6469\u6258\u8f66",
+      "class_id": 3,
+      "confidence": 0.0006996491574682295,
+      "cosine_similarity": 0.12671993672847748
+    }
+  ],
+  "prompt_update": {
+    "prompts": [
+      "\u4e00\u8f86\u6c7d\u8f66",
+      "\u4e00\u6761\u516c\u8def"
+    ],
+    "text_setup_ms": 9657.883975989535
+  },
+  "offline_video_frames": 3
+}

@@ -1,0 +1,15 @@
+services:
+  app:
+    image: rv182x-rk3588-raft-stereo:local
+    container_name: rv182x-rk3588-raft-stereo
+    build:
+      context: .
+      dockerfile: ../../docker/rv182x-rk3588/raft-stereo.dockerfile
+    privileged: true
+    network_mode: host
+    ipc: host
+    environment:
+      MODEL_VARIANT: ${MODEL_VARIANT:-raftstereo-eth3d-160x240}
+    volumes:
+      - ./workspace:/app/workspace
+    restart: unless-stopped
