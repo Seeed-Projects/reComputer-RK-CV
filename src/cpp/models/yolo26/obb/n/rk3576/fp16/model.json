@@ -1,0 +1,22 @@
+{
+  "id": "yolo26n-obb-rk3576-fp16",
+  "name": "yolo26n-obb",
+  "family": "yolo26",
+  "task": "obb",
+  "backend": "yolo",
+  "chip": "rk3576",
+  "size": "n",
+  "precision": "fp16",
+  "tag": "rk3576-yolo26n-obb-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/obb/yolo26n-obb/rk3576/fp16/model.rknn",
+  "sha256": "997a5cd0348092c782a147af9b62b860033509052efac89f71b222a72740e68a",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/obb/yolo26n-obb/rk3576/fp16/metadata.yaml",
+  "metadata_sha256": "0bf2c6c5f0a749ef312a68c58efdc8c3e9757ff93e0407cfcb23f78fb2f9391a",
+  "classes": 15,
+  "end2end": true,
+  "coordinates": "normalized",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "nms": false,
+  "conversion": "custom"
+}

@@ -51,6 +51,9 @@ on:
       - '!docker/rv182x-rk3588/**'
     tags: ['v*.*.*']
   pull_request:
+    paths-ignore:
+      - 'src/cpp/**'
+      - '.github/workflows/cpp-model-images.yml'
   workflow_dispatch:
     inputs:
       platform:
@@ -84,11 +87,6 @@ jobs:
           - rk3576_ppocr
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v6
-        with:
-          lfs: true
-
       - name: Check if build is needed
         id: check_changes
         run: |
@@ -106,6 +104,15 @@ jobs:
           else
             echo "build=true" >> $GITHUB_OUTPUT
           fi
+
+      - name: Checkout Code
+        if: steps.check_changes.outputs.build == 'true'
+        uses: actions/checkout@v6
+        with:
+          lfs: true
+          sparse-checkout: |
+            src/${{ matrix.platform }}
+            docker
 
       - name: Prepare Image Name
         if: steps.check_changes.outputs.build == 'true'

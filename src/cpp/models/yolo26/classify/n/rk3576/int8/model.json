@@ -1,0 +1,22 @@
+{
+  "id": "yolo26n-cls-rk3576-int8",
+  "name": "yolo26n-cls",
+  "family": "yolo26",
+  "task": "classify",
+  "backend": "yolo",
+  "chip": "rk3576",
+  "size": "n",
+  "precision": "int8",
+  "tag": "rk3576-yolo26n-cls-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/classify/yolo26n-cls/rk3576/int8/model.rknn",
+  "sha256": "2246169c2ae0d0ecb45889609e92d3699ff93c00029e6d335ffbe08fc8291588",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/classify/yolo26n-cls/rk3576/int8/metadata.yaml",
+  "metadata_sha256": "1b9519bf1da463d25a301efae2b5665e8381a2039fa6f530a460fedb0f944bc4",
+  "classes": 1000,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "center_crop",
+  "dense_resize": "none",
+  "nms": true,
+  "conversion": "custom"
+}

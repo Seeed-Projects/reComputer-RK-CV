@@ -1,0 +1,500 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live detection | Rockchip CV API</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #eef3f6;
+      --ink: #142733;
+      --muted: #456070;
+      --line: #aebfc9;
+      --blue: #005c80;
+      --screen: #10232d;
+      font: 100%/1.5 "Trebuchet MS", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { width: min(76rem, calc(100% - 2rem)); margin: 0 auto 3rem; }
+    header, .feed-bar, .control-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+    header { min-height: 4rem; border-bottom: 1px solid var(--line); }
+    a { color: var(--blue); }
+    h1 { margin: 1.25rem 0 .25rem; font-size: clamp(2rem, 5vw, 3.75rem); line-height: 1.1; }
+    #model { margin: 0 0 1.25rem; color: var(--muted); }
+    .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem); gap: 1rem; }
+    .monitor { background: var(--screen); color: #edf6fa; }
+    .feed-bar { min-height: 2.75rem; padding: .5rem 1rem; border-bottom: 1px solid #39505c; }
+    #feed-status { color: #b9ddeb; }
+    #feed-status[data-state="live"] { color: #a6edcf; }
+    .view {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 16 / 9;
+      position: relative;
+      text-align: center;
+    }
+    #feed, #video, #boxes { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #feed, #video { object-fit: contain; }
+    #boxes { pointer-events: none; }
+    #feed-message { max-width: 36ch; padding: 1rem; overflow-wrap: anywhere; }
+    .controls { padding: 1rem; border: 1px solid var(--line); background: #f8fbfc; }
+    h2 { margin: 0; font-size: 1.2rem; }
+    .hint { margin: .25rem 0 1rem; color: var(--muted); font-size: .9rem; }
+    fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
+    .control { margin-bottom: 1rem; }
+    output { font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; margin: .35rem 0 0; accent-color: var(--blue); }
+    button {
+      min-height: 2.5rem;
+      padding: .45rem .8rem;
+      border: 1px solid transparent;
+      font: inherit;
+      font-weight: bold;
+      color: white;
+      background: var(--blue);
+      cursor: pointer;
+    }
+    button:disabled { opacity: .6; cursor: default; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    #config-status { min-height: 1.5em; margin: .5rem 0 0; color: var(--muted); font-size: .9rem; }
+    @media (max-width: 48rem) {
+      .layout { grid-template-columns: minmax(0, 1fr); }
+      .view { min-height: 12rem; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <strong>Rockchip CV API</strong>
+      <a href="./docs">API docs</a>
+    </header>
+
+    <h1>Live detection</h1>
+    <p id="model">Reading model information…</p>
+
+    <div class="layout">
+      <section class="monitor" aria-label="Detection preview">
+        <div class="feed-bar">
+          <strong>Video feed</strong>
+          <span id="feed-status" role="status">Connecting</span>
+        </div>
+        <div class="view">
+          <img id="feed" alt="Live video with object detection boxes" hidden>
+          <video id="video" aria-label="Live detection video" muted playsinline loop hidden></video>
+          <canvas id="boxes" aria-hidden="true" hidden></canvas>
+          <p id="feed-message">Waiting for the board to respond…</p>
+        </div>
+      </section>
+
+      <form class="controls" aria-labelledby="controls-title">
+        <h2 id="controls-title">Detection thresholds</h2>
+        <p class="hint" id="threshold-hint">Changes apply to the stream and API defaults for this container.</p>
+        <fieldset disabled>
+          <div class="control">
+            <div class="control-label">
+              <label for="confidence">Minimum confidence</label>
+              <output for="confidence" id="confidence-value">—</output>
+            </div>
+            <input id="confidence" name="obj_thresh" type="range" min="0" max="1" step="any">
+          </div>
+          <div class="control">
+            <div class="control-label">
+              <label for="iou">NMS IoU</label>
+              <output for="iou" id="iou-value">—</output>
+            </div>
+            <input id="iou" name="nms_thresh" type="range" min="0" max="1" step="any">
+            <p class="hint" id="nms-hint" hidden>Server-side NMS is disabled for this model.</p>
+          </div>
+          <button type="submit" disabled>Apply thresholds</button>
+        </fieldset>
+        <p id="config-status" role="status"></p>
+      </form>
+    </div>
+
+    <noscript>Enable JavaScript to connect to the video feed and adjust thresholds.</noscript>
+  </main>
+
+  <script>
+    const feed = document.querySelector("#feed");
+    const video = document.querySelector("#video");
+    const boxes = document.querySelector("#boxes");
+    const drawing = boxes.getContext("2d");
+    const feedStatus = document.querySelector("#feed-status");
+    const feedMessage = document.querySelector("#feed-message");
+    const model = document.querySelector("#model");
+    const form = document.querySelector("form");
+    const fieldset = form.querySelector("fieldset");
+    const sliders = [...form.querySelectorAll("input")];
+    const iou = document.querySelector("#iou");
+    const apply = form.querySelector("button");
+    const configStatus = document.querySelector("#config-status");
+    let savedConfig;
+    let resultsStream;
+    let results = [];
+    let aligned = false;
+    let videoFailed = false;
+    let browserNms = false;
+    let labels = [];
+    let thresholdRevision = 0;
+    const playbackDelay = .22;
+
+    async function json(path, options = {}) {
+      const response = await fetch(path, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(5000),
+        ...options,
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      return response.json();
+    }
+
+    function showFeed(status, message, state) {
+      const hasFrame = resultsStream ? video.readyState >= 2 : feed.naturalWidth > 0;
+      if (feedStatus.textContent !== status) feedStatus.textContent = status;
+      if (feedStatus.dataset.state !== state) feedStatus.dataset.state = state;
+      feed.hidden = Boolean(resultsStream) || !hasFrame;
+      video.hidden = boxes.hidden = !resultsStream || !hasFrame;
+      if (feedMessage.textContent !== message) feedMessage.textContent = message;
+      feedMessage.hidden = hasFrame;
+    }
+
+    function resetFeed(status, message) {
+      feed.removeAttribute("src");
+      showFeed(status, message, "idle");
+    }
+
+    function timeNear(position, reference) {
+      return position + video.duration * Math.round((reference - position) / video.duration);
+    }
+
+    function syncVideo() {
+      const latest = results.at(-1);
+      if (!latest || !Number.isFinite(video.duration) || video.duration <= 0 || video.seeking) return;
+      const target = Math.max(0, latest.time - playbackDelay);
+      const drift = target - timeNear(video.currentTime, target);
+      if (!aligned || Math.abs(drift) > .4) {
+        aligned = true;
+        video.currentTime = target % video.duration;
+        video.playbackRate = 1;
+        if (video.paused) video.play().catch(() => {
+          showFeed("Playback blocked", "The browser blocked video playback. Reload the page to retry.", "idle");
+        });
+      } else {
+        const rate = Math.abs(drift) < .045 ? 1 : Math.max(.95, Math.min(1.05, 1 + drift * .25));
+        if (Math.abs(video.playbackRate - rate) > .005) video.playbackRate = rate;
+      }
+    }
+
+    function overlaps(a, b, threshold) {
+      const width = Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1));
+      const height = Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+      const intersection = width * height;
+      return intersection > threshold * (a.area + b.area - intersection);
+    }
+
+    function visiblePredictions(result) {
+      if (!result.candidates) return result.predictions;
+      if (!savedConfig) return [];
+      if (result.thresholdRevision === thresholdRevision) return result.predictions;
+      const {obj_thresh: minimum, nms_thresh: iou} = savedConfig;
+      const byClass = new Map();
+      const values = result.candidates;
+      for (let offset = 0; offset < values.length; offset += 6) {
+        const confidence = values[offset + 4];
+        if (confidence <= minimum) continue;
+        const classId = values[offset + 5];
+        const x1 = values[offset], y1 = values[offset + 1];
+        const x2 = values[offset + 2], y2 = values[offset + 3];
+        if (!byClass.has(classId)) byClass.set(classId, []);
+        byClass.get(classId).push({
+          class: labels[classId] ?? String(classId), confidence,
+          box: {x1, y1, x2, y2, area: (x2 - x1) * (y2 - y1)},
+        });
+      }
+      const predictions = [];
+      for (const group of byClass.values()) {
+        group.sort((a, b) => b.confidence - a.confidence);
+        const kept = [];
+        for (const candidate of group) {
+          if (iou === 1 || !kept.some(previous => overlaps(candidate.box, previous.box, iou))) {
+            kept.push(candidate);
+          }
+        }
+        predictions.push(...kept.reverse());
+      }
+      result.thresholdRevision = thresholdRevision;
+      return result.predictions = predictions;
+    }
+
+    function drawBoxes(_now, {mediaTime}) {
+      if (!resultsStream) return;
+      const contextWidth = boxes.width;
+      const contextHeight = boxes.height;
+      drawing.clearRect(0, 0, contextWidth, contextHeight);
+      const latest = results.at(-1);
+      if (latest && Number.isFinite(video.duration) && video.duration > 0) {
+        const position = timeNear(mediaTime, latest.time);
+        const result = results.findLast(item => item.time <= position + .008);
+        if (result && position - result.time < .15 && performance.now() - latest.received < 700) {
+          const scale = Math.min(contextWidth / result.image.width, contextHeight / result.image.height);
+          const offsetX = (contextWidth - result.image.width * scale) / 2;
+          const offsetY = (contextHeight - result.image.height * scale) / 2;
+          const pixelRatio = window.devicePixelRatio || 1;
+          drawing.font = `600 ${12 * pixelRatio}px system-ui`;
+          drawing.lineWidth = 2 * pixelRatio;
+          drawing.textBaseline = "top";
+          drawing.strokeStyle = "#a6edcf";
+          for (const {box, confidence, class: label} of visiblePredictions(result)) {
+            const x = offsetX + box.x1 * scale;
+            const y = offsetY + box.y1 * scale;
+            const caption = `${label} ${Math.round(100 * confidence)}%`;
+            drawing.strokeRect(x, y, (box.x2 - box.x1) * scale, (box.y2 - box.y1) * scale);
+            const captionY = Math.max(y - 17 * pixelRatio, offsetY);
+            drawing.fillStyle = "#142733";
+            drawing.fillRect(x, captionY, drawing.measureText(caption).width + 8 * pixelRatio, 17 * pixelRatio);
+            drawing.fillStyle = "#edf6fa";
+            drawing.fillText(caption, x + 4 * pixelRatio, captionY + 2 * pixelRatio);
+          }
+        }
+      }
+      requestFrame();
+    }
+
+    function requestFrame() {
+      if ("requestVideoFrameCallback" in video) video.requestVideoFrameCallback(drawBoxes);
+      else requestAnimationFrame(now => drawBoxes(now, {mediaTime: video.currentTime}));
+    }
+
+    new ResizeObserver(([entry]) => {
+      const pixelRatio = window.devicePixelRatio || 1;
+      boxes.width = Math.round(entry.contentRect.width * pixelRatio);
+      boxes.height = Math.round(entry.contentRect.height * pixelRatio);
+    }).observe(video.parentElement);
+
+    function receiveResult(result) {
+      if (!Number.isFinite(video.duration) || video.duration <= 0) return;
+      result.time = result.cycle * video.duration + result.media_time;
+      result.received = performance.now();
+      results.push(result);
+      while (results.length > 120 || results[0].time < result.time - 1) results.shift();
+      syncVideo();
+      if (video.readyState >= 2 && !video.paused) showFeed("Live", "", "live");
+    }
+
+    function resultsDisconnected() {
+      results = [];
+      aligned = false;
+      showFeed("Reconnecting", "Waiting for detection results…", "idle");
+    }
+
+    async function readCandidates(signal) {
+      const response = await fetch("./api/demo/candidates", {signal, cache: "no-store"});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const reader = response.body.getReader();
+      let pending = new Uint8Array(0);
+      async function readBytes(size) {
+        const bytes = new Uint8Array(size);
+        for (let written = 0; written < size;) {
+          if (!pending.length) {
+            const next = await reader.read();
+            if (next.done) throw new Error("Candidate stream ended");
+            pending = next.value;
+          }
+          const count = Math.min(size - written, pending.length);
+          bytes.set(pending.subarray(0, count), written);
+          pending = pending.subarray(count);
+          written += count;
+        }
+        return bytes.buffer;
+      }
+      try {
+        while (!signal.aborted) {
+          const header = new DataView(await readBytes(32));
+          const size = header.getUint32(0, true);
+          if (size > 16 * 1024 * 1024 || size % 24) throw new Error("Invalid candidate frame");
+          const candidates = new Float32Array(await readBytes(size));
+          receiveResult({
+            image: {width: header.getUint32(4, true), height: header.getUint32(8, true)},
+            cycle: header.getUint32(12, true),
+            media_time: header.getFloat64(16, true),
+            candidates,
+          });
+        }
+      } finally {
+        await reader.cancel().catch(() => {});
+      }
+    }
+
+    async function watchCandidates(signal) {
+      while (!signal.aborted) {
+        try {
+          await readCandidates(signal);
+        } catch {
+          if (signal.aborted) break;
+          resultsDisconnected();
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
+
+    function startTimedFeed() {
+      if (resultsStream) return;
+      feed.removeAttribute("src");
+      video.src = "./api/demo/video";
+      if (browserNms) {
+        const abort = new AbortController();
+        resultsStream = {close: () => abort.abort()};
+        json("./api/metadata").then(metadata => {
+          labels = metadata.labels;
+          thresholdRevision++;
+        }).catch(() => {});
+        watchCandidates(abort.signal);
+      } else {
+        resultsStream = new EventSource("./api/demo/results");
+        resultsStream.onmessage = event => receiveResult(JSON.parse(event.data));
+        resultsStream.onerror = resultsDisconnected;
+      }
+      showFeed("Waiting for video", "Waiting for the source to deliver a frame…", "idle");
+      requestFrame();
+    }
+
+    function stopTimedFeed() {
+      if (!resultsStream) return;
+      resultsStream.close();
+      resultsStream = undefined;
+      results = [];
+      aligned = false;
+      video.removeAttribute("src");
+      video.load();
+    }
+
+    video.addEventListener("error", () => {
+      if (!resultsStream) return;
+      videoFailed = true;
+      stopTimedFeed();
+      feed.src = "./api/video_feed";
+    });
+
+    async function refreshFeed() {
+      try {
+        const health = await json("./health");
+        const { live, backend } = health;
+        model.textContent = `${health.model.name} / ${health.model.chip.toUpperCase()}`;
+        const clientThresholds = Boolean(health.demo_video && !videoFailed && !live?.error &&
+                                         backend.live?.candidate_stream);
+        if (browserNms && !clientThresholds) loadConfig();
+        browserNms = clientThresholds;
+        document.querySelector("#threshold-hint").textContent = browserNms
+          ? "Confidence and NMS apply to this browser preview."
+          : "Changes apply to the stream and API defaults for this container.";
+        iou.disabled = !browserNms && backend.nms === false;
+        document.querySelector("#nms-hint").hidden = !iou.disabled;
+
+        if (!health.demo_video || !live || live.error) stopTimedFeed();
+        if (live === null) {
+          resetFeed("No source", "Set RK_SOURCE when starting the container to use a camera, RTSP stream, or mounted video.");
+        } else if (live.error) {
+          resetFeed("Source unavailable", live.error);
+        } else if (health.demo_video && !videoFailed) {
+          startTimedFeed();
+        } else {
+          if (!feed.hasAttribute("src")) feed.src = "./api/video_feed";
+          renderFrame(live.ended);
+        }
+      } catch {
+        resetFeed("Disconnected", "Could not reach the API. Reconnecting…");
+      } finally {
+        setTimeout(refreshFeed, 2500);
+      }
+    }
+
+    let sourceEnded = false;
+    function renderFrame(ended) {
+      sourceEnded = ended;
+      if (ended) {
+        showFeed("Source finished", "The video source has ended.", "idle");
+      } else if (feed.naturalWidth > 0) {
+        showFeed("Live", "", "live");
+      } else {
+        showFeed("Waiting for video", "Waiting for the source to deliver a frame…", "idle");
+      }
+    }
+    feed.addEventListener("load", () => {
+      if (!resultsStream) renderFrame(sourceEnded);
+    });
+    feed.addEventListener("error", () => {
+      resetFeed("Preview unavailable", "Could not read the preview. Reconnecting…");
+    });
+
+    function updateControls() {
+      for (const slider of sliders) {
+        document.querySelector(`#${slider.id}-value`).textContent = slider.valueAsNumber.toFixed(2);
+      }
+      apply.disabled = sliders.every(slider =>
+        slider.disabled || slider.valueAsNumber === savedConfig[slider.name]);
+    }
+
+    async function loadConfig() {
+      try {
+        savedConfig = await json("./api/config");
+        thresholdRevision++;
+        for (const slider of sliders) slider.value = savedConfig[slider.name];
+        fieldset.disabled = false;
+        updateControls();
+        configStatus.textContent = "";
+      } catch {
+        configStatus.textContent = "Could not read thresholds. Retrying…";
+        setTimeout(loadConfig, 2500);
+      }
+    }
+
+    form.addEventListener("input", updateControls);
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const changes = {};
+      for (const slider of sliders) {
+        if (!slider.disabled && slider.valueAsNumber !== savedConfig[slider.name]) {
+          changes[slider.name] = slider.valueAsNumber;
+        }
+      }
+      if (!Object.keys(changes).length) return;
+      if (browserNms) {
+        Object.assign(savedConfig, changes);
+        thresholdRevision++;
+        configStatus.textContent = "Thresholds applied to this preview.";
+        updateControls();
+        return;
+      }
+      fieldset.disabled = true;
+      configStatus.textContent = "Saving thresholds…";
+      try {
+        await json("./api/config", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changes),
+        });
+        Object.assign(savedConfig, changes);
+        configStatus.textContent = "Thresholds applied.";
+      } catch {
+        configStatus.textContent = "Could not save thresholds. Try again.";
+      } finally {
+        fieldset.disabled = false;
+        updateControls();
+      }
+    });
+
+    refreshFeed();
+    loadConfig();
+  </script>
+</body>
+</html>

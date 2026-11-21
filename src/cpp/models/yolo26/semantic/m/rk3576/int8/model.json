@@ -1,0 +1,22 @@
+{
+  "id": "yolo26m-sem-rk3576-int8",
+  "name": "yolo26m-sem",
+  "family": "yolo26",
+  "task": "semantic",
+  "backend": "yolo",
+  "chip": "rk3576",
+  "size": "m",
+  "precision": "int8",
+  "tag": "rk3576-yolo26m-sem-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/semantic/yolo26m-sem/rk3576/int8/model.rknn",
+  "sha256": "fb6cd2bad417a4f56ef0a8c0fa5aea0eb4087b9fbf105fdac3be991141ec79bf",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/semantic/yolo26m-sem/rk3576/int8/metadata.yaml",
+  "metadata_sha256": "e8d3c20797b41f2a9d23ec4df16c08f6ec1cc083fc69eb59331c05c94f0e78e4",
+  "classes": 19,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "half_pixel",
+  "nms": true,
+  "conversion": "custom"
+}

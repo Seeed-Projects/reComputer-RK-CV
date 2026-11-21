@@ -1,0 +1,26 @@
+{
+  "id": "yolo26s-pose-rk3576-fp16",
+  "name": "yolo26s-pose",
+  "family": "yolo26",
+  "task": "pose",
+  "backend": "yolo",
+  "chip": "rk3576",
+  "size": "s",
+  "precision": "fp16",
+  "tag": "rk3576-yolo26s-pose-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/pose/yolo26s-pose/rk3576/fp16/model.rknn",
+  "sha256": "87cc2a19510936f2b3abdaf3824450c2ec0a9d98148ae6360f692cb05a50e452",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO26-RKNN2/resolve/9b33ad58d4bbc3407de5caa8099681ad5550933a/models/v2.3.2/pose/yolo26s-pose/rk3576/fp16/metadata.yaml",
+  "metadata_sha256": "007517b495dcd3233f6b8accce4af978a6af2a00f30ed3e7cecb09ea3b90dffe",
+  "classes": 1,
+  "end2end": true,
+  "coordinates": "normalized",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "nms": false,
+  "conversion": "custom",
+  "kpt_shape": [
+    17,
+    3
+  ]
+}

@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+*.so
+build/
+.venv/
+media/
+.env
+.env.*
+.local/
+.DS_Store
+*.log
+._*
+.model-package/
