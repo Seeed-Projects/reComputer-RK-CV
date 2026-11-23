@@ -4,12 +4,10 @@
 import argparse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
-import os
 from pathlib import Path
-import shutil
 import subprocess
+import tarfile
 import tempfile
-from threading import Lock
 
 from models import ROOT, image_references, load_catalog, prepare
 
@@ -26,36 +24,49 @@ def layers(image):
 DEMO_CLIPS = {"pose": "exercise", "obb": "harbor"}
 
 
-def stage_video(spec, context):
-    clip = DEMO_CLIPS.get(spec["task"], "street")
-    video = context / "video"
-    video.mkdir()
-    for source, target in ((f"{clip}.mp4", "input.mp4"), (f"{clip}.txt", "ATTRIBUTION.txt")):
-        path = video / target
-        shutil.copyfile(ROOT / "demo" / source, path)
-        path.chmod(0o644)
-        os.utime(path, (0, 0))
-    os.utime(video, (0, 0))
-    return clip
+def stage_video(clip, context):
+    with tarfile.open(context / "video.tar", "w", format=tarfile.USTAR_FORMAT) as archive:
+        for name in ("opt", "opt/demo"):
+            directory = tarfile.TarInfo(name)
+            directory.type = tarfile.DIRTYPE
+            directory.mode = 0o755
+            archive.addfile(directory)
+        for source, target in ((f"{clip}.mp4", "input.mp4"), (f"{clip}.txt", "ATTRIBUTION.txt")):
+            source = ROOT / "demo" / source
+            item = tarfile.TarInfo(f"opt/demo/{target}")
+            item.mode = 0o644
+            item.size = source.stat().st_size
+            with source.open("rb") as content:
+                archive.addfile(item, content)
 
 
-def build(spec, reference, runtime, runtime_layers, revision, publish, video_layers, layer_lock):
+def build_video(clip, runtime, runtime_layers, image):
+    with tempfile.TemporaryDirectory(prefix="rk-video-") as directory:
+        context = Path(directory)
+        stage_video(clip, context)
+        docker("build", "--builder", "default", "--platform", "linux/arm64",
+               "--quiet", "--pull=false", "--build-arg", f"RUNTIME_IMAGE={runtime}",
+               "--build-arg", "SOURCE_DATE_EPOCH=0",
+               "--file", str(ROOT / "Dockerfile.video"), "--tag", image, str(context))
+    image_layers = layers(image)
+    if image_layers[:-1] != runtime_layers:
+        raise RuntimeError(f"{image} must append exactly one video layer to {runtime}")
+    print(f"Video layer {clip}: {image_layers[-1]}", flush=True)
+    return image_layers
+
+
+def build(spec, reference, base, base_layers, revision, publish):
     image = f"{reference[0]}:{reference[1]}"
     versioned = f"{image}-{revision}" if revision else None
     with tempfile.TemporaryDirectory(prefix="rk-model-") as directory:
         context = Path(directory)
         prepare(spec, context / "package")
-        clip = stage_video(spec, context)
         docker("build", "--builder", "default", "--platform", "linux/arm64",
-               "--quiet", "--pull=false", "--build-arg", f"RUNTIME_IMAGE={runtime}",
+               "--quiet", "--pull=false", "--build-arg", f"RUNTIME_IMAGE={base}",
                "--file", str(ROOT / "Dockerfile.model"), "--tag", image, str(context))
 
-    image_layers = layers(image)
-    if image_layers[:-2] != runtime_layers:
-        raise RuntimeError(f"{image} must append exactly one video layer and one model layer to {runtime}")
-    with layer_lock:
-        if video_layers.setdefault(clip, image_layers[-2]) != image_layers[-2]:
-            raise RuntimeError(f"{image} did not reuse the {clip} video layer")
+    if layers(image)[:-1] != base_layers:
+        raise RuntimeError(f"{image} must append exactly one model layer to {base}")
 
     docker("run", "--rm", "--entrypoint", "python", image, "-c",
            "import sys; from rkapi import _native; from rkapi.app import app; "
@@ -97,24 +108,31 @@ def main():
         parser.error("The runtime image has no filesystem layers")
 
     failures = []
-    video_layers = {}
-    layer_lock = Lock()
-    with ThreadPoolExecutor(max_workers=4) as workers:
-        builds = {}
-        for spec in selected:
-            package, tag = references[spec["id"]]
-            future = workers.submit(build, spec, (f"{args.repository}/{package}", tag),
-                                    args.runtime, runtime_layers, args.revision, args.publish,
-                                    video_layers, layer_lock)
-            builds[future] = spec["id"]
-        for future in as_completed(builds):
-            try:
-                future.result()
-            except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
-                failures.append(builds[future])
-                print(f"{builds[future]}: {error}", flush=True)
-    for clip, digest in sorted(video_layers.items()):
-        print(f"Video layer {clip}: {digest}")
+    clips = {DEMO_CLIPS.get(spec["task"], "street") for spec in selected}
+    bases = {}
+    with tempfile.TemporaryDirectory(prefix="rk-video-tag-") as tag_scope:
+        try:
+            for clip in sorted(clips):
+                image = f"rockchip-cv-demo-base:{clip}-{Path(tag_scope).name}"
+                bases[clip] = (image, build_video(clip, args.runtime, runtime_layers, image))
+            with ThreadPoolExecutor(max_workers=4) as workers:
+                builds = {}
+                for spec in selected:
+                    package, tag = references[spec["id"]]
+                    base, base_layers = bases[DEMO_CLIPS.get(spec["task"], "street")]
+                    future = workers.submit(build, spec, (f"{args.repository}/{package}", tag),
+                                            base, base_layers, args.revision, args.publish)
+                    builds[future] = spec["id"]
+                for future in as_completed(builds):
+                    try:
+                        future.result()
+                    except (OSError, ValueError, RuntimeError, subprocess.CalledProcessError) as error:
+                        failures.append(builds[future])
+                        print(f"{builds[future]}: {error}", flush=True)
+        finally:
+            if bases:
+                subprocess.run(["docker", "image", "rm", *(base for base, _ in bases.values())],
+                               check=False, stdout=subprocess.DEVNULL)
     print(f"Verified {len(selected) - len(failures)} of {len(selected)} model images")
     return 1 if failures else 0
 

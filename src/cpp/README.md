@@ -290,9 +290,9 @@ The workflow saves one shared runtime per source commit under
 `runtime:<commit-sha>`. Each model uses it as the base, verifies the model
 package and native module imports, and checks that its layer list matches the
 runtime plus one independent video layer and one model layer. Models that
-use the same clip must have the same video layer ID. The video layer uses
-BuildKit's `COPY --link` with fixed file metadata so code-only rebuilds can
-reuse it. Each model is published with a
+use the same clip must have the same video layer ID. The workflow builds each video layer once from a deterministic archive.
+BuildKit's `ADD --link` keeps the video layer independent so code-only
+rebuilds can reuse it. Each model is published with a
 `<chip>-<precision>` tag and a `<chip>-<precision>-<commit-sha>` tag.
 
 Each manifest points to an immutable Hugging Face revision. The build
