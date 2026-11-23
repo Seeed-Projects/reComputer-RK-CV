@@ -1,0 +1,28 @@
+{
+  "date": "2026-11-23",
+  "kernel": "6.1.172-vendor-seeed-rk3588",
+  "sdk": "1.1.0",
+  "model": "yolov5n",
+  "candidate_image": "sha256:59b85401711d00ff9e748dcaaa3f8c6b32532c7e61a1f16274ecbb8a5a5a7eed",
+  "base_candidate_image": "sha256:1acfc354025cc4dee8852b6fc73341dd33adbb672f6519cf1e972715a9709337",
+  "before": {
+    "driver_present": false,
+    "pci_present": true,
+    "proxy_present": false
+  },
+  "after": {
+    "docker_status": "running",
+    "health": "healthy"
+  },
+  "decoded_output": {
+    "decoded_frames": 3,
+    "shape": [
+      1080,
+      1920,
+      3
+    ]
+  },
+  "workspace_mount": false,
+  "firmware_recovery_enabled": false,
+  "firmware_writes": 0
+}

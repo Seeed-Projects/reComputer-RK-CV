@@ -1,0 +1,20 @@
+{
+  "device_busy_rejected": true,
+  "owned_proxy_stopped": true,
+  "host_service_active": "active",
+  "host_service_enabled": "enabled",
+  "external_proxy_reused": true,
+  "health": {
+    "status": "ok",
+    "model": "yolov5n",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 0,
+    "runtime_ms": 0.0,
+    "total_ms": 0.0,
+    "preview_frames": 0,
+    "preview_error": ""
+  }
+}

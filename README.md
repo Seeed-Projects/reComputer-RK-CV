@@ -286,13 +286,15 @@ These **11 standalone Docker projects and 26 variant configurations** have been 
 | YOLOv6 | `yolov6n`, `yolov6s`, `yolov6m` | `rv182x-rk3588-yolov6` | [README](src/rv182x_rk3588_yolov6/README.md) |
 | YOLOv8 | `yolov8n`, `yolov8s`, `yolov8m` | `rv182x-rk3588-yolov8` | [README](src/rv182x_rk3588_yolov8/README.md) |
 
-Prepare the matching PCIe driver, firmware and RKNN3 proxy and confirm the card is Online. Normal startup does not flash firmware. YOLO26 example:
+The shared runtime prepares/checks the driver and proxy and performs real W8A8 inference before starting the model. Firmware recovery is disabled by default. Verified kernel: 6.1.172-vendor-seeed-rk3588; other kernels require matching vendor headers/toolchain. YOLO26 example:
 
 ```bash
 sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
-sudo docker run --rm --privileged --net=host --ipc=host \
+sudo docker run --rm --privileged --net=host --ipc=host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e PYTHONUNBUFFERED=1 -e RKNN_LOG_LEVEL=0 \
-  -v "$PWD/workspace:/app/workspace" \
   ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
   python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --video video/test.mp4
 ```
@@ -302,3 +304,5 @@ Open http://<Board_IP>:8000; API documentation is /docs. Select a project varian
 QAClip caches text vectors and releases the text encoder before vision inference; its FPS measures frame processing with cached text. Depth Anything V3 uses one 280×280 view and three serial partitions. RAFT exports one iteration and counts stereo pairs. Each project separates synchronous runtime-call FPS from pipeline FPS including decode, task processing and preview encoding.
 
 The dedicated workflow `.github/workflows/docker-build-rv182x.yml` builds an 11-model matrix on push and supports selecting one model with workflow_dispatch.
+
+RK182x models now share a firmware / driver / proxy bootstrap base; see [runtime guide](runtime/rv182x-rk3588/README.md). Firmware recovery requires explicit authorization.

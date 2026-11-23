@@ -10,6 +10,10 @@ services:
     ipc: host
     environment:
       MODEL_VARIANT: ${MODEL_VARIANT:-mobilenetv2-12}
+    stop_grace_period: 5m
     volumes:
+      - /run/lock:/run/lock
+      - /lib/modules:/lib/modules:ro
+      - /usr/src:/usr/src:ro
       - ./workspace:/app/workspace
     restart: unless-stopped

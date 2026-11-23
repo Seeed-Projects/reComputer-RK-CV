@@ -34,7 +34,7 @@ rv182x_rk3588_mobilenetv2/
 └── compose.yaml
 ```
 
-## Prepare the RK3588 host
+## Optional manual host setup (legacy images / native host use)
 
 ```bash
 cd src/rv182x_rk3588_mobilenetv2
@@ -46,7 +46,7 @@ Use `--flash-m2` only when the matched M.2 firmware needs updating. Normal start
 
 ## Quick deployment with GHCR
 
-Prerequisites: Docker on Linux ARM64 RK3588, an Online RK1820 M.2 PCIe card, and the matching SDK 1.1.0 host driver / RKNN3 proxy installed using the host preparation below.
+Prerequisites: Docker on Linux ARM64 RK3588 and a correctly installed RK1820 M.2 PCIe card. The shared runtime now prepares/checks the driver and proxy, waits for Online / OK and performs real W8A8 self-test inference before starting this application. Verified kernel: `6.1.172-vendor-seeed-rk3588`; other kernels need matching headers and a working build environment.
 
 #### Step A: Pull the image
 
@@ -56,14 +56,16 @@ sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-mobilenet
 
 #### Step B: One-command run
 
-Stop other demos using port 8000 or the accelerator first. Run from a writable directory; `workspace` stores uploaded files and analysis results.
+Stop other demos using port 8000 or the accelerator first. No host project directory is required. Workspace persistence is optional; download results before removing the container if no volume is mounted.
 
 ```bash
 sudo docker run --rm --name rv182x-rk3588-mobilenetv2 \
-  --privileged --net=host --ipc=host \
+  --privileged --net=host --ipc=host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
-  -v "$(pwd)/workspace:/app/workspace" \
   ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-mobilenetv2:latest \
   python3 web_detection.py --variant mobilenetv2-12 --model_path model/mobilenetv2-12.rknn --weight_path model/mobilenetv2-12.weight --video video/test.mp4
 ```
@@ -80,11 +82,13 @@ Defaults: 1000 ImageNet classes. Create one name per line in `class_config.txt`,
 
 ```bash
 sudo docker run --rm --name rv182x-rk3588-mobilenetv2 \
-  --privileged --net=host --ipc=host \
+  --privileged --net=host --ipc=host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
   -v "$(pwd)/class_config.txt:/app/class_config.txt:ro" \
-  -v "$(pwd)/workspace:/app/workspace" \
   ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-mobilenetv2:latest \
   python3 web_detection.py --variant mobilenetv2-12 --model_path model/mobilenetv2-12.rknn --weight_path model/mobilenetv2-12.weight --video video/test.mp4 --class_path /app/class_config.txt
 ```
@@ -99,15 +103,17 @@ docker build --network host --platform linux/arm64 \
   -t rv182x-rk3588-mobilenetv2:local src/rv182x_rk3588_mobilenetv2
 ```
 
-For a regional package mirror, add `--build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple --build-arg APT_MIRROR=https://mirrors.tuna.tsinghua.edu.cn`.
+Configure regional package mirrors when building the shared base, not the model layer; see the runtime instructions below.
 
 ## One-command run
 
 ```bash
 docker run -d --name rv182x-rk3588-mobilenetv2 \
-  --privileged --network host --ipc host --restart unless-stopped \
+  --privileged --network host --ipc host --restart unless-stopped --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e MODEL_VARIANT=mobilenetv2-12 \
-  -v "$PWD/workspace:/app/workspace" \
   rv182x-rk3588-mobilenetv2:local
 ```
 
@@ -169,7 +175,10 @@ Conditions: RKNN3 Lite / firmware 1.1.0, core mask `0x1`, one serial process, ot
 
 ```bash
 mkdir -p validation
-docker run --rm --privileged --network host --ipc host \
+docker run --rm --privileged --network host --ipc host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -v "$PWD/validation:/app/validation" rv182x-rk3588-mobilenetv2:local \
   python benchmark.py --variant mobilenetv2-12 --warmup 5 --frames 30 \
   --output validation/benchmark-mobilenetv2-12.json
@@ -190,3 +199,32 @@ See [conversion/README.md](conversion/README.md) for reproducible conversion com
 ## Troubleshooting
 
 On failed health checks, inspect `docker logs`, the host driver, card Online state and proxy. Verify paired model/weight files and that the selected variant has been generated. On overlayroot hosts, Docker and containerd data must reside on a writable ext4 filesystem supporting overlay2.
+
+## Shared runtime and automatic initialization
+
+All model images inherit `ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-runtime:1.1.0`. CI publishes this layer first, then builds models against its immutable digest. It includes firmware, SDK tools, driver source / verified profile and a self-test model, with no startup model/firmware downloads.
+
+Startup: verify assets → detect one RK1820 → load/build the driver → reuse/start proxy → wait for Online / OK → run the bundled MobileNetV2 W8A8 sample → start this model. Pass `doctor` as the image command for read-only diagnostics.
+
+- Share `/run/lock` for cross-container exclusion; stop the previous model before switching. One RK1820 card per host is supported.
+- Mount `/lib/modules` and `/usr/src` read-only for kernel build information. The validated board kernel has a bundled module. Missing headers, ABI mismatch or build failures are reported; forced module loading is never used.
+- Kernel modules affect the host; `--privileged` is required. The entrypoint creates the matching container device node after loading the module; mounting all of host `/dev` is unnecessary.
+- Only a proxy started by this entrypoint is cleaned up. Existing external proxies are reused without being killed. A container-owned proxy lives for the application's lifetime.
+- Firmware flashing is disabled by default. Driver errors and Online self-test/model failures do not trigger flashing.
+- Upload, analysis and download work without a workspace mount. Add `-v "$PWD/workspace:/app/workspace"` only for persistence after container removal.
+
+Only after confirming the M.2 board and stopping all card users and external proxies may an operator add `-e RK182X_ALLOW_FIRMWARE_RECOVERY=1 -e RK182X_BOARD=ext-m2`. An Offline card then gets at most one verified recovery attempt. Healthy cards skip recovery. Shared locking is mandatory. Keep the 300-second stop timeout and do not interrupt power or forcibly stop firmware writes.
+
+Build the runtime locally from the repository root:
+
+```bash
+docker build --platform linux/arm64 -f docker/rv182x-rk3588/runtime.dockerfile \
+  -t ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-runtime:1.1.0 \
+  runtime/rv182x-rk3588
+```
+
+`APT_MIRROR` / `PIP_INDEX_URL` configure the base build. Select it in model builds with `--build-arg RK182X_BASE_IMAGE=<base reference>`. Ordinary users pull only the model image; Docker fetches shared layers automatically.
+
+The benchmark table retains the previous native measurements for all variants. This bootstrap change does not constitute a new full-model benchmark run; initialization / self-test time is outside Runtime FPS. This release's board acceptance is intentionally limited to one model's end-to-end deployment.
+
+See the [shared runtime guide](../../../runtime/rv182x-rk3588/README.md) for the complete procedure and limits.

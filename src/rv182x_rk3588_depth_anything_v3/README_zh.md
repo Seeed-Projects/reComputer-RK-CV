@@ -34,7 +34,7 @@ rv182x_rk3588_depth_anything_v3/
 └── compose.yaml
 ```
 
-## 主机准备（在 RK3588 上）
+## 可选：手动准备主机（旧版镜像 / 宿主机原生运行）
 
 ```bash
 cd src/rv182x_rk3588_depth_anything_v3
@@ -42,11 +42,11 @@ sudo apt-get install -y build-essential linux-headers-$(uname -r)
 sudo bash scripts/setup_host.sh
 ```
 
-仅在明确需要更新匹配的 M.2 固件时使用 `--flash-m2`；普通启动无需刷写。服务通过本机 RKNN3 proxy 访问 PCIe 卡，不是在 RK3588 内置 NPU 上运行。
+仅在明确需要更新匹配的 M.2 固件时使用 `--flash-m2`；普通启动无需刷写。服务通过 RKNN3 proxy 访问 PCIe 卡。新版镜像启动入口可以自行加载驱动、复用已有 proxy 或管理自己的 proxy；无需预先安装 systemd 服务。
 
 ## 使用 GHCR 镜像快速部署
 
-前提：RK3588 已安装 Docker，RK1820 M.2 PCIe 卡 Online，且已按下方“主机准备”安装匹配 SDK 1.1.0 的驱动和 RKNN3 proxy。镜像面向 Linux ARM64。
+前提：Linux ARM64 RK3588、Docker、正确安装的 RK1820 M.2 PCIe 卡。镜像现在继承公共运行时层，自动检查/准备驱动和 proxy、确认 Online，并完成真实 W8A8 自检后启动模型。已验证内核为 `6.1.172-vendor-seeed-rk3588`；其它内核需匹配的 headers 和可用构建环境。
 
 #### 步骤 A：拉取镜像
 
@@ -56,14 +56,16 @@ sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-depth-any
 
 #### 步骤 B：一键运行
 
-先停止占用 8000 端口或正在使用加速卡的演示容器。在可写目录执行；`workspace` 用于保存上传文件和分析结果。
+先停止占用 8000 端口或正在使用加速卡的演示容器。运行命令不依赖宿主机项目目录。workspace 挂载可选；容器退出前可从 Web 下载结果。
 
 ```bash
 sudo docker run --rm --name rv182x-rk3588-depth-anything-v3 \
-  --privileged --net=host --ipc=host \
+  --privileged --net=host --ipc=host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e PYTHONUNBUFFERED=1 \
   -e RKNN_LOG_LEVEL=0 \
-  -v "$(pwd)/workspace:/app/workspace" \
   ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-depth-anything-v3:latest \
   python3 web_detection.py --variant da3-base --video video/test.mp4
 ```
@@ -86,15 +88,17 @@ docker build --network host --platform linux/arm64 \
   -t rv182x-rk3588-depth-anything-v3:local src/rv182x_rk3588_depth_anything_v3
 ```
 
-如果 PyPI 下载较慢，可添加 `--build-arg PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple --build-arg APT_MIRROR=https://mirrors.tuna.tsinghua.edu.cn`。
+依赖已由公共基础层提供。如需修改 PyPI / APT 源，请先按下方公共基础镜像说明重建基础层，再构建本模型。
 
 ## 一键运行
 
 ```bash
 docker run -d --name rv182x-rk3588-depth-anything-v3 \
-  --privileged --network host --ipc host --restart unless-stopped \
+  --privileged --network host --ipc host --restart unless-stopped --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e MODEL_VARIANT=da3-base \
-  -v "$PWD/workspace:/app/workspace" \
   rv182x-rk3588-depth-anything-v3:local
 ```
 
@@ -156,7 +160,10 @@ curl -X POST http://192.168.100.145:8000/api/config \
 
 ```bash
 mkdir -p validation
-docker run --rm --privileged --network host --ipc host \
+docker run --rm --privileged --network host --ipc host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -v "$PWD/validation:/app/validation" rv182x-rk3588-depth-anything-v3:local \
   python benchmark.py --variant da3-base --warmup 5 --frames 30 \
   --output validation/benchmark-da3-base.json
@@ -183,3 +190,32 @@ docker run --rm --privileged --network host --ipc host \
 当前固定 280×280 单 view；INT8 结果有可见分段，远处小目标细节有限。本次通过的是运行与性能验证，尚未做深度数据集精度验收。
 
 [INT8 实机预览](validation/benchmark-da3-base.jpg) · [同帧 FP32 ONNX 参考](validation/fp32-reference-frame34.jpg)
+
+## 公共基础镜像与自动初始化
+
+所有模型层继承 `ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-runtime:1.1.0`。CI 先发布基础镜像，再按其不可变 digest 构建模型镜像。固件、SDK 工具、驱动、自检模型均在基础层，无需临时下载。
+
+默认流程：校验资源 → 发现单张 RK1820 → 加载/按需编译驱动 → 复用/启动 proxy → 等待 Online / OK → MobileNetV2 W8A8 样例自检 → 启动本模型。只读诊断入口为镜像末尾的 `doctor`。
+
+- `/run/lock` 共享挂载用于跨容器互斥；切换模型前停止旧容器。此版本支持单主机单 RK1820 卡。
+- `/lib/modules` 和 `/usr/src` 只读挂载提供其它内核的编译信息。已附带本次板卡内核的已验证驱动；缺 headers、ABI 不匹配或构建失败时会给出明确错误，不强制加载模块。
+- 内核驱动作用于宿主机；运行命令需要 `--privileged`。驱动加载后会在容器创建对应设备节点，不必把整个宿主机 `/dev` 挂载进来。
+- 入口只清理自己启动的 proxy；复用的外部 proxy 不会被终止。容器内维护 proxy 时，容器退出会一并结束它。
+- 默认不刷写固件。常规 Offline、驱动错误和模型自检失败不会被当作可以任意刷卡的理由。
+- 上传、离线分析和下载不依赖 workspace 挂载；如需保留容器退出后的文件，可增加 `-v "$PWD/workspace:/app/workspace"`。
+
+只有确认板型、停止全部推理和外部 proxy 后，才可在启动命令中显式增加 `-e RK182X_ALLOW_FIRMWARE_RECOVERY=1 -e RK182X_BOARD=ext-m2`。该设置只在卡 Offline 时尝试一次匹配固件恢复，正常卡直接跳过；需要共享锁挂载。不要在恢复过程中断电或强制终止容器，停止宽限期应保留为 300 秒。
+
+公共运行时本地构建（仓库根目录）：
+
+```bash
+docker build --platform linux/arm64 -f docker/rv182x-rk3588/runtime.dockerfile \
+  -t ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-runtime:1.1.0 \
+  runtime/rv182x-rk3588
+```
+
+国内镜像源参数 `APT_MIRROR` / `PIP_INDEX_URL` 作用于基础镜像；模型构建通过 `--build-arg RK182X_BASE_IMAGE=<基础镜像引用>` 选择基础层。普通部署只需拉取模型镜像，Docker 自动取得基础层。
+
+本页 benchmark 是之前完成的全部型号原始实测，未因本次启动器改造重测全部模型；启动器初始化和自检时间不属于表内 Runtime FPS。当前版本仅按本次验收要求选择一个模型进行板卡端到端复验。
+
+完整流程与限制见仓库 [公共运行时说明](../../../runtime/rv182x-rk3588/README.md)。

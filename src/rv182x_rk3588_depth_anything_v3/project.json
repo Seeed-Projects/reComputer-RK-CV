@@ -22,5 +22,7 @@
     280,
     3
   ],
-  "views": 1
+  "views": 1,
+  "bootstrap_version": 1,
+  "runtime_base": "rv182x-rk3588-runtime:1.1.0"
 }

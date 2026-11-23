@@ -13,5 +13,7 @@
   "upstream_example": "mobilenet_v2",
   "smoke_expected_ids": [
     494
-  ]
+  ],
+  "bootstrap_version": 1,
+  "runtime_base": "rv182x-rk3588-runtime:1.1.0"
 }

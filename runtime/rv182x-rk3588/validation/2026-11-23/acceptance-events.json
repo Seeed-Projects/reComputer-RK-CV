@@ -1,0 +1,42 @@
+[
+  {
+    "component": "rk182x-init",
+    "event": "BOOTSTRAP_BEGIN",
+    "sdk": "1.1.0",
+    "kernel": "6.1.172-vendor-seeed-rk3588",
+    "bdf": "0000:01:00.0"
+  },
+  {
+    "component": "rk182x-init",
+    "event": "DRIVER_LOADED",
+    "source": "verified-profile",
+    "kernel": "6.1.172-vendor-seeed-rk3588"
+  },
+  {
+    "component": "rk182x-init",
+    "event": "PROXY_STARTED",
+    "pid": 10
+  },
+  {
+    "component": "rk182x-init",
+    "event": "SMI_NONSTANDARD_EXIT",
+    "exit_code": 251,
+    "status": "Online",
+    "health": "OK"
+  },
+  {
+    "component": "rk182x-init",
+    "event": "CARD_ONLINE",
+    "bdf": "0000:01:00.0"
+  },
+  {
+    "component": "rk182x-init",
+    "event": "SELF_TEST_PASSED",
+    "detail": "{\"real_npu_inference\": true, \"model\": \"mobilenetv2-12\", \"quantization\": \"w8a8\", \"top5\": [494, 469, 747, 442, 653]}\nW rknn3-toolkit-lite version: 1.1.0\nW rknn3_dup_context not found in SO; legacy context duplication is disabled.\nW rknn3_create_mem_from_phys not found in SO; physical-address memory import is disabled.\nW rknn3_run_async not found in SO; non-LLM async inference is disabled.\nW rknn3_wait not found in SO; non-LLM async wait is disabled.\n"
+  },
+  {
+    "component": "rk182x-init",
+    "event": "MODEL_START_READY",
+    "sdk": "1.1.0"
+  }
+]

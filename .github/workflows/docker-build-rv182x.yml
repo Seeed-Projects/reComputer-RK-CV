@@ -6,31 +6,21 @@ on:
     paths:
       - 'src/rv182x_rk3588_*/**'
       - 'docker/rv182x-rk3588/**'
+      - 'runtime/rv182x-rk3588/**'
       - '.github/workflows/docker-build-rv182x.yml'
   pull_request:
     paths:
       - 'src/rv182x_rk3588_*/**'
       - 'docker/rv182x-rk3588/**'
+      - 'runtime/rv182x-rk3588/**'
       - '.github/workflows/docker-build-rv182x.yml'
   workflow_dispatch:
     inputs:
       model:
-        description: Model project to build
+        description: Model project to build (runtime base is built first)
         type: choice
         default: all
-        options:
-          - all
-          - mobilenetv2
-          - resnet
-          - yolov5
-          - yolov6
-          - yolov8
-          - yolo26
-          - yolo26-segment
-          - yolo26-pose
-          - qaclip
-          - depth-anything-v3
-          - raft-stereo
+        options: [all, mobilenetv2, resnet, yolov5, yolov6, yolov8, yolo26, yolo26-segment, yolo26-pose, qaclip, depth-anything-v3, raft-stereo]
 
 jobs:
   prepare:
@@ -39,12 +29,20 @@ jobs:
       contents: read
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
+      registry: ${{ steps.matrix.outputs.registry }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          sparse-checkout: |
+            runtime/rv182x-rk3588
+      - name: Test bootstrap safety policies
+        run: python3 -m unittest discover -s runtime/rv182x-rk3588 -p test_runtime.py -v
       - id: matrix
         env:
           SELECTED_MODEL: ${{ inputs.model || 'all' }}
         run: |
-          python - <<'PY'
+          python3 - <<'PY'
           import json, os
           models = ['mobilenetv2', 'resnet', 'yolov5', 'yolov6', 'yolov8', 'yolo26',
                     'yolo26-segment', 'yolo26-pose', 'qaclip', 'depth-anything-v3', 'raft-stereo']
@@ -57,14 +55,58 @@ jobs:
                                 for model in models]}
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
               output.write('matrix=' + json.dumps(matrix) + '\n')
+              output.write('registry=ghcr.io/' + os.environ['GITHUB_REPOSITORY'].lower() + '\n')
           PY
 
-  build:
+  runtime:
     needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.base.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          lfs: false
+          sparse-checkout: |
+            runtime/rv182x-rk3588
+            docker/rv182x-rk3588
+      - name: Verify pinned SDK, firmware, driver and self-test assets
+        run: cd runtime/rv182x-rk3588 && sha256sum -c ASSET_SHA256SUMS
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        id: base
+        with:
+          context: runtime/rv182x-rk3588
+          file: docker/rv182x-rk3588/runtime.dockerfile
+          platforms: linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ needs.prepare.outputs.registry }}/rv182x-rk3588-runtime:latest
+            ${{ needs.prepare.outputs.registry }}/rv182x-rk3588-runtime:1.1.0
+            ${{ needs.prepare.outputs.registry }}/rv182x-rk3588-runtime:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=rv182x-runtime-110
+          cache-to: type=gha,mode=max,scope=rv182x-runtime-110
+
+  build:
+    needs: [prepare, runtime]
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 4
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     permissions:
       contents: read
@@ -76,29 +118,16 @@ jobs:
           sparse-checkout: |
             src/${{ matrix.project }}
             docker/rv182x-rk3588
-      - name: Fetch only this project's runtime LFS assets
+      - name: Prepare and verify this project's model assets
         env:
           PROJECT: ${{ matrix.project }}
         run: |
-          if ! git lfs version >/dev/null 2>&1; then
-            sudo apt-get update
-            sudo apt-get install -y git-lfs
-          fi
-          git lfs install --local
-          git lfs pull --include="src/$PROJECT/model/**,src/$PROJECT/lib/**,src/$PROJECT/rknn3-toolkit-lite-packages/**,src/$PROJECT/video/**" --exclude=""
           cd "src/$PROJECT"
-          if [ -f scripts/prepare_assets.py ]; then
-            python3 scripts/prepare_assets.py
-          fi
+          if [ -f scripts/prepare_assets.py ]; then python3 scripts/prepare_assets.py; fi
           sha256sum -c SHA256SUMS
       - uses: docker/setup-qemu-action@v4
       - uses: docker/setup-buildx-action@v4
-      - name: Image name
-        env:
-          MODEL: ${{ matrix.model }}
-        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}/rv182x-rk3588-$MODEL" >> "$GITHUB_ENV"
       - uses: docker/login-action@v4
-        if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -108,12 +137,16 @@ jobs:
           context: src/${{ matrix.project }}
           file: docker/rv182x-rk3588/${{ matrix.model }}.dockerfile
           platforms: linux/arm64
+          build-args: |
+            RK182X_BASE_IMAGE=${{ needs.prepare.outputs.registry }}/rv182x-rk3588-runtime@${{ needs.runtime.outputs.digest }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
-          push: ${{ github.event_name != 'pull_request' }}
+            org.opencontainers.image.base.name=${{ needs.prepare.outputs.registry }}/rv182x-rk3588-runtime
+            org.opencontainers.image.base.digest=${{ needs.runtime.outputs.digest }}
+          push: true
           tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
-          cache-from: type=gha,scope=rv182x-${{ matrix.model }}
-          cache-to: type=gha,mode=max,scope=rv182x-${{ matrix.model }}
+            ${{ needs.prepare.outputs.registry }}/rv182x-rk3588-${{ matrix.model }}:latest
+            ${{ needs.prepare.outputs.registry }}/rv182x-rk3588-${{ matrix.model }}:${{ github.sha }}
+          cache-from: type=gha,scope=rv182x-shared-${{ matrix.model }}
+          cache-to: type=gha,mode=max,scope=rv182x-shared-${{ matrix.model }}

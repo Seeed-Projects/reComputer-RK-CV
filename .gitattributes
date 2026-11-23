@@ -77,3 +77,13 @@ src/rv182x_rk3588_qaclip/model/qaclip-vision.weight.part-* -filter -diff -merge 
 
 # Preserve meaningful blank context lines and the mail signature in the upstream patch.
 src/rv182x_rk3588_raft_stereo/conversion/raft-performance.patch whitespace=-blank-at-eol,-blank-at-eof
+
+# Pinned SDK and self-test assets in the shared runtime (all below the Git blob limit).
+runtime/rv182x-rk3588/lib/*.so -filter -diff -merge -text
+runtime/rv182x-rk3588/selftest/*.rknn -filter -diff -merge -text
+runtime/rv182x-rk3588/selftest/*.weight -filter -diff -merge -text
+runtime/rv182x-rk3588/selftest/*.jpg -filter -diff -merge -text
+runtime/rv182x-rk3588/rknn3-toolkit-lite-packages/*.whl -filter -diff -merge -text
+runtime/rv182x-rk3588/host/bin/* -filter -diff -merge -text
+runtime/rv182x-rk3588/host/firmware/*.img -filter -diff -merge -text
+runtime/rv182x-rk3588/drivers/*/*.ko -filter -diff -merge -text

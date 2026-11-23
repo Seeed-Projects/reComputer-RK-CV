@@ -1,0 +1,311 @@
+{
+  "model": "yolov5n",
+  "upload_mode": true,
+  "workspace_mount": false,
+  "health": {
+    "status": "ok",
+    "model": "yolov5n",
+    "quantization": "w8a8",
+    "accelerator": "rk1820",
+    "host": "rk3588",
+    "runtime": "rknn3-toolkit-lite 1.1.0",
+    "inference_count": 0,
+    "runtime_ms": 0.0,
+    "total_ms": 0.0,
+    "preview_frames": 0,
+    "preview_error": ""
+  },
+  "prediction": {
+    "success": true,
+    "source": "video frame at 0.0s",
+    "predictions": [
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.8280816078186035,
+        "box": {
+          "x1": 1367,
+          "y1": 953,
+          "x2": 1585,
+          "y2": 1080
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7422531247138977,
+        "box": {
+          "x1": 1052,
+          "y1": 740,
+          "x2": 1147,
+          "y2": 825
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7328259348869324,
+        "box": {
+          "x1": 1120,
+          "y1": 928,
+          "x2": 1290,
+          "y2": 1080
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.730150043964386,
+        "box": {
+          "x1": 484,
+          "y1": 765,
+          "x2": 608,
+          "y2": 860
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7291785478591919,
+        "box": {
+          "x1": 351,
+          "y1": 758,
+          "x2": 495,
+          "y2": 849
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7271973490715027,
+        "box": {
+          "x1": 883,
+          "y1": 892,
+          "x2": 1017,
+          "y2": 1045
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7247059941291809,
+        "box": {
+          "x1": 644,
+          "y1": 787,
+          "x2": 771,
+          "y2": 916
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7117878794670105,
+        "box": {
+          "x1": 26,
+          "y1": 886,
+          "x2": 271,
+          "y2": 1080
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.7093887329101562,
+        "box": {
+          "x1": 924,
+          "y1": 681,
+          "x2": 999,
+          "y2": 750
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.6791234612464905,
+        "box": {
+          "x1": 1201,
+          "y1": 751,
+          "x2": 1321,
+          "y2": 849
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.6701936721801758,
+        "box": {
+          "x1": 650,
+          "y1": 676,
+          "x2": 725,
+          "y2": 735
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.6165794134140015,
+        "box": {
+          "x1": 1124,
+          "y1": 673,
+          "x2": 1187,
+          "y2": 729
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.5877739787101746,
+        "box": {
+          "x1": 746,
+          "y1": 687,
+          "x2": 830,
+          "y2": 757
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.5819301009178162,
+        "box": {
+          "x1": 536,
+          "y1": 678,
+          "x2": 624,
+          "y2": 738
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.4736640155315399,
+        "box": {
+          "x1": 138,
+          "y1": 911,
+          "x2": 424,
+          "y2": 1080
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.4442434310913086,
+        "box": {
+          "x1": 1613,
+          "y1": 677,
+          "x2": 1678,
+          "y2": 717
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.3653258681297302,
+        "box": {
+          "x1": 346,
+          "y1": 576,
+          "x2": 390,
+          "y2": 606
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.3395617604255676,
+        "box": {
+          "x1": 1000,
+          "y1": 608,
+          "x2": 1058,
+          "y2": 668
+        }
+      },
+      {
+        "class": "bus",
+        "class_id": 5,
+        "confidence": 0.3264590799808502,
+        "box": {
+          "x1": 135,
+          "y1": 909,
+          "x2": 425,
+          "y2": 1080
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.32108718156814575,
+        "box": {
+          "x1": 640,
+          "y1": 624,
+          "x2": 706,
+          "y2": 671
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.31126493215560913,
+        "box": {
+          "x1": 636,
+          "y1": 642,
+          "x2": 719,
+          "y2": 721
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.2963669002056122,
+        "box": {
+          "x1": 803,
+          "y1": 622,
+          "x2": 868,
+          "y2": 670
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.2898147404193878,
+        "box": {
+          "x1": 1341,
+          "y1": 589,
+          "x2": 1426,
+          "y2": 635
+        }
+      },
+      {
+        "class": "car",
+        "class_id": 2,
+        "confidence": 0.2679179012775421,
+        "box": {
+          "x1": 1082,
+          "y1": 620,
+          "x2": 1132,
+          "y2": 658
+        }
+      }
+    ],
+    "image": {
+      "width": 1920,
+      "height": 1080
+    },
+    "timing": {
+      "runtime_ms": 66.376,
+      "total_ms": 107.905
+    }
+  },
+  "upload": {
+    "filename": "runtime-acceptance.mp4",
+    "status": "uploaded"
+  },
+  "analysis": {
+    "status": "started",
+    "output_filename": "runtime-acceptance_results.mp4"
+  },
+  "analysis_status": {
+    "is_processing": false,
+    "progress": 100,
+    "current_video": "runtime-acceptance.mp4",
+    "error": ""
+  },
+  "download_bytes": 557149
+}

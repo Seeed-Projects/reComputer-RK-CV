@@ -1,0 +1,9 @@
+{
+  "6.1.172-vendor-seeed-rk3588": {
+    "file": "6.1.172-vendor-seeed-rk3588/pcie-rkep.ko",
+    "sha256": "9144009ef9f25af9bb7243615ee092ea4c29936e680eb100879ced6168e73201",
+    "vermagic": "6.1.172-vendor-seeed-rk3588 SMP mod_unload modversions aarch64",
+    "source_sha256": "67fc9c7cdba38545c3954d1ed2081e17c37aa2bfedb5b7157bf228618a017b26",
+    "validation": "Loaded successfully on RK3588 Armbian 26.8.7; same driver source as bundled SDK 1.1.0"
+  }
+}

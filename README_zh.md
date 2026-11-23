@@ -286,13 +286,15 @@ curl -X POST "http://127.0.0.1:8000/api/models/yolo11/predict"
 | YOLOv6 | `yolov6n`, `yolov6s`, `yolov6m` | `rv182x-rk3588-yolov6` | [README](src/rv182x_rk3588_yolov6/README_zh.md) |
 | YOLOv8 | `yolov8n`, `yolov8s`, `yolov8m` | `rv182x-rk3588-yolov8` | [README](src/rv182x_rk3588_yolov8/README_zh.md) |
 
-主机先安装匹配的 PCIe 驱动、固件和 RKNN3 proxy，并确认加速卡 Online。普通启动不刷写固件。以 YOLO26 为例：
+公共运行时自动准备/检查驱动和 proxy，并完成真实 W8A8 自检后启动模型；默认不刷写固件。已验证内核为 6.1.172-vendor-seeed-rk3588，其它内核需匹配的 vendor headers / 工具链。以 YOLO26 为例：
 
 ```bash
 sudo docker pull ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest
-sudo docker run --rm --privileged --net=host --ipc=host \
+sudo docker run --rm --privileged --net=host --ipc=host --stop-timeout 300 \
+  -v /run/lock:/run/lock \
+  -v /lib/modules:/lib/modules:ro \
+  -v /usr/src:/usr/src:ro \
   -e PYTHONUNBUFFERED=1 -e RKNN_LOG_LEVEL=0 \
-  -v "$PWD/workspace:/app/workspace" \
   ghcr.io/seeed-projects/recomputer-rk-cv/rv182x-rk3588-yolo26:latest \
   python3 web_detection.py --variant yolo26n --model_path model/yolo26n.rknn --video video/test.mp4
 ```
@@ -302,3 +304,5 @@ sudo docker run --rm --privileged --net=host --ipc=host \
 QAClip 先缓存文本向量并释放文本编码器，再运行视觉编码器；其 FPS 对应缓存文本后的逐帧处理。Depth Anything V3 固定单 view、280×280，并串行运行三段模型。RAFT 固定 1 次迭代，FPS 按左右目图片对计数。每个项目区分同步推理调用 FPS 与包含解码、后处理和展示编码的 Pipeline FPS。
 
 专用工作流 `.github/workflows/docker-build-rv182x.yml` 在 push 后构建全部 11 个模型，支持通过 workflow_dispatch 手动选择单个模型。
+
+RK182x 模型现在共享含固件、驱动和 proxy 初始化的基础镜像，详见[运行时说明](runtime/rv182x-rk3588/README.md)。默认不自动刷写固件，恢复需要明确授权。
