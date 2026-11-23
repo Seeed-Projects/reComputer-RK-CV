@@ -1,3 +1,4 @@
 ARG RUNTIME_IMAGE=rockchip-cv-runtime:local
 FROM ${RUNTIME_IMAGE}
+COPY --link --chown=0:0 video/ /opt/demo/
 COPY package/ /opt/model/

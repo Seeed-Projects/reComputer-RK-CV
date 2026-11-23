@@ -107,12 +107,12 @@ if metadata["model"]["task"] == "detection":
 ## Models
 
 YOLO26 ships in sizes `n`, `s`, and `m` for RK3576 and RK3588, with
-INT8 and FP16 builds for all seven tasks. Each image serves one model.
+INT8 and FP16 builds for all seven tasks. Each image serves one model and includes a short demo video.
 The catalog contains 84 variants across 21 image names.
 
 All images built from the same code revision share the same ARM64 operating
-system, dependencies, C++ engine, HTTP API, and browser code. Only the final
-filesystem layer contains model-specific files. The common entrypoint loads
+system, dependencies, C++ engine, HTTP API, and browser code. The final filesystem layer contains model-specific files. A separate layer contains
+the selected demo video and its attribution. The common entrypoint loads
 the model manifest bundled at `/opt/model/package.json`.
 
 Image names below use the prefix `ghcr.io/seeed-projects/recomputer-rk-cv/`.
@@ -208,9 +208,9 @@ the client to include transport and response delivery.
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
 | `RK_NMS` | Model setting | Enable or disable server NMS with `on` or `off` |
-| `RK_SOURCE` | Unset | RTSP URL, mounted video file, or H.264 V4L2 device |
-| `RK_LOOP_VIDEO` | `0` | Set to `1` for the browser-rendered local MP4 detection demo |
-| `RK_WORKERS` | `0` | Automatic live worker count, or `1` for a single context |
+| `RK_SOURCE` | Bundled demo video | Override with an RTSP URL, mounted video file, or H.264 V4L2 device. Set to an empty string to disable live preview. |
+| `RK_LOOP_VIDEO` | `1` for the bundled demo, otherwise `0` | Set to `1` for looping, browser-rendered playback of a local MP4 |
+| `RK_WORKERS` | `0` | Use all NPU cores with dedicated workers, two on RK3576 and three on RK3588. Set to `1` for one context. |
 | `RK_MAX_UPLOAD_MB` | `128` | Maximum upload size in MB |
 | `RK_CLASSES` | Packaged labels | Override labels with one class per line |
 | `RK_PACKAGE` | `/opt/model/package.json` | Model package manifest path |
@@ -224,22 +224,24 @@ provide a usable frame.
 
 ## Video
 
-For continuous prediction, add `-e RK_SOURCE=rtsp://192.168.1.10/live` to
-the Docker run command. For a local video, pass
-`-v "$PWD/media:/media:ro" -e RK_SOURCE=/media/input.mp4`.
-An H.264 V4L2 camera can use `-e RK_SOURCE=/dev/video0`.
+Open `http://<board-ip>:8000` to play the bundled clip and view the model's
+output. The first live-stream subscriber starts the decoder and NPU workers.
+The last disconnect stops them. Reading the page or checking `/health` does
+not start inference. Image or video-frame uploads still run on demand.
+`/health` reports whether the pipeline is active, the subscriber count, and
+the worker count and core masks when running.
 
-Continuous H.264/H.265 sources use MPP hardware decoding. Once a frame is
-ready, open `http://<board-ip>:8000` to watch the annotated feed and
-adjust confidence and NMS IoU. Threshold changes also update the container's
-API defaults. Use a detection image such as `yolo26n:rk3576-int8` for the live preview.
+| Tasks | Bundled clip |
+| --- | --- |
+| Detection, classification, instance segmentation, semantic segmentation, depth | Street traffic with moving vehicles and foreground/background separation |
+| Pose | A full-body squat demonstration |
+| Oriented boxes | Aerial footage of boats at different angles |
 
-For smooth playback of a mounted H.264 MP4 with an object detection model,
-also pass `-e RK_LOOP_VIDEO=1`. The board loops the file and publishes
-timestamped detection results. The browser plays the original MP4 and draws
-boxes on a canvas, so playback can run at the video's frame rate even when
-inference produces fewer results. The MP4 should use landscape or portrait
-dimensions encoded directly, without a rotation tag.
+The browser plays the H.264 MP4 and draws model results on a canvas. For a
+custom clip, pass `-v "$PWD/input.mp4:/media/input.mp4:ro"` with
+`-e RK_SOURCE=/media/input.mp4 -e RK_LOOP_VIDEO=1`. Use a browser-compatible
+MP4 without a rotation tag. RTSP and H.264 V4L2 sources still use the MJPEG
+preview with the source selected through `RK_SOURCE`.
 
 With a YOLO26 split scores-and-boxes model, the browser applies confidence
 filtering and per-class NMS locally. The board sends every valid decoded
@@ -255,36 +257,26 @@ six `float32` values per proposal in the order `x1, y1, x2, y2, confidence,
 class_id`. Box coordinates are in source-image pixels. Use the label list
 from `GET /api/metadata`.
 
-Call `curl -fsS -X POST "$API/api/predict"` for the latest result or use
-`/api/video_feed` directly for the 10 FPS MJPEG preview. Local files follow
-media timestamps from container startup and retain the last result at EOF
-when looping is disabled.
+Call `curl -fsS -X POST "$API/api/predict"` for the latest result while a
+preview stream is subscribed. `/api/video_feed` serves the 10 FPS MJPEG
+preview and holds a live-source subscription.
 
 ## Build and publish
 
 ### Build locally
 
 Run these commands in `src/cpp` on an ARM64 Docker host. Inference requires
-the matching Rockchip board.
+the matching Rockchip board. Leave out `--model` to build the full catalog.
 
 ```sh
 python3 tools/models.py list
-
-docker build --platform linux/arm64 --target model \
-  --build-arg MODEL_ID=yolo26n-rk3588-int8 \
-  -t yolo26n:rk3588-int8 .
-```
-
-Set `IMAGE=yolo26n:rk3588-int8` in the quick-start command to run the local
-image. To build several model images from exactly the same local runtime, use
-the same packaging script as CI. Leave out `--model` to build the full catalog.
-
-```sh
 docker build --platform linux/arm64 --target runtime -t rockchip-cv-runtime:local .
 python3 -m pip install PyYAML
 python3 tools/build_images.py --runtime rockchip-cv-runtime:local \
   --repository rockchip-cv-local --model yolo26n-rk3588-int8
 ```
+
+Set `IMAGE=rockchip-cv-local/yolo26n:rk3588-int8` in the quick-start command.
 
 ### GitHub Actions
 
@@ -297,7 +289,10 @@ or the full catalog when left empty. Manual runs on `main` publish images.
 The workflow saves one shared runtime per source commit under
 `runtime:<commit-sha>`. Each model uses it as the base, verifies the model
 package and native module imports, and checks that its layer list matches the
-runtime plus exactly one model layer. Each model is published with a
+runtime plus one independent video layer and one model layer. Models that
+use the same clip must have the same video layer ID. The video layer uses
+BuildKit's `COPY --link` with fixed file metadata so code-only rebuilds can
+reuse it. Each model is published with a
 `<chip>-<precision>` tag and a `<chip>-<precision>-<commit-sha>` tag.
 
 Each manifest points to an immutable Hugging Face revision. The build
@@ -314,3 +309,7 @@ The model packages use weights and conversion metadata from
 [HanzoHuang/YOLO26-RKNN2](https://huggingface.co/HanzoHuang/YOLO26-RKNN2).
 Model manifests and metadata record provenance, license information, and the
 SHA-256 checksums used during packaging.
+
+The bundled clips were excerpted or resized and converted to H.264 without
+audio. Attributions and license links are included in each image at
+`/opt/demo/ATTRIBUTION.txt` and in the [demo directory](demo/).

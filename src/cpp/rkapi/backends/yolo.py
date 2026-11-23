@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+from threading import Lock
 from time import perf_counter
 
 import cv2
@@ -78,16 +79,53 @@ class Backend(BaseBackend):
             "output": prediction_output(task, package),
         }
         self.live = None
-        source = os.getenv("RK_SOURCE")
-        if os.getenv("RK_LOOP_VIDEO") == "1":
-            path = Path(source or "")
-            if task != "detection" or path.suffix.lower() != ".mp4" or not path.is_file():
-                raise ValueError("RK_LOOP_VIDEO requires a detection model and a local MP4 as RK_SOURCE")
+        self.live_lock = Lock()
+        self.viewers = 0
+        self.model = model
+        self.model_options = encoded_options
+        self.workers = int(os.getenv("RK_WORKERS", "0"))
+        if self.workers not in (0, 1):
+            raise ValueError("RK_WORKERS must be 0 (auto) or 1")
+        bundled = Path("/opt/demo/input.mp4")
+        override = os.getenv("RK_SOURCE")
+        self.source = str(bundled) if override is None and bundled.is_file() else override
+        loop = os.getenv("RK_LOOP_VIDEO", "1" if override is None and self.source else "0")
+        if loop == "1":
+            path = Path(self.source or "")
+            if path.suffix.lower() != ".mp4" or not path.is_file():
+                raise ValueError("RK_LOOP_VIDEO requires a local MP4 as RK_SOURCE")
             self.demo_video = path.resolve()
-        if source:
-            self.live = _native.Live(source, model, int(os.getenv("RK_WORKERS", "0")),
-                                     encoded_options, loop_file=self.demo_video is not None)
-            self.description["live"] = json.loads(self.live.description())
+        if self.source:
+            self.description["live"] = {
+                "candidate_stream": self.demo_video is not None and self.predictor.supports_candidates()
+            }
+
+    def acquire_live(self):
+        with self.live_lock:
+            if not self.source:
+                raise SourceUnavailable("configure RK_SOURCE for realtime predictions")
+            if self.live is None:
+                try:
+                    live = _native.Live(self.source, self.model, self.workers,
+                                        self.model_options, loop_file=self.demo_video is not None)
+                except RuntimeError as error:
+                    raise SourceUnavailable(str(error)) from error
+                try:
+                    with self.config_lock:
+                        live.configure(self.config["obj_thresh"], self.config["nms_thresh"])
+                    self.description["live"] = json.loads(live.description())
+                except Exception:
+                    live.close()
+                    raise
+                self.live = live
+            self.viewers += 1
+
+    def release_live(self):
+        with self.live_lock:
+            self.viewers -= 1
+            if self.viewers == 0:
+                self.live.close()
+                self.live = None
 
     def response(self, raw, source):
         predictions = []
@@ -174,9 +212,12 @@ class Backend(BaseBackend):
         return state, jpeg
 
     def source_status(self):
-        if not self.live:
-            return None
-        return json.loads(self.live.state())
+        with self.live_lock:
+            if not self.source:
+                return None
+            if self.live is None:
+                return {"active": False, "viewers": 0, "error": "", "ended": False, "dropped": 0}
+            return {"active": True, "viewers": self.viewers} | json.loads(self.live.state())
 
     def live_result(self, after=0):
         if not self.live:
@@ -192,7 +233,8 @@ class Backend(BaseBackend):
             return None
         result = self.response(raw, "realtime")
         return {key: raw[key] for key in ("frame", "media_time", "cycle")} | {
-            "predictions": result["predictions"], "image": result["image"]}
+            key: result[key] for key in ("predictions", "image", "classification", "semantic", "depth")
+            if key in result}
 
     def demo_candidates(self, after):
         try:
@@ -201,17 +243,22 @@ class Backend(BaseBackend):
             raise SourceUnavailable(str(error)) from error
 
     def predict_realtime(self, conf, iou):
-        if self.live_result() is None:
-            raise SourceUnavailable("live source has no frame yet")
-        raw = self.live.predict(self.predictor, conf, iou)
+        with self.live_lock:
+            if self.live is None:
+                raise SourceUnavailable("open a preview stream to start live inference")
+            if self.live_result() is None:
+                raise SourceUnavailable("live source has no frame yet")
+            raw = self.live.predict(self.predictor, conf, iou)
         return self.response(json.loads(raw), "realtime")
 
     def configure(self, values):
-        with self.config_lock:
+        with self.live_lock, self.config_lock:
             self.config.update(values)
             if self.live:
                 self.live.configure(self.config["obj_thresh"], self.config["nms_thresh"])
 
     def close(self):
-        if self.live:
-            self.live.close()
+        with self.live_lock:
+            if self.live:
+                self.live.close()
+                self.live = None

@@ -45,14 +45,3 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)" || exit 1
 CMD ["uvicorn", "rkapi.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--limit-concurrency", "16"]
-
-# The catalog selects weights and adapter; no Dockerfile edit per new model.
-FROM build AS package
-COPY rkapi /source/rkapi
-COPY tools/models.py /source/tools/models.py
-COPY models /source/models
-ARG MODEL_ID
-RUN python3 tools/models.py prepare --model "$MODEL_ID" --output /model-package
-
-FROM runtime AS model
-COPY --from=package /model-package/ /opt/model/

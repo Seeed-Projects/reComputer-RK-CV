@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from time import perf_counter
 
+from anyio import CancelScope
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -214,16 +215,33 @@ async def predict(request: Request, file: UploadFile | None = File(None), video:
                 await upload.close()
 
 
+class LiveResponse(StreamingResponse):
+    """Hold one live-source lease until the HTTP stream disconnects."""
+
+    def __init__(self, runtime, content, **kwargs):
+        super().__init__(content, **kwargs)
+        self.runtime = runtime
+
+    async def __call__(self, scope, receive, send):
+        acquired = False
+        try:
+            with CancelScope(shield=True):
+                await run_in_threadpool(self.runtime.acquire_live)
+                acquired = True
+            await super().__call__(scope, receive, send)
+        except SourceUnavailable as error:
+            raise HTTPException(503, str(error)) from error
+        except UnsupportedOperation as error:
+            raise HTTPException(501, str(error)) from error
+        finally:
+            if acquired:
+                with CancelScope(shield=True):
+                    await run_in_threadpool(self.runtime.release_live)
+
+
 @app.get("/api/video_feed")
 async def video_feed():
     rt = app.state.runtime
-    try:
-        await run_in_threadpool(rt.preview)
-    except SourceUnavailable as error:
-        raise HTTPException(503, str(error)) from error
-    except UnsupportedOperation as error:
-        raise HTTPException(501, str(error)) from error
-
     async def frames():
         previous = None
         while True:
@@ -243,7 +261,7 @@ async def video_feed():
                 break
             await asyncio.sleep(.05)
 
-    return StreamingResponse(frames(), media_type="multipart/x-mixed-replace; boundary=frame",
+    return LiveResponse(rt, frames(), media_type="multipart/x-mixed-replace; boundary=frame",
                              headers={"Cache-Control": "no-store"})
 
 
@@ -276,7 +294,7 @@ async def demo_results():
                 yield "data: " + json.dumps(result, separators=(",", ":")) + "\n\n"
             await asyncio.sleep(.015)
 
-    return StreamingResponse(events(), media_type="text/event-stream",
+    return LiveResponse(rt, events(), media_type="text/event-stream",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
@@ -299,7 +317,7 @@ async def demo_candidates():
             previous, data = packet
             yield data
 
-    return StreamingResponse(frames(), media_type="application/octet-stream",
+    return LiveResponse(rt, frames(), media_type="application/octet-stream",
                              headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 

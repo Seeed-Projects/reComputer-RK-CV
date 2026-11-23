@@ -6,6 +6,7 @@ __pycache__
 **/*.pyc
 **/*.so
 build
+demo
 media
 .local
 *.log
