@@ -17,13 +17,10 @@ working NPU, RGA, and MPP drivers supplied by the board OS.
 **1. Start YOLO26 object detection on the board**
 
 ```sh
-CHIP=rk3588  # Use rk3576 on an RK3576 board.
-IMAGE="ghcr.io/seeed-projects/recomputer-rk-cv/yolo26n:${CHIP}-int8"
-
-docker run -d --name cv-api --restart unless-stopped \
+docker run --rm --name cv-api \
   --privileged -p 8000:8000 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  "$IMAGE"
+  "ghcr.io/seeed-projects/recomputer-rk-cv/yolo26n:rk3588-int8"
 ```
 
 Pick a model and tag from the [model catalog](#models),
