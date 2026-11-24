@@ -17,7 +17,7 @@ working NPU, RGA, and MPP drivers supplied by the board OS.
 **1. Start YOLO26 object detection on the board**
 
 ```bash
-docker run -d --name cv-api --restart unless-stopped \
+docker run --rm --name cv-api \
   --privileged -p 8000:8000 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
   ghcr.io/seeed-projects/recomputer-rk-cv/yolo26n:rk3588-int8
