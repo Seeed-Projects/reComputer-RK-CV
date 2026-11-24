@@ -19,6 +19,17 @@ namespace py = pybind11;
 using namespace nvr;
 
 // ARM64 Linux uses little-endian IEEE floats. Append fields individually to avoid padding.
+static void append_candidates(std::string &packet, const std::vector<Detection> &candidates)
+{
+    for (const auto &candidate : candidates)
+    {
+        packet.append(reinterpret_cast<const char *>(candidate.box.data()), 4 * sizeof(float));
+        packet.append(reinterpret_cast<const char *>(&candidate.confidence), sizeof(float));
+        const float class_id = candidate.class_id;
+        packet.append(reinterpret_cast<const char *>(&class_id), sizeof(float));
+    }
+}
+
 static std::string candidate_packet(const Frame &frame, const Json &result,
                                     const std::vector<Detection> &candidates)
 {
@@ -34,12 +45,7 @@ static std::string candidate_packet(const Frame &frame, const Json &result,
     append(uint32_t(frame.cycle));
     append(result.at("media_time").get<double>());
     append(frame.sequence);
-    for (const auto &candidate : candidates)
-    {
-        packet.append(reinterpret_cast<const char *>(candidate.box.data()), 4 * sizeof(float));
-        append(candidate.confidence);
-        append(float(candidate.class_id));
-    }
+    append_candidates(packet, candidates);
     return packet;
 }
 
@@ -51,8 +57,9 @@ class Predictor
     Detector detector_;
 
 public:
-    Predictor(const std::string &model, const std::string &options)
-        : detector_(model, .25f, .45f, RKNN_NPU_CORE_ALL, model_options(Json::parse(options))) {}
+    Predictor(const std::string &model, const std::string &options, int core_mask)
+        : detector_(model, .25f, .45f, static_cast<rknn_core_mask>(core_mask),
+                    model_options(Json::parse(options))) {}
 
     Json frame(const Frame &frame, float confidence, float iou)
     {
@@ -74,7 +81,8 @@ public:
         }
     }
 
-    std::string image(const std::string &pixels, int width, int height, float confidence, float iou)
+    std::string predict_image(const std::string &pixels, int width, int height, float confidence, float iou,
+                              std::vector<Detection> *candidates)
     {
         prefer_performance_cpus();
         auto entered = Clock::now();
@@ -121,10 +129,28 @@ public:
         mpp_buffer_put(buffer);
         detector_.configure(confidence, iou);
         double upload_ms = milliseconds(upload_started);
-        auto result = detector_.infer(frame);
+        auto result = detector_.infer(frame, candidates, candidates != nullptr);
         result["context_wait_ms"] = wait_ms;
         result["dma_upload_ms"] = upload_ms;
         return result.dump();
+    }
+
+    std::string image(const std::string &pixels, int width, int height, float confidence, float iou)
+    {
+        return predict_image(pixels, width, height, confidence, iou, nullptr);
+    }
+
+    py::tuple preview(const std::string &pixels, int width, int height, float confidence, float iou)
+    {
+        std::string result, packet;
+        {
+            py::gil_scoped_release unlocked;
+            std::vector<Detection> candidates;
+            result = predict_image(pixels, width, height, confidence, iou, &candidates);
+            packet.reserve(candidates.size() * 6 * sizeof(float));
+            append_candidates(packet, candidates);
+        }
+        return py::make_tuple(std::move(result), py::bytes(packet));
     }
 
     std::string description() const { return detector_.description.dump(); }
@@ -323,8 +349,12 @@ public:
 PYBIND11_MODULE(_native, m)
 {
     py::class_<Predictor>(m, "Predictor")
-        .def(py::init<const std::string &, const std::string &>(), py::arg("model"), py::arg("options") = "{}")
+        .def(py::init<const std::string &, const std::string &, int>(),
+             py::arg("model"), py::arg("options") = "{}",
+             py::arg("core_mask") = int(RKNN_NPU_CORE_ALL),
+             py::call_guard<py::gil_scoped_release>())
         .def("predict", &Predictor::image, py::call_guard<py::gil_scoped_release>())
+        .def("preview", &Predictor::preview)
         .def("description", &Predictor::description)
         .def("supports_candidates", &Predictor::supports_candidates);
     py::class_<Live>(m, "Live")

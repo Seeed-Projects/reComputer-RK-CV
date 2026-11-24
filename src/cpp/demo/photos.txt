@@ -1,0 +1,10 @@
+Dog: Labradorretriever.jpg, by Manofsteel, public-domain dedication.
+https://commons.wikimedia.org/wiki/File:Labradorretriever.jpg
+Banana: Banana-Single.jpg, by Evan-Amos, CC BY-SA 3.0.
+https://commons.wikimedia.org/wiki/File:Banana-Single.jpg
+Tennis ball: Tennisball.jpg, by Christian “VisualBeo” Horvat, CC BY-SA 3.0.
+https://commons.wikimedia.org/wiki/File:Tennisball.jpg
+CC BY-SA 3.0 license: https://creativecommons.org/licenses/by-sa/3.0/
+Photos were resized and re-encoded as JPEG. The banana and tennis-ball edits are CC BY-SA 3.0.
+ImageNet class names: Keras ImageNet class index, keyed by WordNet synset.
+https://storage.googleapis.com/download.tensorflow.org/data/imagenet_class_index.json

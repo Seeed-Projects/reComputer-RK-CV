@@ -1,0 +1,23 @@
+{
+  "id": "yolox-s-rk3588-int8",
+  "name": "YOLOX-s",
+  "family": "yolox",
+  "chip": "rk3588",
+  "task": "detection",
+  "backend": "yolo",
+  "tag": "rk3588-yolox-s-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLOX-RKNN2/resolve/07e796197678386dfef0afe9f9ffd54a3b1e798e/models/v2.3.2/detect/yolox_s/rk3588/int8/model.rknn",
+  "sha256": "81373b682a214c7ddd20850f36964550c63621f0645bb488efc015a5e496a7e2",
+  "nms": true,
+  "size": "s",
+  "precision": "int8",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLOX-RKNN2/resolve/07e796197678386dfef0afe9f9ffd54a3b1e798e/models/v2.3.2/detect/yolox_s/rk3588/int8/metadata.yaml",
+  "metadata_sha256": "be12ad50cc4a97d33f48335add291ebc22cfdce23f2538e979268301c573e2b9",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official",
+  "head": "yolox"
+}

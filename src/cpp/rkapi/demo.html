@@ -7,34 +7,40 @@
   <style>
     :root {
       color-scheme: light;
-      --paper: #eef3f6;
-      --ink: #142733;
-      --muted: #456070;
-      --line: #aebfc9;
-      --blue: #005c80;
-      --screen: #10232d;
-      font: 100%/1.5 "Trebuchet MS", system-ui, sans-serif;
+      --paper: #f8f9fb;
+      --ink: #18181b;
+      --muted: #52525b;
+      --line: #e4e4e7;
+      --blue: #27272a;
+      --screen: #121217;
+      --surface: #ffffff;
+      --radius: .8rem;
+      font: 100%/1.5 "Geist", system-ui, sans-serif;
       color: var(--ink);
       background: var(--paper);
     }
     * { box-sizing: border-box; }
     body { margin: 0; }
-    main { width: min(76rem, calc(100% - 2rem)); margin: 0 auto 3rem; }
+    main { width: min(82rem, calc(100% - 2.5rem)); margin: 0 auto 3rem; }
     header, .feed-bar, .control-label {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: .75rem;
     }
-    header { min-height: 4rem; border-bottom: 1px solid var(--line); }
-    a { color: var(--blue); }
-    h1 { margin: 1.25rem 0 .25rem; font-size: clamp(2rem, 5vw, 3.75rem); line-height: 1.1; }
-    #model { margin: 0 0 1.25rem; color: var(--muted); }
+    header { min-height: 4rem; border-bottom: 1px solid var(--line); font-size: .88rem; }
+    a { color: var(--blue); text-underline-offset: .22em; }
+    header a { padding: .4rem .7rem; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); }
+    h1 { margin: 1.65rem 0 .35rem; font-size: clamp(2rem, 4.2vw, 3.15rem); letter-spacing: -.045em; line-height: 1.12; }
+    #model { display: inline-block; margin: 0 0 1.25rem; padding: .28rem .63rem; color: var(--muted);
+      background: #efeff2; border-radius: .45rem; font-size: .82rem; font-weight: 600; }
     .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem); gap: 1rem; }
     .layout.single { grid-template-columns: minmax(0, 1fr); }
-    .monitor { background: var(--screen); color: #edf6fa; }
-    .feed-bar { min-height: 2.75rem; padding: .5rem 1rem; border-bottom: 1px solid #39505c; }
-    #feed-status { color: #b9ddeb; }
+    .layout[hidden] { display: none; }
+    .monitor { background: var(--screen); color: #f4f4f5; border-radius: var(--radius); overflow: hidden; min-width: 0; }
+    .feed-bar { min-height: 3rem; padding: .5rem 1rem; border-bottom: 1px solid #33333b; font-size: .88rem; }
+    #preview-fps { margin-inline-start: auto; color: #e4e4e7; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    #feed-status { color: #e4e4e7; background: #2a2a33; border-radius: 2rem; padding: .18rem .62rem; }
     #feed-status[data-state="live"] { color: #a6edcf; }
     .view {
       display: grid;
@@ -46,9 +52,12 @@
     #feed, #video, #boxes { position: absolute; inset: 0; width: 100%; height: 100%; }
     #feed, #video { object-fit: contain; }
     #boxes { pointer-events: none; }
+    #video-controls:not([hidden]) { display: flex; align-items: center; gap: .75rem; padding: .5rem 1rem; }
+    #video-position { margin: 0; accent-color: #a6edcf; }
     #feed-message { max-width: 36ch; padding: 1rem; overflow-wrap: anywhere; }
-    .controls { padding: 1rem; border: 1px solid var(--line); background: #f8fbfc; }
-    h2 { margin: 0; font-size: 1.2rem; }
+    .controls { padding: 1.15rem; border: 1px solid var(--line); border-radius: var(--radius);
+      background: var(--surface); box-shadow: 0 1px 2px #18181b09; min-width: 0; }
+    h2 { margin: 0; font-size: 1.02rem; font-weight: 650; letter-spacing: -.015em; }
     .hint { margin: .25rem 0 1rem; color: var(--muted); font-size: .9rem; }
     fieldset { margin: 0; padding: 0; border: 0; min-width: 0; }
     .control { margin-bottom: 1rem; }
@@ -58,15 +67,46 @@
       min-height: 2.5rem;
       padding: .45rem .8rem;
       border: 1px solid transparent;
+      border-radius: .5rem;
       font: inherit;
-      font-weight: bold;
+      font-size: .88rem;
+      font-weight: 600;
       color: white;
       background: var(--blue);
       cursor: pointer;
     }
     button:disabled { opacity: .6; cursor: default; }
+    button:not(:disabled):hover { filter: brightness(1.2); }
+    .sources { margin: 0 0 1rem; }
+    .source-fields { display: flex; flex-wrap: wrap; align-items: end; gap: .65rem; margin-top: .7rem; }
+    .source-field { min-width: min(10rem, 100%); max-width: 100%; }
+    .source-field label { display: block; margin-bottom: .25rem; font-size: .82rem; font-weight: 600; }
+    select, input[type="file"] { max-width: 100%; min-height: 2.5rem; padding: .4rem;
+      border: 1px solid var(--line); border-radius: .5rem; color: var(--ink); background: var(--surface); font: inherit; font-size: .85rem; }
+    select { min-width: min(13rem, 100%); }
+    #source-note { min-height: 1.25em; margin: .55rem 0 0; color: var(--muted); font-size: .82rem; overflow-wrap: anywhere; }
+    .secondary { color: var(--ink); border-color: var(--line); background: var(--surface); }
     :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
     #config-status { min-height: 1.5em; margin: .5rem 0 0; color: var(--muted); font-size: .9rem; }
+    .photo-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: .75rem 0 1.25rem; }
+    .photo-grid button { padding: .35rem; color: var(--ink); background: #f8fbfc; border-color: var(--line); }
+    .photo-grid img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; }
+    .photo-grid[hidden] { display: none; }
+    #upload label { display: block; margin-bottom: .35rem; }
+    #upload input { display: block; max-width: 100%; margin-bottom: .75rem; }
+    #classified-photo { width: 100%; max-height: min(55vh, 30rem); object-fit: contain; }
+    #classified-photo:not([hidden]) { display: block; }
+    #photo-preview { position: relative; }
+    #photo-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    @media (min-width: 48rem) {
+      #classification[data-task="obb"] .layout { grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); }
+    }
+    #photo-results { padding-left: 1.5rem; }
+    #semantic-legend { list-style: none; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; font-size: .85rem; }
+    .swatch { display: inline-block; width: .85em; height: .85em; margin-right: .4em; border: 1px solid var(--line); }
+    .depth-gradient { height: .85rem; margin: .35rem 0; border: 1px solid var(--line);
+      background: linear-gradient(to right, #000080, #0000ff 12.5%, #00ffff 37.5%, #ffff00 62.5%, #ff0000 87.5%, #800000); }
+    #depth-opacity { margin-bottom: 1rem; }
     @media (max-width: 48rem) {
       .layout { grid-template-columns: minmax(0, 1fr); }
       .view { min-height: 12rem; }
@@ -83,21 +123,53 @@
     <h1>Live detection</h1>
     <p id="model">Reading model information…</p>
 
+    <form id="source-controls" class="controls sources" aria-labelledby="source-title">
+      <h2 id="source-title">Input source</h2>
+      <div class="source-fields">
+        <div class="source-field">
+          <label for="source-kind">Source</label>
+          <select id="source-kind" disabled>
+            <option value="example">Built-in example</option>
+            <option value="camera">Board camera</option>
+            <option value="video">Upload video</option>
+            <option value="photo">Upload photo</option>
+          </select>
+        </div>
+        <div class="source-field" id="camera-field" hidden>
+          <label for="camera-device">Camera on the board</label>
+          <select id="camera-device"></select>
+        </div>
+        <button id="refresh-cameras" type="button" class="secondary" hidden>Refresh cameras</button>
+        <div class="source-field" id="file-field" hidden>
+          <label for="source-file">Choose a file</label>
+          <input id="source-file" type="file">
+        </div>
+        <button id="start-source" type="submit" hidden>Analyze</button>
+        <button id="stop-source" class="secondary" type="button" hidden>Stop</button>
+      </div>
+      <p id="source-note" role="status"></p>
+    </form>
+
     <div class="layout">
-      <section class="monitor" aria-label="Detection preview">
+      <section class="monitor" aria-label="Inference preview">
         <div class="feed-bar">
-          <strong>Video feed</strong>
+          <strong id="preview-label">Preview</strong>
+          <span id="preview-fps" hidden></span>
           <span id="feed-status" role="status">Connecting</span>
         </div>
         <div class="view">
-          <img id="feed" alt="Live video with object detection boxes" hidden>
-          <video id="video" aria-label="Live detection video" muted playsinline loop hidden></video>
+          <img id="feed" alt="Source preview" hidden>
+          <video id="video" aria-label="Source video" muted playsinline loop hidden></video>
           <canvas id="boxes" aria-hidden="true" hidden></canvas>
           <p id="feed-message">Waiting for the board to respond…</p>
         </div>
+        <div id="video-controls" hidden>
+          <button type="button" id="video-play" class="secondary">Pause</button>
+          <input id="video-position" type="range" min="0" max="0" step="any" aria-label="Video position">
+        </div>
       </section>
 
-      <form class="controls" aria-labelledby="controls-title">
+      <form id="thresholds" class="controls" aria-labelledby="controls-title">
         <h2 id="controls-title">Detection thresholds</h2>
         <p class="hint" id="threshold-hint">Changes apply to the stream and API defaults for this container.</p>
         <fieldset disabled>
@@ -114,13 +186,57 @@
               <output for="iou" id="iou-value">—</output>
             </div>
             <input id="iou" name="nms_thresh" type="range" min="0" max="1" step="any">
-            <p class="hint" id="nms-hint" hidden>Server-side NMS is disabled for this model.</p>
+            <p class="hint" id="nms-hint" hidden>This model does not use NMS for this source.</p>
           </div>
           <button type="submit" disabled>Apply thresholds</button>
         </fieldset>
         <p id="config-status" role="status"></p>
       </form>
+      <aside id="semantic-controls" class="controls" hidden>
+        <h2>What the colors mean</h2>
+        <p class="hint">The model labels each pixel with an urban scene class, such as road, sidewalk, building, or car. The mask shows where each surface or object class is in the frame.</p>
+        <label for="opacity">Mask opacity</label>
+        <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.55">
+        <ul id="semantic-legend"></ul>
+      </aside>
+      <aside id="depth-controls" class="controls" aria-labelledby="depth-title" hidden>
+        <h2 id="depth-title">Relative depth</h2>
+        <div class="depth-gradient" aria-hidden="true"></div>
+        <div class="control-label"><span>Farther</span><span>Nearer</span></div>
+        <p class="hint">Colors compare distances within the frame.</p>
+        <label for="depth-opacity">Overlay opacity</label>
+        <input id="depth-opacity" type="range" min="0" max="1" step="0.05" value="0.65">
+      </aside>
     </div>
+
+    <section id="classification" hidden aria-labelledby="examples-title">
+      <div class="layout">
+        <div class="controls">
+          <h2 id="examples-title">Try an example photo</h2>
+          <div class="photo-grid">
+            <button type="button" data-photo="dog"><img alt="">Dog</button>
+            <button type="button" data-photo="banana"><img alt="">Banana</button>
+            <button type="button" data-photo="tennis-ball"><img alt="">Tennis ball</button>
+          </div>
+          <form id="upload" enctype="multipart/form-data" aria-labelledby="upload-title">
+            <h2 id="upload-title">Upload a photo</h2>
+            <label for="photo-file">Choose an image file</label>
+            <input type="file" id="photo-file" name="file" accept="image/*" required>
+            <button type="submit">Classify photo</button>
+          </form>
+          <button type="button" id="detect-ships" hidden>Detect ships</button>
+        </div>
+        <section class="controls" aria-labelledby="results-title">
+          <h2 id="results-title">Predictions</h2>
+          <div id="photo-preview">
+            <img id="classified-photo" alt="" hidden>
+            <canvas id="photo-overlay" aria-hidden="true" hidden></canvas>
+          </div>
+          <p id="photo-status" role="status">Select an example or upload a photo.</p>
+          <ol id="photo-results"></ol>
+        </section>
+      </div>
+    </section>
 
     <noscript>Enable JavaScript to connect to the video feed and adjust thresholds.</noscript>
   </main>
@@ -128,26 +244,165 @@
   <script>
     const feed = document.querySelector("#feed");
     const video = document.querySelector("#video");
+    const videoControls = document.querySelector("#video-controls");
+    const videoPlay = document.querySelector("#video-play");
+    const videoPosition = document.querySelector("#video-position");
     const boxes = document.querySelector("#boxes");
     const drawing = boxes.getContext("2d");
+    const previewFps = document.querySelector("#preview-fps");
     const feedStatus = document.querySelector("#feed-status");
     const feedMessage = document.querySelector("#feed-message");
     const model = document.querySelector("#model");
-    const form = document.querySelector("form");
+    const form = document.querySelector("#thresholds");
     const fieldset = form.querySelector("fieldset");
     const sliders = [...form.querySelectorAll("input")];
     const iou = document.querySelector("#iou");
     const apply = form.querySelector("button");
     const configStatus = document.querySelector("#config-status");
+    const semanticControls = document.querySelector("#semantic-controls");
+    const semanticLegend = document.querySelector("#semantic-legend");
+    const opacity = document.querySelector("#opacity");
+    const depthControls = document.querySelector("#depth-controls");
+    const depthOpacity = document.querySelector("#depth-opacity");
+    const classification = document.querySelector("#classification");
+    const photo = document.querySelector("#classified-photo");
+    const photoOverlay = document.querySelector("#photo-overlay");
+    const photoStatus = document.querySelector("#photo-status");
+    const photoResults = document.querySelector("#photo-results");
+    const photoFile = document.querySelector("#photo-file");
+    const mainLayout = document.querySelector("main > .layout");
+    const sourceForm = document.querySelector("#source-controls");
+    const sourceKind = document.querySelector("#source-kind");
+    const cameraDevice = document.querySelector("#camera-device");
+    const refreshCameras = document.querySelector("#refresh-cameras");
+    const sourceFile = document.querySelector("#source-file");
+    const sourceNote = document.querySelector("#source-note");
+    const startSource = document.querySelector("#start-source");
+    const stopSource = document.querySelector("#stop-source");
+    const previewLabel = document.querySelector("#preview-label");
+    let sourceRequest;
+    let fpsTimer;
+    let fpsStarted;
+    let fpsFrames = 0;
+    let lastFpsResult;
+    let sourceURL;
+    let currentResult;
+    let uploadedFrame;
+    let seekRevision = 0;
+    let cameraBitmap;
+    let photoRequest;
+    let photoURL;
+    let shipResult;
+    let task;
     let savedConfig;
     let resultsStream;
     let results = [];
     let aligned = false;
     let videoFailed = false;
     let browserNms = false;
+    let previewHealth;
     let labels = [];
     let thresholdRevision = 0;
     const playbackDelay = .22;
+    const semanticColors = [
+      [128, 64, 128], [244, 35, 232], [70, 70, 70], [102, 102, 156], [190, 153, 153],
+      [153, 153, 153], [250, 170, 30], [220, 220, 0], [107, 142, 35], [152, 251, 152],
+      [70, 130, 180], [220, 20, 60], [255, 0, 0], [0, 0, 142], [0, 0, 70],
+      [0, 60, 100], [0, 80, 100], [0, 0, 230], [119, 11, 32],
+    ];
+    const poseLinks = [
+      [0, 1], [0, 2], [1, 3], [2, 4], [0, 5], [0, 6], [5, 6],
+      [5, 7], [7, 9], [6, 8], [8, 10], [5, 11], [6, 12], [11, 12],
+      [11, 13], [13, 15], [12, 14], [14, 16],
+    ];
+
+    function drawShipPhoto() {
+      const rect = photo.getBoundingClientRect();
+      if (!shipResult || !photo.naturalWidth || !rect.width || !rect.height) return;
+      const pixelRatio = window.devicePixelRatio || 1;
+      photoOverlay.width = Math.round(rect.width * pixelRatio);
+      photoOverlay.height = Math.round(rect.height * pixelRatio);
+      const context = photoOverlay.getContext("2d");
+      const scale = Math.min(photoOverlay.width / shipResult.image.width, photoOverlay.height / shipResult.image.height);
+      const x = (photoOverlay.width - shipResult.image.width * scale) / 2;
+      const y = (photoOverlay.height - shipResult.image.height * scale) / 2;
+      context.strokeStyle = "#a6edcf";
+      context.lineWidth = 2 * pixelRatio;
+      for (const {polygon} of shipResult.predictions) {
+        context.beginPath();
+        for (const [px, py] of polygon) context.lineTo(x + px * scale, y + py * scale);
+        context.closePath();
+        context.stroke();
+      }
+    }
+
+    photo.addEventListener("load", drawShipPhoto);
+    new ResizeObserver(drawShipPhoto).observe(photo);
+
+    async function predictPhoto(name, selectedFile) {
+      photoRequest?.abort();
+      const request = new AbortController();
+      photoRequest = request;
+      if (photoURL) URL.revokeObjectURL(photoURL);
+      photoURL = selectedFile ? URL.createObjectURL(selectedFile) : undefined;
+      const example = `./api/demo/photos/${name}.jpg`;
+      photo.src = photoURL ?? example;
+      photo.alt = selectedFile ? selectedFile.name : name.replaceAll("-", " ");
+      photo.hidden = false;
+      photoResults.replaceChildren();
+      photoStatus.textContent = "Analyzing photo…";
+      shipResult = undefined;
+      photoOverlay.hidden = true;
+      const signal = AbortSignal.any([request.signal, AbortSignal.timeout(30000)]);
+      try {
+        let file = selectedFile;
+        if (!file) {
+          const source = await fetch(example, {signal});
+          if (!source.ok) throw new Error("Could not load the example photo.");
+          file = new File([await source.blob()], `${name}.jpg`, {type: "image/jpeg"});
+        }
+        const result = await analyzeFile(file, signal);
+        if (request.signal.aborted) return;
+        if (task === "obb") {
+          const ships = result.predictions.filter(item => item.class === "ship" && item.polygon?.length);
+          shipResult = {image: result.image, predictions: ships};
+          photoOverlay.hidden = false;
+          drawShipPhoto();
+          photoStatus.textContent = `${ships.length} ${ships.length === 1 ? "ship" : "ships"} detected`;
+          return;
+        }
+        for (const prediction of result.classification.slice(0, 5)) {
+          const item = document.createElement("li");
+          item.textContent = `${prediction.class_name ?? prediction.class} · ${(100 * prediction.confidence).toFixed(1)}%`;
+          photoResults.append(item);
+        }
+        photoStatus.textContent = photoResults.childElementCount ? "Top predictions" : "No predictions returned.";
+      } catch (error) {
+        if (!request.signal.aborted) photoStatus.textContent = error.name === "TimeoutError"
+          ? "Prediction timed out. Try again." : error.message;
+      }
+    }
+
+    for (const button of classification.querySelectorAll("[data-photo]")) {
+      button.addEventListener("click", () => predictPhoto(button.dataset.photo));
+    }
+    document.querySelector("#upload").addEventListener("submit", event => {
+      event.preventDefault();
+      if (photoFile.files.length) predictPhoto(undefined, photoFile.files[0]);
+    });
+    document.querySelector("#detect-ships").addEventListener("click", () => predictPhoto("boats"));
+
+    function showSemanticLegend(classNames) {
+      if (semanticLegend.childElementCount || !classNames) return;
+      for (const [index, name] of classNames.entries()) {
+        const item = document.createElement("li");
+        const swatch = document.createElement("span");
+        swatch.className = "swatch";
+        swatch.style.backgroundColor = `rgb(${semanticColors[index % semanticColors.length].join(",")})`;
+        item.append(swatch, name);
+        semanticLegend.append(item);
+      }
+    }
 
     async function json(path, options = {}) {
       const response = await fetch(path, {
@@ -157,6 +412,361 @@
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return response.json();
+    }
+
+    async function analyzeFile(file, signal) {
+      const body = new FormData();
+      body.set("file", file, file.name || "frame.jpg");
+      const response = await fetch("./api/predict", {method: "POST", body, signal});
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(typeof result.detail === "string" ? result.detail : "Could not analyze the input.");
+      return result;
+    }
+
+    const previewDecoder = new TextDecoder();
+
+    async function readPreviewFrame(readBytes) {
+      const header = new DataView(await readBytes(12));
+      const jpegSize = header.getUint32(0, true);
+      const jsonSize = header.getUint32(4, true);
+      const candidateSize = header.getUint32(8, true);
+      if (jpegSize > 4 * 1024 * 1024 || !jsonSize || jsonSize > 16 * 1024 * 1024 ||
+          candidateSize > 16 * 1024 * 1024 || candidateSize % 24) {
+        throw new Error("The board sent an invalid preview frame.");
+      }
+      const jpeg = jpegSize ? await readBytes(jpegSize) : null;
+      const result = JSON.parse(previewDecoder.decode(await readBytes(jsonSize)));
+      if (candidateSize) result.candidates = new Float32Array(await readBytes(candidateSize));
+      return {jpeg, result};
+    }
+
+    async function analyzePreviewFrame(jpeg, signal) {
+      const response = await fetch("./api/demo/frame", {method: "POST", body: jpeg, signal});
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || "Could not analyze the video frame.");
+      }
+      const reader = response.body.getReader();
+      try {
+        const {result} = await readPreviewFrame(frameReader(reader));
+        return result;
+      } finally {
+        await reader.cancel().catch(() => {});
+      }
+    }
+
+    function renderInput() {
+      const kind = sourceKind.value;
+      const isFile = kind === "photo" || kind === "video";
+      document.querySelector("#camera-field").hidden = kind !== "camera";
+      refreshCameras.hidden = kind !== "camera";
+      document.querySelector("#file-field").hidden = !isFile;
+      sourceFile.accept = kind === "video" ? "video/*" : "image/*";
+      startSource.hidden = kind === "example";
+      startSource.disabled = Boolean(sourceRequest) || (isFile ? !sourceFile.files.length : !cameraDevice.value);
+      startSource.textContent = {camera: "Start camera", photo: "Analyze photo", video: "Analyze video"}[kind] ?? "Analyze";
+      stopSource.hidden = !sourceRequest;
+      previewLabel.textContent = {camera: "Board camera", photo: "Uploaded photo", video: "Uploaded video"}[kind] ?? "Built-in preview";
+    }
+
+    async function listCameras() {
+      const selected = cameraDevice.value;
+      refreshCameras.disabled = true;
+      try {
+        const {cameras} = await json("./api/demo/cameras");
+        cameraDevice.replaceChildren(...cameras.map(device => new Option(`${device.name} · ${device.id}`, device.id)));
+        if (cameras.some(device => device.id === selected)) cameraDevice.value = selected;
+        if (sourceKind.value === "camera" && !sourceRequest) {
+          sourceNote.textContent = cameras.length ? "Choose a camera connected to the board." : "No accessible board cameras found.";
+        }
+      } catch {
+        if (sourceKind.value === "camera") sourceNote.textContent = "Could not read the board camera list.";
+      } finally {
+        refreshCameras.disabled = false;
+        renderInput();
+      }
+    }
+
+    function customView(message, mode) {
+      feed.hidden = mode !== "photo";
+      video.hidden = true;
+      videoControls.hidden = mode !== "video";
+      boxes.hidden = !mode;
+      feedMessage.hidden = Boolean(mode);
+      feedMessage.textContent = message;
+      const playback = video.ended ? "Finished" : video.paused ? "Paused" : "Playing";
+      const status = mode ? ({camera: "Live", video: playback, photo: "Ready"}[mode]) : message;
+      if (feedStatus.textContent !== status) feedStatus.textContent = status;
+      feedStatus.dataset.state = mode === "camera" ? "live" : "idle";
+    }
+
+    function repaintInput() {
+      if (sourceKind.value === "example") return;
+      drawing.clearRect(0, 0, boxes.width, boxes.height);
+      if (currentResult) paintResult(currentResult, uploadedFrame ?? cameraBitmap);
+    }
+
+    function countPreviewFrame(result) {
+      if (result === lastFpsResult) return;
+      lastFpsResult = result;
+      fpsFrames++;
+      if (fpsTimer !== undefined) return;
+      fpsStarted = performance.now();
+      fpsTimer = setInterval(() => {
+        const now = performance.now();
+        const rate = fpsFrames * 1000 / (now - fpsStarted);
+        const label = `${rate.toFixed(1)} FPS`;
+        if (previewFps.textContent !== label) previewFps.textContent = label;
+        previewFps.hidden = false;
+        fpsFrames = 0;
+        fpsStarted = now;
+      }, 1000);
+    }
+
+    function resetPreviewFps() {
+      clearInterval(fpsTimer);
+      fpsTimer = undefined;
+      fpsFrames = 0;
+      lastFpsResult = undefined;
+      previewFps.hidden = true;
+    }
+
+    function stopInput() {
+      resetPreviewFps();
+      sourceRequest?.abort();
+      sourceRequest = undefined;
+      photoRequest?.abort();
+      currentResult = undefined;
+      uploadedFrame?.close();
+      uploadedFrame = undefined;
+      cameraBitmap?.close();
+      cameraBitmap = undefined;
+      if (sourceURL) {
+        URL.revokeObjectURL(sourceURL);
+        sourceURL = undefined;
+      }
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.loop = true;
+      videoControls.hidden = true;
+      feed.removeAttribute("src");
+      drawing.clearRect(0, 0, boxes.width, boxes.height);
+      renderInput();
+    }
+
+    function displayResult(result) {
+      currentResult = result;
+      repaintInput();
+      if (uploadedFrame || cameraBitmap) countPreviewFrame(result);
+      const top = result.classification?.[0];
+      const summary = top
+        ? `${top.class_name ?? top.class} · ${Math.round(top.confidence * 100)}%`
+        : result.depth ? "Relative depth map"
+          : result.semantic ? "Semantic class map"
+            : `${result.predictions.length} predictions`;
+      if (sourceNote.textContent !== summary) sourceNote.textContent = summary;
+    }
+
+    async function analyzeVideo(file, signal) {
+      sourceURL = URL.createObjectURL(file);
+      video.loop = false;
+      video.playbackRate = 1;
+      video.src = sourceURL;
+      await video.play();
+      if (signal.aborted) return;
+      videoPosition.max = Number.isFinite(video.duration) ? video.duration : 0;
+      videoPosition.disabled = !Number.isFinite(video.duration);
+      videoPosition.value = 0;
+      const frame = document.createElement("canvas");
+      const context = frame.getContext("2d", {alpha: false});
+      const backend = previewHealth.backend;
+      const maxSide = Math.min(960, Math.max(640, backend.input_width, backend.input_height));
+      const capacity = backend.preview_workers || 1;
+      const pending = [];
+      let batch = new AbortController();
+      let revision = seekRevision;
+      let previousTime;
+      let decodedFrame;
+      let frameCallback;
+
+      function trackFrame(_now, {mediaTime}) {
+        if (signal.aborted) return;
+        decodedFrame = {mediaTime, revision: seekRevision};
+        frameCallback = video.requestVideoFrameCallback(trackFrame);
+      }
+      if (videoFrameCallbacks) frameCallback = video.requestVideoFrameCallback(trackFrame);
+
+      function clearPending() {
+        batch.abort();
+        for (const sample of pending.splice(0)) sample.bitmap.close();
+      }
+
+      try {
+        while (!signal.aborted) {
+          if (seekRevision !== revision) {
+            clearPending();
+            batch = new AbortController();
+            revision = seekRevision;
+            previousTime = undefined;
+          }
+          const head = pending[0];
+          if (head?.complete) {
+            pending.shift();
+            if (head.error) {
+              head.bitmap.close();
+              throw head.error;
+            }
+            uploadedFrame?.close();
+            uploadedFrame = head.bitmap;
+            if (!videoPosition.matches(":active")) videoPosition.value = head.time;
+            customView("", "video");
+            displayResult(head.result);
+            await new Promise(resolve => requestAnimationFrame(resolve));
+            continue;
+          }
+
+          const time = videoFrameCallbacks
+            ? (decodedFrame?.revision === revision ? decodedFrame.mediaTime : undefined)
+            : video.currentTime;
+          if (pending.length >= capacity || video.readyState < 2 || video.seeking ||
+              time === undefined || (previousTime !== undefined &&
+                Math.abs(time - previousTime) < (videoFrameCallbacks ? Number.EPSILON : 1 / 30))) {
+            const next = new Promise(resolve => setTimeout(resolve, video.paused ? 30 : 10));
+            await (head ? Promise.race([head.done, next]) : next);
+            continue;
+          }
+
+          previousTime = time;
+          const scale = Math.min(maxSide / video.videoWidth, maxSide / video.videoHeight, 1);
+          const width = Math.max(1, Math.round(video.videoWidth * scale));
+          const height = Math.max(1, Math.round(video.videoHeight * scale));
+          if (frame.width !== width || frame.height !== height) {
+            frame.width = width;
+            frame.height = height;
+          }
+          context.drawImage(video, 0, 0, frame.width, frame.height);
+          const [jpeg, bitmap] = await Promise.all([
+            new Promise(resolve => frame.toBlob(resolve, "image/jpeg", .82)),
+            createImageBitmap(frame),
+          ]);
+          if (!jpeg || signal.aborted || revision !== seekRevision) {
+            bitmap.close();
+            if (!jpeg) throw new Error("Could not read a video frame.");
+            continue;
+          }
+          const sample = {bitmap, time};
+          const requestSignal = AbortSignal.any([signal, batch.signal, AbortSignal.timeout(15000)]);
+          sample.done = analyzePreviewFrame(jpeg, requestSignal).then(
+            result => { sample.result = result; },
+            error => { sample.error = error; },
+          ).then(() => { sample.complete = true; });
+          pending.push(sample);
+        }
+      } finally {
+        clearPending();
+        if (frameCallback !== undefined) video.cancelVideoFrameCallback(frameCallback);
+      }
+    }
+
+    async function openCamera(device, signal) {
+      const response = await fetch(`./api/demo/cameras/${encodeURIComponent(device)}/frames`, {signal, cache: "no-store"});
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.detail || "Could not open the board camera.");
+      }
+      const reader = response.body.getReader();
+      const readBytes = frameReader(reader);
+      try {
+        while (!signal.aborted) {
+          const {jpeg, result} = await readPreviewFrame(readBytes);
+          if (!jpeg) throw new Error(result.error || "The board camera stopped delivering frames.");
+          const bitmap = await createImageBitmap(new Blob([jpeg], {type: "image/jpeg"}));
+          if (signal.aborted) {
+            bitmap.close();
+            return;
+          }
+          cameraBitmap?.close();
+          cameraBitmap = bitmap;
+          customView("", "camera");
+          displayResult(result);
+        }
+      } finally {
+        await reader.cancel().catch(() => {});
+      }
+    }
+
+    sourceForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const kind = sourceKind.value;
+      if (kind === "example" || startSource.disabled) return;
+      const file = sourceFile.files[0];
+      const request = new AbortController();
+      sourceRequest = request;
+      renderInput();
+      customView(kind === "camera" ? "Connecting to camera…" : "Analyzing file…");
+      sourceNote.textContent = "";
+      try {
+        if (kind === "camera") {
+          await openCamera(cameraDevice.value, request.signal);
+        } else if (kind === "video") {
+          await analyzeVideo(file, request.signal);
+        } else {
+          sourceURL = URL.createObjectURL(file);
+          feed.src = sourceURL;
+          await feed.decode();
+          if (request.signal.aborted) return;
+          customView("", "photo");
+          const result = await analyzeFile(file, AbortSignal.any([request.signal, AbortSignal.timeout(30000)]));
+          if (!request.signal.aborted) displayResult(result);
+        }
+      } catch (error) {
+        if (!request.signal.aborted) {
+          stopInput();
+          customView("Input unavailable");
+          sourceNote.textContent = error.message;
+        }
+      }
+    });
+
+    stopSource.addEventListener("click", () => {
+      stopInput();
+      customView("Stopped");
+      sourceNote.textContent = "";
+    });
+    sourceFile.addEventListener("change", renderInput);
+    cameraDevice.addEventListener("change", renderInput);
+    refreshCameras.addEventListener("click", listCameras);
+    sourceKind.addEventListener("change", () => {
+      stopTimedFeed();
+      stopInput();
+      sourceFile.value = "";
+      renderInput();
+      if (previewHealth) updateThresholdMode(previewHealth);
+      sourceNote.textContent = "";
+      classification.hidden = true;
+      mainLayout.hidden = false;
+      if (sourceKind.value === "example") reloadFeed();
+      else customView(sourceKind.value === "camera" ? "Choose a board camera" : "Choose a file to analyze");
+      if (sourceKind.value === "camera") listCameras();
+    });
+    opacity.addEventListener("input", repaintInput);
+    depthOpacity.addEventListener("input", repaintInput);
+    videoPosition.addEventListener("change", () => {
+      video.currentTime = videoPosition.valueAsNumber;
+    });
+    videoPlay.addEventListener("click", () => {
+      if (video.paused) video.play().catch(error => { sourceNote.textContent = error.message; });
+      else video.pause();
+    });
+    video.addEventListener("seeking", () => {
+      if (sourceKind.value === "video") seekRevision++;
+    });
+    for (const event of ["play", "pause", "ended"]) {
+      video.addEventListener(event, () => {
+        videoPlay.textContent = video.ended ? "Replay" : video.paused ? "Play" : "Pause";
+        if (!videoControls.hidden) customView("", "video");
+      });
     }
 
     function showFeed(status, message, state) {
@@ -203,6 +813,27 @@
       return intersection > threshold * (a.area + b.area - intersection);
     }
 
+    function smoothPose(result, previous) {
+      if (!previous || previous.cycle !== result.cycle || result.time - previous.time > .2) return;
+      const currentWeight = 1 - Math.exp(-(result.time - previous.time) / .075);
+      const available = previous.predictions.slice();
+      for (const prediction of result.predictions) {
+        if (!prediction.keypoints) continue;
+        const area = box => (box.x2 - box.x1) * (box.y2 - box.y1);
+        const current = {...prediction.box, area: area(prediction.box)};
+        const index = available.findIndex(candidate => candidate.keypoints &&
+          overlaps(current, {...candidate.box, area: area(candidate.box)}, .45));
+        if (index === -1) continue;
+        const [match] = available.splice(index, 1);
+        prediction.keypoints = prediction.keypoints.map(([x, y, score], joint) => {
+          const last = match.keypoints[joint];
+          if (!last || score < .25 || last[2] < .25) return [x, y, score];
+          return [last[0] + (x - last[0]) * currentWeight, last[1] + (y - last[1]) * currentWeight,
+                  last[2] + (score - last[2]) * currentWeight];
+        });
+      }
+    }
+
     function visiblePredictions(result) {
       if (!result.candidates) return result.predictions;
       if (!savedConfig) return [];
@@ -237,6 +868,32 @@
       return result.predictions = predictions;
     }
 
+    function depthColorScale(raster) {
+      const samples = new Float32Array(raster.width * raster.height);
+      let length = 0;
+      for (let i = 0; i < raster.runs.length; i += 2) {
+        const code = raster.runs[i];
+        if (code === 65536) continue;
+        const distance = raster.offset + code * raster.scale;
+        const end = length + raster.runs[i + 1];
+        samples.fill(1 / distance, length, end);
+        length = end;
+      }
+      const ordered = samples.subarray(0, length).sort();
+      const percentile = fraction => {
+        const index = fraction * (length - 1);
+        const low = Math.floor(index), high = Math.ceil(index);
+        return ordered[low] + (ordered[high] - ordered[low]) * (index - low);
+      };
+      const far = percentile(.02), near = percentile(.98);
+      return code => {
+        const disparity = 1 / (raster.offset + code * raster.scale);
+        const fraction = near > far ? Math.max(0, Math.min(1, (disparity - far) / (near - far))) : .5;
+        const channel = center => 255 * Math.max(0, Math.min(1, 1.5 - Math.abs(4 * fraction - center)));
+        return [channel(3), channel(2), channel(1)];
+      };
+    }
+
     function drawRaster(raster, type, scale, offsetX, offsetY) {
       if (!raster.canvas) {
         const canvas = document.createElement("canvas");
@@ -244,6 +901,7 @@
         canvas.height = raster.height;
         const context = canvas.getContext("2d");
         const pixels = context.createImageData(raster.width, raster.height);
+        const depthColor = type === "depth" ? depthColorScale(raster) : null;
         let start = 0;
         for (let i = 0; i < raster.runs.length; i += 2) {
           const value = raster.runs[i], count = raster.runs[i + 1];
@@ -252,15 +910,13 @@
             start = end;
             continue;
           }
-          const shade = type === "depth" ? Math.round(255 * value / 65535) : value * 73 % 256;
-          const red = type === "mask" ? 38 : shade;
-          const green = type === "mask" ? 225 : type === "depth" ? 128 : (shade + 89) % 256;
-          const blue = type === "mask" ? 172 : type === "depth" ? 255 - shade : (shade + 157) % 256;
+          const [red, green, blue] = depthColor ? depthColor(value)
+            : type === "semantic" ? semanticColors[value % semanticColors.length] : [38, 225, 172];
           for (let index = start * 4; index < end * 4; index += 4) {
             pixels.data[index] = red;
             pixels.data[index + 1] = green;
             pixels.data[index + 2] = blue;
-            pixels.data[index + 3] = 102;
+            pixels.data[index + 3] = type === "mask" ? 102 : 255;
           }
           start = end;
         }
@@ -279,6 +935,65 @@
       drawing.fillText(caption, x + 4 * pixelRatio, y + 2 * pixelRatio);
     }
 
+    function paintResult(result, bitmap) {
+      const scale = Math.min(boxes.width / result.image.width, boxes.height / result.image.height);
+      const offsetX = (boxes.width - result.image.width * scale) / 2;
+      const offsetY = (boxes.height - result.image.height * scale) / 2;
+      const pixelRatio = window.devicePixelRatio || 1;
+      drawing.font = `600 ${12 * pixelRatio}px system-ui`;
+      drawing.lineWidth = 2 * pixelRatio;
+      drawing.textBaseline = "top";
+      drawing.strokeStyle = "#a6edcf";
+      if (bitmap) drawing.drawImage(bitmap, offsetX, offsetY, result.image.width * scale, result.image.height * scale);
+      showSemanticLegend(result.semantic?.labels);
+      for (const [index, prediction] of (result.classification ?? []).slice(0, 3).entries()) {
+        drawCaption(`${prediction.class_name ?? prediction.class} ${Math.round(prediction.confidence * 100)}%`,
+                    offsetX + 10 * pixelRatio, offsetY + (10 + index * 19) * pixelRatio, pixelRatio);
+      }
+      if (result.semantic) {
+        drawing.globalAlpha = opacity.valueAsNumber;
+        drawRaster(result.semantic, "semantic", scale, offsetX, offsetY);
+        drawing.globalAlpha = 1;
+      }
+      if (result.depth) {
+        drawing.globalAlpha = depthOpacity.valueAsNumber;
+        drawRaster(result.depth, "depth", scale, offsetX, offsetY);
+        drawing.globalAlpha = 1;
+      }
+      for (const {box, confidence, class: label, polygon, keypoints, mask} of visiblePredictions(result)) {
+        const x = offsetX + box.x1 * scale;
+        const y = offsetY + box.y1 * scale;
+        if (mask) drawRaster(mask, "mask", scale, offsetX, offsetY);
+        if (polygon?.length) {
+          drawing.beginPath();
+          for (const [px, py] of polygon) drawing.lineTo(offsetX + px * scale, offsetY + py * scale);
+          drawing.closePath();
+          drawing.stroke();
+        } else {
+          drawing.strokeRect(x, y, (box.x2 - box.x1) * scale, (box.y2 - box.y1) * scale);
+        }
+        const caption = `${label} ${Math.round(100 * confidence)}%`;
+        drawCaption(caption, x, Math.max(y - 17 * pixelRatio, offsetY), pixelRatio);
+        if (keypoints) {
+          drawing.beginPath();
+          for (const [from, to] of poseLinks) {
+            const start = keypoints[from], end = keypoints[to];
+            if (!start || !end || start[2] < .4 || end[2] < .4) continue;
+            drawing.moveTo(offsetX + start[0] * scale, offsetY + start[1] * scale);
+            drawing.lineTo(offsetX + end[0] * scale, offsetY + end[1] * scale);
+          }
+          drawing.stroke();
+          drawing.fillStyle = "#a6edcf";
+          for (const [px, py, score] of keypoints) {
+            if (score < .4) continue;
+            drawing.beginPath();
+            drawing.arc(offsetX + px * scale, offsetY + py * scale, 3 * pixelRatio, 0, 2 * Math.PI);
+            drawing.fill();
+          }
+        }
+      }
+    }
+
     function drawBoxes(_now, {mediaTime}) {
       if (!resultsStream) return;
       const contextWidth = boxes.width;
@@ -287,66 +1002,39 @@
       const latest = results.at(-1);
       if (latest && Number.isFinite(video.duration) && video.duration > 0) {
         const position = timeNear(mediaTime, latest.time);
-        const result = results.findLast(item => item.time <= position + .008);
-        if (result && position - result.time < (browserNms ? .15 : .35) && performance.now() - latest.received < 700) {
-          const scale = Math.min(contextWidth / result.image.width, contextHeight / result.image.height);
-          const offsetX = (contextWidth - result.image.width * scale) / 2;
-          const offsetY = (contextHeight - result.image.height * scale) / 2;
-          const pixelRatio = window.devicePixelRatio || 1;
-          drawing.font = `600 ${12 * pixelRatio}px system-ui`;
-          drawing.lineWidth = 2 * pixelRatio;
-          drawing.textBaseline = "top";
-          drawing.strokeStyle = "#a6edcf";
-          if (result.semantic) drawRaster(result.semantic, "semantic", scale, offsetX, offsetY);
-          if (result.depth) drawRaster(result.depth, "depth", scale, offsetX, offsetY);
-          for (const [index, prediction] of (result.classification ?? []).slice(0, 3).entries()) {
-            drawCaption(`${prediction.class} ${Math.round(100 * prediction.confidence)}%`,
-                        offsetX + 8 * pixelRatio, offsetY + (8 + index * 19) * pixelRatio, pixelRatio);
-          }
-          for (const {box, confidence, class: label, polygon, keypoints, mask} of visiblePredictions(result)) {
-            const x = offsetX + box.x1 * scale;
-            const y = offsetY + box.y1 * scale;
-            if (mask) drawRaster(mask, "mask", scale, offsetX, offsetY);
-            if (polygon?.length) {
-              drawing.beginPath();
-              for (const [px, py] of polygon) drawing.lineTo(offsetX + px * scale, offsetY + py * scale);
-              drawing.closePath();
-              drawing.stroke();
-            } else {
-              drawing.strokeRect(x, y, (box.x2 - box.x1) * scale, (box.y2 - box.y1) * scale);
-            }
-            const caption = `${label} ${Math.round(100 * confidence)}%`;
-            drawCaption(caption, x, Math.max(y - 17 * pixelRatio, offsetY), pixelRatio);
-            if (keypoints) {
-              drawing.fillStyle = "#a6edcf";
-              for (const [px, py, score] of keypoints) {
-                if (score < .4) continue;
-                drawing.beginPath();
-                drawing.arc(offsetX + px * scale, offsetY + py * scale, 3 * pixelRatio, 0, 2 * Math.PI);
-                drawing.fill();
-              }
-            }
-          }
+        const result = results.findLast(item => Math.abs(item.time - position) <= .008);
+        if (result) {
+          paintResult(result);
+          countPreviewFrame(result);
         }
       }
       requestFrame();
     }
 
+    let frameRequest;
+    const videoFrameCallbacks = "requestVideoFrameCallback" in video;
+
     function requestFrame() {
-      if ("requestVideoFrameCallback" in video) video.requestVideoFrameCallback(drawBoxes);
-      else requestAnimationFrame(now => drawBoxes(now, {mediaTime: video.currentTime}));
+      frameRequest = videoFrameCallbacks
+        ? video.requestVideoFrameCallback(drawBoxes)
+        : requestAnimationFrame(now => drawBoxes(now, {mediaTime: video.currentTime}));
     }
 
     new ResizeObserver(([entry]) => {
       const pixelRatio = window.devicePixelRatio || 1;
       boxes.width = Math.round(entry.contentRect.width * pixelRatio);
       boxes.height = Math.round(entry.contentRect.height * pixelRatio);
+      repaintInput();
     }).observe(video.parentElement);
 
     function receiveResult(result) {
+      showSemanticLegend(result.semantic?.labels);
       if (!Number.isFinite(video.duration) || video.duration <= 0) return;
       result.time = result.cycle * video.duration + result.media_time;
       result.received = performance.now();
+      const previous = results.at(-1);
+      if (previous && result.time <= previous.time) return;
+      if (task === "pose") smoothPose(result, previous);
       results.push(result);
       while (results.length > 120 || results[0].time < result.time - 1) results.shift();
       syncVideo();
@@ -354,22 +1042,20 @@
     }
 
     function resultsDisconnected() {
+      resetPreviewFps();
       results = [];
       aligned = false;
       showFeed("Reconnecting", "Waiting for detection results…", "idle");
     }
 
-    async function readCandidates(signal) {
-      const response = await fetch("./api/demo/candidates", {signal, cache: "no-store"});
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const reader = response.body.getReader();
+    function frameReader(reader) {
       let pending = new Uint8Array(0);
-      async function readBytes(size) {
+      return async size => {
         const bytes = new Uint8Array(size);
         for (let written = 0; written < size;) {
           if (!pending.length) {
             const next = await reader.read();
-            if (next.done) throw new Error("Candidate stream ended");
+            if (next.done) throw new Error("Preview stream ended");
             pending = next.value;
           }
           const count = Math.min(size - written, pending.length);
@@ -378,7 +1064,14 @@
           written += count;
         }
         return bytes.buffer;
-      }
+      };
+    }
+
+    async function readCandidates(signal) {
+      const response = await fetch("./api/demo/candidates", {signal, cache: "no-store"});
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const reader = response.body.getReader();
+      const readBytes = frameReader(reader);
       try {
         while (!signal.aborted) {
           const header = new DataView(await readBytes(32));
@@ -416,10 +1109,6 @@
       if (browserNms) {
         const abort = new AbortController();
         resultsStream = {close: () => abort.abort()};
-        json("./api/metadata").then(metadata => {
-          labels = metadata.labels;
-          thresholdRevision++;
-        }).catch(() => {});
         watchCandidates(abort.signal);
       } else {
         resultsStream = new EventSource("./api/demo/results");
@@ -432,8 +1121,11 @@
 
     function stopTimedFeed() {
       if (!resultsStream) return;
+      resetPreviewFps();
       resultsStream.close();
       resultsStream = undefined;
+      if (videoFrameCallbacks) video.cancelVideoFrameCallback(frameRequest);
+      else cancelAnimationFrame(frameRequest);
       results = [];
       aligned = false;
       video.removeAttribute("src");
@@ -447,27 +1139,74 @@
       feed.src = "./api/video_feed";
     });
 
-    async function refreshFeed() {
-      try {
-        const health = await json("./health");
-        const { live, backend } = health;
-        const titles = {detection: "Live detection", classify: "Live classification", depth: "Live depth",
-                        obb: "Live oriented boxes", pose: "Live pose", segment: "Live instance segmentation",
-                        semantic: "Live semantic segmentation"};
-        document.querySelector("h1").textContent = titles[health.model.task] ?? "Live inference";
-        form.hidden = ["classify", "depth", "semantic"].includes(health.model.task);
-        document.querySelector(".layout").classList.toggle("single", form.hidden);
-        model.textContent = `${health.model.name} / ${health.model.chip.toUpperCase()}`;
-        const clientThresholds = Boolean(health.demo_video && !videoFailed && !live?.error &&
-                                         backend.live?.candidate_stream);
-        if (browserNms && !clientThresholds) loadConfig();
-        browserNms = clientThresholds;
-        document.querySelector("#threshold-hint").textContent = browserNms
-          ? "Confidence and NMS apply to this browser preview."
-          : "Changes apply to the stream and API defaults for this container.";
-        iou.disabled = !browserNms && backend.nms === false;
-        document.querySelector("#nms-hint").hidden = !iou.disabled;
+    let feedLifecycle;
+    let refreshTimer;
 
+    function updateThresholdMode(health) {
+      const {backend, live} = health;
+      const source = sourceKind.value;
+      const clientThresholds = source === "example"
+        ? Boolean(health.demo_video && !videoFailed && !live?.error && backend.live?.candidate_stream)
+        : (source === "camera" || source === "video") && backend.candidate_preview;
+      if (clientThresholds && !browserNms) {
+        json("./api/metadata").then(metadata => {
+          labels = metadata.labels;
+          thresholdRevision++;
+          repaintInput();
+        }).catch(() => {});
+      }
+      if (browserNms && !clientThresholds) loadConfig();
+      browserNms = Boolean(clientThresholds);
+      document.querySelector("#threshold-hint").textContent = browserNms
+        ? "Confidence and NMS apply to this browser preview."
+        : "Changes apply to the stream and API defaults for this container.";
+      iou.disabled = !browserNms && backend.nms === false;
+      document.querySelector("#nms-hint").hidden = !iou.disabled;
+      if (savedConfig) updateControls();
+    }
+
+    async function refreshFeed(signal) {
+      try {
+        const health = await json("./health", {signal: AbortSignal.any([signal, AbortSignal.timeout(5000)])});
+        if (signal.aborted) return;
+        previewHealth = health;
+        const {live} = health;
+        task = health.model.task;
+        const titles = {detection: "Live detection", classify: "Photo classification", depth: "Live depth",
+                        obb: "Ship detection", pose: "Live pose", segment: "Live instance segmentation",
+                        semantic: "Live semantic segmentation"};
+        document.querySelector("h1").textContent = titles[task] ?? "Live inference";
+        model.textContent = `${health.model.name} / ${health.model.chip.toUpperCase()}`;
+        sourceKind.disabled = false;
+        form.hidden = ["classify", "depth", "semantic"].includes(task);
+        semanticControls.hidden = task !== "semantic";
+        depthControls.hidden = task !== "depth";
+        mainLayout.classList.toggle("single", form.hidden && semanticControls.hidden && depthControls.hidden);
+        updateThresholdMode(health);
+        if (sourceKind.value !== "example") return;
+        if (task === "classify" || task === "obb") {
+          mainLayout.hidden = true;
+          classification.hidden = false;
+          classification.dataset.task = task;
+          if (task === "obb") {
+            document.querySelector("#examples-title").textContent = "Aerial ship example";
+            document.querySelector(".photo-grid").hidden = true;
+            document.querySelector("#upload").hidden = true;
+            document.querySelector("#detect-ships").hidden = false;
+            if (!photo.hasAttribute("src")) {
+              photo.src = "./api/demo/photos/boats.jpg";
+              photo.alt = "Aerial view of ships";
+              photo.hidden = false;
+              photoStatus.textContent = "Select Detect ships to run the model.";
+            }
+            return;
+          }
+          for (const button of classification.querySelectorAll("[data-photo]")) {
+            const image = button.querySelector("img");
+            if (!image.hasAttribute("src")) image.src = `./api/demo/photos/${button.dataset.photo}.jpg`;
+          }
+          return;
+        }
         if (!health.demo_video || !live || live.error) stopTimedFeed();
         if (live === null) {
           resetFeed("No source", "Set RK_SOURCE when starting the container to use a camera, RTSP stream, or mounted video.");
@@ -480,10 +1219,17 @@
           renderFrame(live.ended);
         }
       } catch {
-        resetFeed("Disconnected", "Could not reach the API. Reconnecting…");
+        if (!signal.aborted && sourceKind.value === "example") resetFeed("Disconnected", "Could not reach the API. Reconnecting…");
       } finally {
-        setTimeout(refreshFeed, 2500);
+        if (!signal.aborted) refreshTimer = setTimeout(() => refreshFeed(signal), 2500);
       }
+    }
+
+    function reloadFeed() {
+      feedLifecycle?.abort();
+      clearTimeout(refreshTimer);
+      feedLifecycle = new AbortController();
+      refreshFeed(feedLifecycle.signal);
     }
 
     let sourceEnded = false;
@@ -498,10 +1244,10 @@
       }
     }
     feed.addEventListener("load", () => {
-      if (!resultsStream) renderFrame(sourceEnded);
+      if (sourceKind.value === "example" && !resultsStream) renderFrame(sourceEnded);
     });
     feed.addEventListener("error", () => {
-      resetFeed("Preview unavailable", "Could not read the preview. Reconnecting…");
+      if (sourceKind.value === "example") resetFeed("Preview unavailable", "Could not read the preview. Reconnecting…");
     });
 
     function updateControls() {
@@ -516,6 +1262,7 @@
       try {
         savedConfig = await json("./api/config");
         thresholdRevision++;
+        repaintInput();
         for (const slider of sliders) slider.value = savedConfig[slider.name];
         fieldset.disabled = false;
         updateControls();
@@ -539,6 +1286,7 @@
       if (browserNms) {
         Object.assign(savedConfig, changes);
         thresholdRevision++;
+        repaintInput();
         configStatus.textContent = "Thresholds applied to this preview.";
         updateControls();
         return;
@@ -562,10 +1310,18 @@
     });
 
     window.addEventListener("pagehide", () => {
+      feedLifecycle?.abort();
+      photoRequest?.abort();
+      clearTimeout(refreshTimer);
       stopTimedFeed();
-      feed.removeAttribute("src");
+      stopInput();
+      if (sourceKind.value !== "example") {
+        customView("Stopped");
+        sourceNote.textContent = "";
+      }
     });
-    refreshFeed();
+    window.addEventListener("pageshow", reloadFeed);
+    renderInput();
     loadConfig();
   </script>
 </body>

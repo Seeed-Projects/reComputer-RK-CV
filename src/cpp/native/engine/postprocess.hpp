@@ -60,6 +60,7 @@ public:
     std::vector<Detection> decode(const Geometry &geometry, const std::vector<float> &output,
                                   const std::vector<std::vector<int8_t>> &quantized = {},
                                   double *nms_ms = nullptr,
-                                  std::vector<Detection> *unfiltered = nullptr) const;
+                                  std::vector<Detection> *unfiltered = nullptr,
+                                  bool candidates_only = false) const;
 };
 } // namespace nvr

@@ -205,7 +205,7 @@ YoloPostprocessor::YoloPostprocessor(const YoloLayout &layout, float confidence,
 std::vector<Detection>
 YoloPostprocessor::decode(const Geometry &g, const std::vector<float> &output,
                           const std::vector<std::vector<int8_t>> &quantized, double *nms_ms,
-                          std::vector<Detection> *unfiltered) const
+                          std::vector<Detection> *unfiltered, bool candidates_only) const
 {
     require(g.width > 0 && g.height > 0 && g.rw > 0 && g.rh > 0, "invalid detection geometry");
     if (layout_.kind == YoloLayout::Kind::Dfl)
@@ -256,6 +256,8 @@ YoloPostprocessor::decode(const Geometry &g, const std::vector<float> &output,
                 if (auto detection = source_detection(box))
                     unfiltered->push_back(*detection);
             }
+            if (candidates_only)
+                return {};
             candidates.erase(std::remove_if(candidates.begin(), candidates.end(),
                                             [&](const Box &box) { return box.score <= threshold_; }),
                              candidates.end());

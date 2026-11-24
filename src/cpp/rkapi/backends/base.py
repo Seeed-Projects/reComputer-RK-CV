@@ -18,6 +18,7 @@ class BaseBackend(ABC):
         self.description = {}
         self.prediction_metadata = {}
         self.demo_video = None
+        self.preview_workers = 1
 
     def thresholds(self, conf, iou):
         with self.config_lock:
@@ -39,6 +40,9 @@ class BaseBackend(ABC):
 
     def acquire_live(self):
         raise UnsupportedOperation("this backend does not support live inference")
+
+    def preview_image(self, image, conf, iou, source):
+        return self.image(image, conf, iou, source), b""
 
     def release_live(self):
         pass

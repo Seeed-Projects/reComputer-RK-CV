@@ -1,0 +1,22 @@
+{
+  "id": "yolo11n-seg-rk3576-fp16",
+  "name": "YOLO11n-seg",
+  "family": "yolo11",
+  "chip": "rk3576",
+  "task": "segment",
+  "backend": "yolo",
+  "tag": "rk3576-yolo11n-seg-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLO11-RKNN2/resolve/a31867822336b491e7aa494e71ed4af17ccb1730/models/v2.3.2/segment/yolo11n-seg/rk3576/fp16/model.rknn",
+  "sha256": "d1370aa52dd3f127a6b447c27a813e4d12c3ec8955cacd6f70bd9b13f8ad488d",
+  "nms": true,
+  "size": "n",
+  "precision": "fp16",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO11-RKNN2/resolve/a31867822336b491e7aa494e71ed4af17ccb1730/models/v2.3.2/segment/yolo11n-seg/rk3576/fp16/metadata.yaml",
+  "metadata_sha256": "52fc9d095a5b85fb1b3cf83156887776e1bd16dc77808fff7d38ed51ed18579c",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-inspired"
+}

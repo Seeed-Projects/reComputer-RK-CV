@@ -1,0 +1,26 @@
+{
+  "id": "yolo11m-pose-rk3588-fp16",
+  "name": "YOLO11m-pose",
+  "family": "yolo11",
+  "chip": "rk3588",
+  "task": "pose",
+  "backend": "yolo",
+  "tag": "rk3588-yolo11m-pose-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLO11-RKNN2/resolve/a31867822336b491e7aa494e71ed4af17ccb1730/models/v2.3.2/pose/yolo11m-pose/rk3588/fp16/model.rknn",
+  "sha256": "d86259afa52226f8c645cef1272e5096e6f953dfddf84d7d20e85570e7e70cc6",
+  "nms": true,
+  "size": "m",
+  "precision": "fp16",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO11-RKNN2/resolve/a31867822336b491e7aa494e71ed4af17ccb1730/models/v2.3.2/pose/yolo11m-pose/rk3588/fp16/metadata.yaml",
+  "metadata_sha256": "2281458794491abfcd1529e54a6ec889b3a69e8027817e074dd93beec187f02b",
+  "classes": 1,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-inspired",
+  "kpt_shape": [
+    17,
+    3
+  ]
+}

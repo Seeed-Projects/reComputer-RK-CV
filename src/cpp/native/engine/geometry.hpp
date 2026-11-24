@@ -2,6 +2,13 @@
 
 namespace nvr
 {
+enum class InputTransform
+{
+    Letterbox,
+    CenterCrop,
+    Stretch,
+};
+
 struct Geometry
 {
     int width = 0, height = 0, rw = 0, rh = 0, px = 0, py = 0;

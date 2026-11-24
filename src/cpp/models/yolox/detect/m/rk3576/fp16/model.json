@@ -1,0 +1,23 @@
+{
+  "id": "yolox-m-rk3576-fp16",
+  "name": "YOLOX-m",
+  "family": "yolox",
+  "chip": "rk3576",
+  "task": "detection",
+  "backend": "yolo",
+  "tag": "rk3576-yolox-m-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLOX-RKNN2/resolve/07e796197678386dfef0afe9f9ffd54a3b1e798e/models/v2.3.2/detect/yolox_m/rk3576/fp16/model.rknn",
+  "sha256": "a63aa4e8041e093fcf81fd600fab39ab6ff441af4568ea03be17469f4f574908",
+  "nms": true,
+  "size": "m",
+  "precision": "fp16",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLOX-RKNN2/resolve/07e796197678386dfef0afe9f9ffd54a3b1e798e/models/v2.3.2/detect/yolox_m/rk3576/fp16/metadata.yaml",
+  "metadata_sha256": "9b465372399178d838e64b400cfbaddccd2f27bbd42946ca56654e169cbeeae4",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official",
+  "head": "yolox"
+}

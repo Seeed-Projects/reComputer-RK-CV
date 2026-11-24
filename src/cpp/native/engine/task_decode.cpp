@@ -137,7 +137,7 @@ TaskResult TaskPostprocessor::decode(const Geometry &g,
         {
             return;
         }
-        if (options_.normalized && layout_ != Layout::Dfl)
+        if (options_.normalized && layout_ != Layout::Dfl && layout_ != Layout::Objectness)
         {
             candidate.x *= model_width;
             candidate.width *= model_width;
@@ -253,6 +253,69 @@ TaskResult TaskPostprocessor::decode(const Geometry &g,
             accept(std::move(c), options_.task != ModelTask::Obb);
         }
     }
+    else if (layout_ == Layout::Objectness)
+    {
+        const bool anchored = options_.head == ModelOptions::Head::Anchored;
+        const int anchors = anchored ? 3 : 1;
+        const int features = 5 + options_.classes;
+        for (size_t branch = 0; branch < regressions_.size(); ++branch)
+        {
+            const int index = regressions_[branch];
+            const auto &shape = specs_[size_t(index)].dimensions;
+            const int width = shape[3], cells = width * shape[2];
+            const float stride = float(input_width_ / width);
+            for (int anchor = 0; anchor < anchors; ++anchor)
+            {
+                const auto *data = outputs[size_t(index)].data() + size_t(anchor) * features * cells;
+                for (int p = 0; p < cells; ++p)
+                {
+                    auto value = [&](int feature) { return data[size_t(feature) * cells + p]; };
+                    const float objectness = value(4);
+                    if (!(objectness >= confidence))
+                    {
+                        continue;
+                    }
+                    Candidate c;
+                    for (int cls = 0; cls < options_.classes; ++cls)
+                    {
+                        const float score = objectness * value(5 + cls);
+                        if (score > c.score)
+                        {
+                            c.score = score;
+                            c.class_id = cls;
+                        }
+                    }
+                    if (!(c.score >= confidence))
+                    {
+                        continue;
+                    }
+                    const float x = float(p % width), y = float(p / width);
+                    if (anchored)
+                    {
+                        const auto &group = options_.anchors[branch];
+                        c.x = (x + 2 * value(0) - .5f) * stride;
+                        c.y = (y + 2 * value(1) - .5f) * stride;
+                        const float w = 2 * value(2), h = 2 * value(3);
+                        c.width = w * w * group[size_t(anchor) * 2];
+                        c.height = h * h * group[size_t(anchor) * 2 + 1];
+                    }
+                    else
+                    {
+                        c.x = (x + value(0)) * stride;
+                        c.y = (y + value(1)) * stride;
+                        c.width = std::exp(value(2)) * stride;
+                        c.height = std::exp(value(3)) * stride;
+                    }
+                    for (int j = 0; j < extra_count; ++j)
+                    {
+                        c.extra.push_back(outputs[size_t(index + 1)]
+                                                [size_t(anchor * extra_count + j) * cells + p]);
+                    }
+                    accept(std::move(c), false);
+                }
+            }
+        }
+    }
     else
     {
         int offset = 0;
@@ -267,15 +330,19 @@ TaskResult TaskPostprocessor::decode(const Geometry &g,
                 packed_logits ? std::log(confidence / (1 - confidence)) : confidence;
             int channels = d[1] - (packed_logits ? options_.classes : 0), bins = channels / 4,
                 stride = input_width_ / width;
+            const bool rank_class_scores = options_.task == ModelTask::Detect && options_.end_to_end;
             for (int p = 0; p < cells; ++p)
             {
                 Candidate c;
                 c.score = -std::numeric_limits<float>::infinity();
+                auto class_score = [&](int category)
+                {
+                    return outputs[size_t(cls)]
+                                  [size_t(category + (packed_logits ? channels : 0)) * cells + p];
+                };
                 for (int category = 0; category < options_.classes; ++category)
                 {
-                    float score =
-                        outputs[size_t(cls)]
-                               [size_t(category + (packed_logits ? channels : 0)) * cells + p];
+                    float score = class_score(category);
                     if (std::isfinite(score) && score > c.score)
                     {
                         c.score = score;
@@ -342,7 +409,23 @@ TaskResult TaskPostprocessor::decode(const Geometry &g,
                 c.height = distances[1] + distances[3];
                 // Raw spatial heads are already in pixels, independent of decoded INT8
                 // normalization.
-                accept(std::move(c), false);
+                if (rank_class_scores)
+                {
+                    // An NMS-free head ranks box/class pairs, so one box can yield several labels.
+                    for (int category = 0; category < options_.classes; ++category)
+                    {
+                        c.score = class_score(category);
+                        c.class_id = category;
+                        if (c.score >= confidence)
+                        {
+                            accept(c, false);
+                        }
+                    }
+                }
+                else
+                {
+                    accept(std::move(c), false);
+                }
             }
             offset += cells;
         }
@@ -380,7 +463,8 @@ TaskResult TaskPostprocessor::decode(const Geometry &g,
         {
             for (const auto &previous : kept)
             {
-                if (candidate.class_id == previous.class_id &&
+                if ((options_.head == ModelOptions::Head::YoloX ||
+                     candidate.class_id == previous.class_id) &&
                     overlap(candidate, previous, false) > nms_iou)
                 {
                     suppressed = true;

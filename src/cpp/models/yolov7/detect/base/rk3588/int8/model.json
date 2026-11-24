@@ -1,0 +1,49 @@
+{
+  "id": "yolov7-rk3588-int8",
+  "name": "YOLOv7",
+  "family": "yolov7",
+  "chip": "rk3588",
+  "task": "detection",
+  "backend": "yolo",
+  "tag": "rk3588-yolov7-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLOv7-RKNN2/resolve/260fc6cd97b75a081e708123cfb260699e12388e/models/v2.3.2/detect/yolov7/rk3588/int8/model.rknn",
+  "sha256": "d3f6d3f1d4d5e4fe25b4e62f7e261419ec7e5279e302664b015b47267003f110",
+  "nms": true,
+  "size": "base",
+  "precision": "int8",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLOv7-RKNN2/resolve/260fc6cd97b75a081e708123cfb260699e12388e/models/v2.3.2/detect/yolov7/rk3588/int8/metadata.yaml",
+  "metadata_sha256": "bba512f5095e73d41533a6dded69763399a20d5e00cd9c616bc740937ad8b262",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official",
+  "head": "anchored",
+  "anchors": [
+    [
+      12.0,
+      16.0,
+      19.0,
+      36.0,
+      40.0,
+      28.0
+    ],
+    [
+      36.0,
+      75.0,
+      76.0,
+      55.0,
+      72.0,
+      146.0
+    ],
+    [
+      142.0,
+      110.0,
+      192.0,
+      243.0,
+      459.0,
+      401.0
+    ]
+  ]
+}

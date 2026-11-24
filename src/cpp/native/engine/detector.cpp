@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include <algorithm>
+#include <cstring>
 
 namespace nvr
 {
@@ -26,8 +27,9 @@ Detector::Detector(const std::string &model, float threshold, float iou,
         rknn_input_output_num io{};
         require(rknn_query(context_, RKNN_QUERY_IN_OUT_NUM, &io, sizeof(io)) == 0,
                 "query RKNN I/O");
-        require(io.n_input == 1 && io.n_output > 0 && io.n_output <= 16,
-                "Model requires one image input and 1..16 output tensors");
+        const bool has_text = !options_.text_embeddings.empty();
+        require(io.n_input == (has_text ? 2u : 1u) && io.n_output > 0 && io.n_output <= 16,
+                "RKNN input or output count differs from the model package");
         require(rknn_query(context_, RKNN_QUERY_INPUT_ATTR, &input_attr_, sizeof(input_attr_)) == 0,
                 "query RKNN input");
         require(rknn_query(context_, RKNN_QUERY_OUTPUT_ATTR, &output_attr_, sizeof(output_attr_)) ==
@@ -68,6 +70,7 @@ Detector::Detector(const std::string &model, float threshold, float iou,
             output_attrs_[0].dims[1] == 64 && output_attrs_[3].dims[1] == 64 &&
             output_attrs_[6].dims[1] == 64;
         task_output_ = options_.task != ModelTask::Detect ||
+                       layout_kind == TaskPostprocessor::Layout::Objectness ||
                        layout_kind == TaskPostprocessor::Layout::EndToEnd ||
                        task_postprocessor_->classes() > 1020 ||
                        (layout_kind == TaskPostprocessor::Layout::Split && options_.normalized) ||
@@ -237,12 +240,31 @@ Detector::Detector(const std::string &model, float threshold, float iou,
         input_attr_.h_stride = static_cast<uint32_t>(height_);
         require(rknn_set_io_mem(context_, tensor_, &input_attr_) == 0,
                 "bind external RGB input to RKNN");
+        if (has_text)
+        {
+            rknn_tensor_attr text{};
+            text.index = 1;
+            require(rknn_query(context_, RKNN_QUERY_INPUT_ATTR, &text, sizeof(text)) == 0 &&
+                        text.n_dims == 3 && text.dims[0] == 1 &&
+                        text.dims[1] == uint32_t(options_.classes) && text.dims[2] == 512 &&
+                        text.n_elems == options_.text_embeddings.size(),
+                    "Invalid RKNN text input dimensions");
+            const auto bytes = uint32_t(text.n_elems * sizeof(float));
+            text_tensor_ = rknn_create_mem(context_, std::max(bytes, text.size_with_stride));
+            require(text_tensor_ && text_tensor_->virt_addr, "allocate RKNN text input");
+            std::memcpy(text_tensor_->virt_addr, options_.text_embeddings.data(), bytes);
+            text.type = RKNN_TENSOR_FLOAT32;
+            text.pass_through = 0;
+            require(rknn_set_io_mem(context_, text_tensor_, &text) == 0 &&
+                        rknn_mem_sync(context_, text_tensor_, RKNN_MEMORY_SYNC_TO_DEVICE) == 0,
+                    "bind fixed text embeddings to RKNN");
+        }
         if (!task_output_ && !dfl_ && !split_)
         {
             output_.resize(output_attr_.n_elems);
         }
         preprocessor_ = std::make_unique<Preprocessor>(*input_, width_, height_, stride_,
-                                                       options_.center_crop);
+                                                       options_.input_transform, has_text ? 0 : 114);
         rknn_sdk_version version{};
         require(rknn_query(context_, RKNN_QUERY_SDK_VERSION, &version, sizeof(version)) == 0,
                 "query RKNN version");
@@ -274,6 +296,10 @@ Detector::Detector(const std::string &model, float threshold, float iou,
             rknn_destroy_mem(context_, tensor_);
         }
         tensor_ = nullptr;
+        if (text_tensor_)
+        {
+            rknn_destroy_mem(context_, text_tensor_);
+        }
         input_.reset();
         if (context_)
         {
@@ -291,6 +317,10 @@ Detector::~Detector()
     if (tensor_)
     {
         rknn_destroy_mem(context_, tensor_);
+    }
+    if (text_tensor_)
+    {
+        rknn_destroy_mem(context_, text_tensor_);
     }
     input_.reset();
     if (context_)
@@ -372,7 +402,7 @@ void Detector::run_output()
     last_output_ms_ = milliseconds(started);
 }
 
-Json Detector::infer(const Frame &f, std::vector<Detection> *unfiltered)
+Json Detector::infer(const Frame &f, std::vector<Detection> *unfiltered, bool candidates_only)
 {
     auto pre = Clock::now();
     auto geometry = preprocessor_->process(f.image());
@@ -397,7 +427,8 @@ Json Detector::infer(const Frame &f, std::vector<Detection> *unfiltered)
     }
     else
     {
-        for (const auto &detection : postprocessor_->decode(geometry, output_, quant_outputs_, &nms_ms, unfiltered))
+        for (const auto &detection : postprocessor_->decode(geometry, output_, quant_outputs_,
+                                                            &nms_ms, unfiltered, candidates_only))
         {
             result["detections"].push_back({{"class_id", detection.class_id},
                                             {"confidence", detection.confidence},

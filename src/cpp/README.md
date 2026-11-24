@@ -16,13 +16,14 @@ working NPU, RGA, and MPP drivers supplied by the board OS.
 
 **1. Start YOLO26 object detection on the board**
 
-```sh
-docker run --rm --name cv-api \
+```bash
+docker run -d --name cv-api --restart unless-stopped \
   --privileged -p 8000:8000 \
   -v /proc/device-tree/compatible:/proc/device-tree/compatible:ro \
-  "ghcr.io/seeed-projects/recomputer-rk-cv/yolo26n:rk3588-int8"
+  ghcr.io/seeed-projects/recomputer-rk-cv/yolo26n:rk3588-int8
 ```
 
+On an RK3576 board, use the `rk3576-int8` tag.
 Pick a model and tag from the [model catalog](#models),
 or [build the same image locally](#build-locally). Use a different container
 name and host port, such as `-p 8001:8000`, to serve a second model.
@@ -103,13 +104,25 @@ if metadata["model"]["task"] == "detection":
 
 ## Models
 
-YOLO26 ships in sizes `n`, `s`, and `m` for RK3576 and RK3588, with
-INT8 and FP16 builds for all seven tasks. Each image serves one model and includes a short demo video.
-The catalog contains 84 variants across 21 image names.
+The catalog follows the model exports in [Rockchip CV API](https://github.com/Hanzo-Huang/rockchip-cv-api).
+It contains 316 INT8 and FP16 variants across 10 families for RK3576 and RK3588.
+Each image serves one model and includes demo media for its task.
+
+| Family | Sizes | Tasks |
+| --- | --- | --- |
+| YOLO26 | `n`, `s`, `m` | Detection, segmentation, pose, oriented boxes, classification, semantic segmentation, depth |
+| YOLO11, YOLOv8 | `n`, `s`, `m` | Detection, segmentation, pose, oriented boxes, classification |
+| YOLOv5 | `n`, `s`, `m`, plus `s-relu` for detection | Detection, segmentation, classification |
+| YOLOv6 | `n`, `s`, `m` | Detection |
+| YOLOv7 | `base`, `tiny` | Detection |
+| YOLOv10 | `n`, `s`, `m`, `b`, `l`, `x` | Detection |
+| YOLOX | `nano`, `s`, `m` | Detection |
+| PP-YOLOE | `s`, `m` | Detection |
+| YOLO-World | `v2s`, `v2m` | Detection with the model zoo's fixed COCO vocabulary |
 
 All images built from the same code revision share the same ARM64 operating
 system, dependencies, C++ engine, HTTP API, and browser code. The final filesystem layer contains model-specific files. A separate layer contains
-the selected demo video and its attribution. The common entrypoint loads
+the selected demo media and its attribution. The common entrypoint loads
 the model manifest bundled at `/opt/model/package.json`.
 
 Image names below use the prefix `ghcr.io/seeed-projects/recomputer-rk-cv/`.
@@ -120,12 +133,13 @@ Image names below use the prefix `ghcr.io/seeed-projects/recomputer-rk-cv/`.
 | Instance segmentation | `yolo26n-seg:rk3588-int8` | `predictions[].mask` |
 | Pose estimation | `yolo26n-pose:rk3588-int8` | `predictions[].keypoints` as `[x, y, confidence]` |
 | Oriented boxes | `yolo26n-obb:rk3588-int8` | `predictions[].polygon` with four corners |
-| Classification | `yolo26n-cls:rk3588-int8` | `classification` with ranked classes |
+| Classification | `yolo26n-cls:rk3588-int8` | `classification` with ranked class IDs, names, and scores |
 | Semantic segmentation | `yolo26n-sem:rk3588-int8` | `semantic` raster and class labels |
 | Depth estimation | `yolo26n-depth:rk3588-int8` | `depth` raster |
 
 Replace `rk3588` with `rk3576` for the other board, or `int8` with `fp16`
-to change precision. Run `python3 tools/models.py list` for all image tags
+to change precision. For example, use `yolo11n-seg:rk3588-int8` for YOLO11
+segmentation. Run `python3 tools/models.py list` for all image tags
 and build IDs in the [model catalog](models/).
 
 <details>
@@ -135,6 +149,9 @@ Masks, semantic maps, and depth maps have `width`, `height`, `box`, and
 `runs`. The box locates the raster in the source image. Runs alternate value
 and count in row-major order. Semantic values are class IDs. Recover depth
 samples with `offset + value * scale`. The value `65536` marks invalid depth.
+The YOLO26 depth packages use RGA to resize each frame to the model's full
+input size. The live preview colorizes inverse depth, with warmer colors for
+nearer regions and a relative scale within each frame.
 
 </details>
 
@@ -228,11 +245,27 @@ not start inference. Image or video-frame uploads still run on demand.
 `/health` reports whether the pipeline is active, the subscriber count, and
 the worker count and core masks when running.
 
-| Tasks | Bundled clip |
+| Tasks | Bundled media |
 | --- | --- |
-| Detection, classification, instance segmentation, semantic segmentation, depth | Street traffic with moving vehicles and foreground/background separation |
-| Pose | A full-body squat demonstration |
-| Oriented boxes | Aerial footage of boats at different angles |
+| Detection | [Street traffic from the YOLO11 showcase, in the existing 1080p YOLO26 example](../rv182x_rk3588_yolo26/video/test.mp4) |
+| Depth | [Provided depth demo clip](demo/depth.txt). Warmer colors show nearer regions. Adjust overlay opacity to compare with the video. |
+| Pose | [Single-person squat demonstration](demo/pose.txt). The browser smooths matched joints across consecutive frames. |
+| Instance segmentation | [YOLOv8 pose showcase](../rk3576_yolov8_pose/video/test.mp4) |
+| Oriented boxes | [Official Ultralytics aerial ship photo](demo/ships.txt). Select **Detect ships** to draw rotated boxes on the image. The prediction API returns all model classes. |
+| Semantic segmentation | [Street-level urban footage](demo/semantic.txt). Each color shows which pixels belong to a class like road, sidewalk, or vegetation. |
+| Classification | [Example photos](demo/photos.txt) and an upload form. The page runs a prediction for each photo the viewer submits. |
+
+Use **Input source** to select the built-in example, a capture device exposed to
+the container, or a local photo or video. A board camera opens only when you
+start its preview. The browser decodes uploaded videos locally and posts sampled
+JPEG frames to the preview endpoint. Uploads and camera streams work across all
+seven tasks.
+Camera and upload previews use one inference worker per NPU core by default,
+with two on RK3576 and three on RK3588. They keep only one frame in flight per
+worker and present results in frame order. Set `RK_WORKERS=1` to use a single
+context. The preview displays each sampled upload frame with its own result. Built-in
+videos draw results only on matching video timestamps. Closing the last live
+preview stops its inference. On RK3588, select `rk_hdmirx` to use HDMI IN.
 
 The browser plays the H.264 MP4 and draws model results on a canvas. For a
 custom clip, pass `-v "$PWD/input.mp4:/media/input.mp4:ro"` with
@@ -241,12 +274,13 @@ MP4 without a rotation tag. RTSP and H.264 V4L2 sources still use the MJPEG
 preview with the source selected through `RK_SOURCE`.
 
 With a YOLO26 split scores-and-boxes model, the browser applies confidence
-filtering and per-class NMS locally. The board sends every valid decoded
+filtering and per-class NMS for the built-in clip, board camera, and uploaded
+video. The board sends every valid decoded
 proposal with its highest-scoring class. It applies no confidence cutoff,
 top-k limit, or NMS to this stream. The preview controls affect the current
 tab. The prediction API and legacy MJPEG feed use the container's API settings.
 
-The browser reads `GET /api/demo/candidates` as a binary stream. Each
+For the built-in clip, the browser reads `GET /api/demo/candidates` as a binary stream. Each
 little-endian frame contains a `uint32` payload size in bytes, `uint32` source
 width, `uint32` source height, `uint32` video loop index, `float64` media
 timestamp in seconds, and `uint64` frame sequence. The payload contains
@@ -263,7 +297,8 @@ preview and holds a live-source subscription.
 ### Build locally
 
 Run these commands in `src/cpp` on an ARM64 Docker host. Inference requires
-the matching Rockchip board. Leave out `--model` to build the full catalog.
+the matching Rockchip board. Use `--family yolo11` in place of `--model` to
+build a family, or omit both filters to build the full catalog.
 
 ```sh
 python3 tools/models.py list
@@ -273,29 +308,36 @@ python3 tools/build_images.py --runtime rockchip-cv-runtime:local \
   --repository rockchip-cv-local --model yolo26n-rk3588-int8
 ```
 
-Set `IMAGE=rockchip-cv-local/yolo26n:rk3588-int8` in the quick-start command.
+Replace the quick-start image reference with `rockchip-cv-local/yolo26n:rk3588-int8`.
+In a sparse checkout, include the two existing project clip paths in the table
+above. Use `--size n --precision int8` in place of `--model` to check the
+n-size INT8 variants on both chips.
 
 ### GitHub Actions
 
 The [C++ Rockchip model images workflow](../../.github/workflows/cpp-model-images.yml)
-uses a native ARM64 runner with a sparse checkout of `src/cpp`. Pull requests
-build and check the full catalog. Changes to this directory or workflow on
-`main` publish all 84 variants to GHCR. A manual run accepts one catalog ID
+uses native ARM64 runners with sparse checkouts. A shared runtime job builds
+the base image, and per-family jobs add the demo media and model packages.
+Pull requests check n-size INT8 variants on both chips. Changes to the code,
+packaged videos, or workflow on `main` publish all 316 variants to GHCR.
+A manual run accepts one catalog ID
 or the full catalog when left empty. Manual runs on `main` publish images.
 
 The workflow saves one shared runtime per source commit under
 `runtime:<commit-sha>`. Each model uses it as the base, verifies the model
 package and native module imports, and checks that its layer list matches the
-runtime plus one independent video layer and one model layer. Models that
-use the same clip must have the same video layer ID. The workflow builds each video layer once from a deterministic archive.
-BuildKit's `ADD --link` keeps the video layer independent so code-only
+runtime plus one independent demo media layer and one model layer. The workflow
+builds each media layer once from a deterministic archive and reuses it for all
+images with the same demo assets.
+BuildKit's `ADD --link` keeps the media layer independent so code-only
 rebuilds can reuse it. Each model is published with a
 `<chip>-<precision>` tag and a `<chip>-<precision>-<commit-sha>` tag.
 
 Each manifest points to an immutable Hugging Face revision. The build
 downloads the RKNN model and its metadata, verifies their SHA-256 checksums,
 and checks the metadata against the task, chip, class list, and tensor
-contract. The repository stores the manifests without the weights.
+contract. YOLO-World also downloads and verifies the fixed text embedding
+tensor. The repository stores the manifests without the weights.
 
 ## Credits
 
@@ -307,6 +349,5 @@ The model packages use weights and conversion metadata from
 Model manifests and metadata record provenance, license information, and the
 SHA-256 checksums used during packaging.
 
-The bundled clips were excerpted or resized and converted to H.264 without
-audio. Attributions and license links are included in each image at
-`/opt/demo/ATTRIBUTION.txt` and in the [demo directory](demo/).
+Demo media sources, attribution, and applicable licenses are recorded in the
+image at `/opt/demo/ATTRIBUTION.txt`.

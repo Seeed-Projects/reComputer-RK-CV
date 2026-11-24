@@ -1,0 +1,22 @@
+{
+  "id": "yolov8s-seg-rk3576-fp16",
+  "name": "YOLOv8s-seg",
+  "family": "yolov8",
+  "chip": "rk3576",
+  "task": "segment",
+  "backend": "yolo",
+  "tag": "rk3576-yolov8s-seg-fp16",
+  "url": "https://huggingface.co/HanzoHuang/YOLOv8-RKNN2/resolve/971fd1b3e6996ef45e4a16842810aad516dd92b2/models/v2.3.2/segment/yolov8s-seg/rk3576/fp16/model.rknn",
+  "sha256": "53d627fabfb2247da667423206a0ec245089c11bdfecbf8aba30657cf4df2247",
+  "nms": true,
+  "size": "s",
+  "precision": "fp16",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLOv8-RKNN2/resolve/971fd1b3e6996ef45e4a16842810aad516dd92b2/models/v2.3.2/segment/yolov8s-seg/rk3576/fp16/metadata.yaml",
+  "metadata_sha256": "52fc9d095a5b85fb1b3cf83156887776e1bd16dc77808fff7d38ed51ed18579c",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official"
+}

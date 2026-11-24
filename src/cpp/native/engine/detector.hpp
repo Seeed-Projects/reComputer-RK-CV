@@ -20,6 +20,7 @@ class Detector
     rknn_context context_ = 0;
     rknn_tensor_attr input_attr_{}, output_attr_{};
     rknn_tensor_mem *tensor_ = nullptr;
+    rknn_tensor_mem *text_tensor_ = nullptr;
     std::unique_ptr<DmaBuffer> input_;
     std::unique_ptr<Preprocessor> preprocessor_;
     std::unique_ptr<YoloPostprocessor> postprocessor_;
@@ -53,7 +54,8 @@ public:
     Detector &operator=(const Detector &) = delete;
 
     bool supports_candidates() const { return split_ && !task_output_; }
-    Json infer(const Frame &frame, std::vector<Detection> *unfiltered = nullptr);
+    Json infer(const Frame &frame, std::vector<Detection> *unfiltered = nullptr,
+               bool candidates_only = false);
     void configure(float confidence, float iou)
     {
         confidence_ = confidence;

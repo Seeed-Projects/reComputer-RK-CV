@@ -2,22 +2,26 @@ import asyncio
 import json
 import logging
 import os
+import struct
 import tempfile
+from collections import deque
 from contextlib import asynccontextmanager
 from pathlib import Path
 from time import perf_counter
+from typing import Literal
 
 from anyio import CancelScope
 import cv2
 import numpy as np
 from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response, StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
 from starlette.datastructures import MutableHeaders
 
 from .runtime import load_runtime
 from .backends.base import SourceUnavailable, UnsupportedOperation
+from .cameras import CameraPreview, cameras
 
 MAX_UPLOAD = int(os.getenv("RK_MAX_UPLOAD_MB", "128")) * 1024 * 1024
 MAX_PIXELS = 8192 * 8192
@@ -61,6 +65,11 @@ def prediction_response(result):
     response.headers["Server-Timing"] = f"response_encode;dur={(perf_counter() - started) * 1000:.3f}"
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+def preview_packet(result, jpeg=b"", candidates=b""):
+    metadata = json.dumps(result, separators=(",", ":")).encode()
+    return struct.pack("<III", len(jpeg), len(metadata), len(candidates)) + jpeg + metadata + candidates
 
 
 class Configuration(BaseModel):
@@ -236,7 +245,83 @@ class LiveResponse(StreamingResponse):
         finally:
             if acquired:
                 with CancelScope(shield=True):
-                    await run_in_threadpool(self.runtime.release_live)
+                    try:
+                        await self.body_iterator.aclose()
+                    finally:
+                        await run_in_threadpool(self.runtime.release_live)
+
+
+@app.get("/api/demo/cameras", include_in_schema=False)
+def demo_cameras():
+    return {"cameras": cameras()}
+
+
+@app.post("/api/demo/frame", include_in_schema=False)
+async def demo_frame(request: Request):
+    payload = bytearray()
+    async for chunk in request.stream():
+        if len(payload) + len(chunk) > min(MAX_UPLOAD, 4 * 1024 * 1024):
+            raise HTTPException(413, "preview frame is too large")
+        payload.extend(chunk)
+    if not payload:
+        raise HTTPException(400, "empty preview frame")
+    rt = app.state.runtime
+
+    def process():
+        started = perf_counter()
+        image = cv2.imdecode(np.frombuffer(payload, dtype=np.uint8), cv2.IMREAD_COLOR)
+        if image is None:
+            raise HTTPException(400, "cannot decode preview frame")
+        decode_ms = (perf_counter() - started) * 1000
+        conf, iou = rt.thresholds(None, None)
+        result, candidates = rt.preview_image(image, conf, iou, "uploaded video")
+        result["timing"]["decode_ms"] = decode_ms
+        return preview_packet(result, candidates=candidates)
+
+    try:
+        packet = await run_in_threadpool(process)
+    except (RuntimeError, cv2.error, ValueError) as error:
+        raise HTTPException(400, str(error)) from error
+    return Response(packet, media_type="application/octet-stream", headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/demo/cameras/{device}/frames", include_in_schema=False)
+async def demo_camera_frames(device: str):
+    devices = await run_in_threadpool(cameras)
+    camera = next((camera for camera in devices if camera["id"] == device), None)
+    if camera is None:
+        raise HTTPException(404, "This board camera is unavailable")
+    preview = CameraPreview(camera, app.state.runtime)
+
+    async def frames():
+        capture = None
+        pending = deque()
+        try:
+            while True:
+                if capture is None and len(pending) < preview.runtime.preview_workers:
+                    capture = asyncio.create_task(run_in_threadpool(preview.read))
+                if pending and pending[0].done():
+                    result, jpeg, candidates = pending.popleft().result()
+                    yield preview_packet(result, jpeg, candidates)
+                elif capture is not None and capture.done():
+                    image = capture.result()
+                    capture = None
+                    pending.append(asyncio.create_task(run_in_threadpool(preview.frame, image)))
+                else:
+                    waiting = [capture] if capture is not None else []
+                    if pending:
+                        waiting.append(pending[0])
+                    await asyncio.wait(waiting, return_when=asyncio.FIRST_COMPLETED)
+        except (RuntimeError, cv2.error, ValueError) as error:
+            yield preview_packet({"error": str(error)})
+        finally:
+            with CancelScope(shield=True):
+                if capture is not None:
+                    pending.append(capture)
+                await asyncio.gather(*pending, return_exceptions=True)
+
+    return LiveResponse(preview, frames(), media_type="application/octet-stream",
+                        headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"})
 
 
 @app.get("/api/video_feed")
@@ -276,6 +361,14 @@ def demo_runtime():
 def demo_video():
     return FileResponse(demo_runtime().demo_video, media_type="video/mp4",
                         headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/api/demo/photos/{name}.jpg", include_in_schema=False)
+def demo_photo(name: Literal["dog", "banana", "tennis-ball", "boats"]):
+    path = Path("/opt/demo/photos") / f"{name}.jpg"
+    if not path.is_file():
+        raise HTTPException(404, "this model image does not include that example photo")
+    return FileResponse(path, media_type="image/jpeg")
 
 
 @app.get("/api/demo/results", include_in_schema=False)

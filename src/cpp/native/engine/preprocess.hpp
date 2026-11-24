@@ -21,14 +21,16 @@ class Preprocessor
     std::array<rga_buffer_handle_t, 2> scaled_handles_{};
     int width_, height_, stride_;
     DmaBuffer &input_;
-    bool painted_ = false, center_crop_ = false;
+    bool painted_ = false;
+    InputTransform input_transform_;
+    int pad_value_;
     Geometry previous_;
 
     rga_buffer_t resize_buffer(size_t slot, int width, int height);
 
 public:
     Preprocessor(DmaBuffer &input, int width, int height, int stride,
-                 bool center_crop = false);
+                 InputTransform input_transform, int pad_value = 114);
     ~Preprocessor();
 
     Preprocessor(const Preprocessor &) = delete;

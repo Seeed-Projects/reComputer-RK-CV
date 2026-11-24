@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+from queue import Queue
 from threading import Lock
 from time import perf_counter
 
@@ -56,14 +57,26 @@ class Backend(BaseBackend):
         if nms_mode not in ("on", "off"):
             raise ValueError("RK_NMS must be on or off")
         options = {key: package[key] for key in ("classes", "end2end", "coordinates",
-                                                 "preprocess", "dense_resize", "kpt_shape")
+                                                 "preprocess", "dense_resize", "kpt_shape",
+                                                 "head", "anchors")
                    if key in package}
         options.update(task="detect" if package["task"] == "detection" else package["task"],
                        nms=nms_mode == "on")
+        if package.get("text_embeddings"):
+            embeddings = np.load(package["text_embeddings"], allow_pickle=False)
+            if (embeddings.shape != (1, package["classes"], 512) or
+                    embeddings.dtype != np.float32 or not np.isfinite(embeddings).all()):
+                raise ValueError("Invalid YOLO-World text embeddings")
+            options["text_embeddings"] = embeddings.ravel().tolist()
+        if "runtime_preprocess" in package:
+            options["preprocess"] = package["runtime_preprocess"]
         encoded_options = json.dumps(options)
         self.predictor = _native.Predictor(model, encoded_options)
         self.description = json.loads(self.predictor.description())
         self.description["chip"] = package["chip"]
+        self.description["candidate_preview"] = self.predictor.supports_candidates()
+        self.description["input_transform"] = options.get(
+            "preprocess", "center_crop" if package["task"] == "classify" else "letterbox")
         self.labels = COCO if self.description["classes"] == 80 else []
         if path := os.getenv("RK_CLASSES", package.get("labels")):
             with open(path, encoding="utf-8") as f:
@@ -71,6 +84,10 @@ class Backend(BaseBackend):
             if len(self.labels) != self.description["classes"]:
                 raise ValueError("class file must have one label per model class")
         task = package["task"]
+        classification_names = Path("/opt/demo/photos/labels.json")
+        self.classification_names = {}
+        if task == "classify" and classification_names.is_file():
+            self.classification_names = json.loads(classification_names.read_text(encoding="utf-8"))
         self.prediction_metadata = {
             "model_input": {"width": self.description["input_width"],
                             "height": self.description["input_height"]},
@@ -86,6 +103,12 @@ class Backend(BaseBackend):
         self.workers = int(os.getenv("RK_WORKERS", "0"))
         if self.workers not in (0, 1):
             raise ValueError("RK_WORKERS must be 0 (auto) or 1")
+        self.preview_workers = self.workers or {"rk3576": 2, "rk3588": 3}.get(package["chip"], 1)
+        self.preview_masks = ([1 << index for index in range(self.preview_workers)]
+                              if self.preview_workers > 1 else ["all"])
+        self.description.update(preview_workers=self.preview_workers, preview_core_masks=self.preview_masks)
+        self.preview_pool = None
+        self.preview_lock = Lock()
         bundled = Path("/opt/demo/input.mp4")
         override = os.getenv("RK_SOURCE")
         self.source = str(bundled) if override is None and bundled.is_file() else override
@@ -144,9 +167,11 @@ class Backend(BaseBackend):
                     "context_wait_ms", "dma_upload_ms", "preprocess_ms", "inference_ms",
                     "rknn_run_ms", "output_get_ms", "postprocess_ms", "nms_ms") if key in raw}}
         if "classification" in raw:
-            result["classification"] = [
-                {**item, "class": self.labels[item["class_id"]] if self.labels else str(item["class_id"])}
-                for item in raw["classification"]]
+            result["classification"] = []
+            for item in raw["classification"]:
+                label = self.labels[item["class_id"]] if self.labels else str(item["class_id"])
+                result["classification"].append({**item, "class": label,
+                                                 "class_name": self.classification_names.get(label, label)})
         if "dense" in raw:
             result[raw["task"]] = raw["dense"]
             if raw["task"] == "semantic":
@@ -154,6 +179,36 @@ class Backend(BaseBackend):
         return result
 
     def image(self, image, conf, iou, source):
+        result, _ = self._image(self.predictor, image, conf, iou, source, False)
+        return result
+
+    def preview_image(self, image, conf, iou, source):
+        candidate_preview = self.description["candidate_preview"]
+        if self.preview_workers == 1:
+            result, candidates = self._image(self.predictor, image, conf, iou, source, candidate_preview)
+            result["npu_core_mask"] = "all"
+            return result, candidates
+
+        queued = perf_counter()
+        with self.preview_lock:
+            if self.preview_pool is None:
+                pool = Queue(maxsize=self.preview_workers)
+                for mask in self.preview_masks:
+                    pool.put_nowait((mask, _native.Predictor(self.model, self.model_options, mask)))
+                self.preview_pool = pool
+            pool = self.preview_pool
+        worker = pool.get()
+        wait_ms = (perf_counter() - queued) * 1000
+        mask, predictor = worker
+        try:
+            result, candidates = self._image(predictor, image, conf, iou, source, candidate_preview)
+        finally:
+            pool.put_nowait(worker)
+        result["npu_core_mask"] = mask
+        result["timing"]["preview_queue_ms"] = wait_ms
+        return result, candidates
+
+    def _image(self, predictor, image, conf, iou, source, candidate_preview):
         started = perf_counter()
         if image is None or image.size == 0:
             raise ValueError("cannot decode image or video frame")
@@ -174,7 +229,11 @@ class Backend(BaseBackend):
         pixels = nv12.tobytes()
         prepare_ms = (perf_counter() - started) * 1000
         started = perf_counter()
-        encoded = self.predictor.predict(pixels, w, h, conf, iou)
+        if candidate_preview:
+            encoded, candidates = predictor.preview(pixels, w, h, conf, iou)
+        else:
+            encoded = predictor.predict(pixels, w, h, conf, iou)
+            candidates = b""
         native_ms = (perf_counter() - started) * 1000
         started = perf_counter()
         raw = json.loads(encoded)
@@ -185,7 +244,7 @@ class Backend(BaseBackend):
         result = self.response(raw, source)
         result["timing"].update({"color_convert_ms": prepare_ms, "native_call_ms": native_ms,
                                  "response_build_ms": (perf_counter() - started) * 1000})
-        return result
+        return result, candidates
 
     def annotate(self, jpeg, raw):
         image = cv2.imdecode(np.frombuffer(jpeg, dtype=np.uint8), cv2.IMREAD_COLOR)

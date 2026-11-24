@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - 'src/cpp/**'
+      - 'src/rv182x_rk3588_yolo26/video/test.mp4'
+      - 'src/rk3576_yolov8_pose/video/test.mp4'
       - '.github/workflows/cpp-model-images.yml'
   push:
     branches: [main]
     paths:
       - 'src/cpp/**'
+      - 'src/rv182x_rk3588_yolo26/video/test.mp4'
+      - 'src/rk3576_yolov8_pose/video/test.mp4'
       - '.github/workflows/cpp-model-images.yml'
   workflow_dispatch:
     inputs:
@@ -24,20 +28,25 @@ concurrency:
   group: cpp-model-images-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  RUNTIME_IMAGE: rockchip-cv-runtime:${{ github.sha }}
+  PUBLISH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
+  MODEL_ID: ${{ inputs.model }}
+  CHECK_N_INT8: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  images:
+  runtime:
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 120
+    outputs:
+      families: ${{ steps.catalog.outputs.families }}
+      namespace: ${{ steps.catalog.outputs.namespace }}
     permissions:
       contents: read
       packages: write
     defaults:
       run:
         working-directory: src/cpp
-    env:
-      RUNTIME_IMAGE: rockchip-cv-runtime:${{ github.sha }}
-      PUBLISH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
-      MODEL_ID: ${{ inputs.model }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -47,10 +56,18 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - name: Validate model catalog
+      - name: Validate model catalog and select families
+        id: catalog
+        shell: bash
         run: |
-          python -m pip install 'PyYAML==6.0.3'
           python tools/models.py validate
+          args=()
+          if [[ -n "$MODEL_ID" ]]; then args+=(--model "$MODEL_ID"); fi
+          families=$(python tools/models.py matrix "${args[@]}" | jq -c --arg check "$CHECK_N_INT8" '
+            .include | map(select($check != "true" or (.size == "n" and .precision == "int8")))
+            | {family: (map(.family) | unique)}')
+          echo "families=$families" >> "$GITHUB_OUTPUT"
+          echo "namespace=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
       - uses: docker/login-action@v4
         if: env.PUBLISH == 'true'
         with:
@@ -62,7 +79,6 @@ jobs:
         run: |
           namespace="ghcr.io/${GITHUB_REPOSITORY,,}"
           remote_runtime="$namespace/runtime:$GITHUB_SHA"
-          echo "IMAGE_NAMESPACE=$namespace" >> "$GITHUB_ENV"
           if [[ "$PUBLISH" == true ]]; then
             if output=$(docker pull --platform linux/arm64 "$remote_runtime" 2>&1); then
               echo "$output"
@@ -82,11 +98,79 @@ jobs:
             docker image tag "$RUNTIME_IMAGE" "$remote_runtime"
             docker push "$remote_runtime"
           fi
+      - name: Export runtime for verification jobs
+        if: env.PUBLISH != 'true'
+        shell: bash
+        run: docker image save "$RUNTIME_IMAGE" | gzip -1 > "$RUNNER_TEMP/runtime.tar.gz"
+      - uses: actions/upload-artifact@v7
+        if: env.PUBLISH != 'true'
+        with:
+          name: rockchip-runtime
+          path: ${{ runner.temp }}/runtime.tar.gz
+          compression-level: 0
+          retention-days: 1
+          if-no-files-found: error
+
+  images:
+    needs: runtime
+    name: Build ${{ matrix.family }} model images
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix: ${{ fromJSON(needs.runtime.outputs.families) }}
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: src/cpp
+    env:
+      IMAGE_NAMESPACE: ${{ needs.runtime.outputs.namespace }}
+      MODEL_FAMILY: ${{ matrix.family }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          lfs: false
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.gitattributes
+            /src/cpp/
+            /src/rv182x_rk3588_yolo26/video/test.mp4
+            /src/rk3576_yolov8_pose/video/test.mp4
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install 'PyYAML==6.0.3'
+      - uses: docker/login-action@v4
+        if: env.PUBLISH == 'true'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - uses: actions/download-artifact@v7
+        if: env.PUBLISH != 'true'
+        with:
+          name: rockchip-runtime
+          path: ${{ runner.temp }}
+      - name: Load the shared runtime
+        shell: bash
+        run: |
+          if [[ "$PUBLISH" == true ]]; then
+            remote_runtime="$IMAGE_NAMESPACE/runtime:$GITHUB_SHA"
+            docker pull --platform linux/arm64 "$remote_runtime"
+            docker image tag "$remote_runtime" "$RUNTIME_IMAGE"
+          else
+            docker image load --input "$RUNNER_TEMP/runtime.tar.gz"
+          fi
       - name: Build and verify model packages
         shell: bash
         run: |
           args=()
           if [[ -n "$MODEL_ID" ]]; then args+=(--model "$MODEL_ID"); fi
+          if [[ "$CHECK_N_INT8" == true ]]; then args+=(--size n --precision int8); fi
           if [[ "$PUBLISH" == true ]]; then args+=(--publish); fi
-          python tools/build_images.py --runtime "$RUNTIME_IMAGE" --repository "$IMAGE_NAMESPACE" \
+          python tools/build_images.py --family "$MODEL_FAMILY" --runtime "$RUNTIME_IMAGE" --repository "$IMAGE_NAMESPACE" \
             --revision "$GITHUB_SHA" "${args[@]}"
