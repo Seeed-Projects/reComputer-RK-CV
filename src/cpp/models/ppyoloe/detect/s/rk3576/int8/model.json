@@ -1,0 +1,22 @@
+{
+  "id": "ppyoloe-s-rk3576-int8",
+  "name": "PP-YOLOE-s",
+  "family": "ppyoloe",
+  "chip": "rk3576",
+  "task": "detection",
+  "backend": "yolo",
+  "tag": "rk3576-ppyoloe-s-int8",
+  "url": "https://huggingface.co/HanzoHuang/PP-YOLOE-RKNN2/resolve/faf19781b11864c62e48edbf8550eb6c915f59de/models/v2.3.2/detect/ppyoloe_s/rk3576/int8/model.rknn",
+  "sha256": "bd3fd618f472835eb2f6adc8171274f9d1efab1bd679f8a02e6da9fcd9ba0f4c",
+  "nms": true,
+  "size": "s",
+  "precision": "int8",
+  "metadata_url": "https://huggingface.co/HanzoHuang/PP-YOLOE-RKNN2/resolve/faf19781b11864c62e48edbf8550eb6c915f59de/models/v2.3.2/detect/ppyoloe_s/rk3576/int8/metadata.yaml",
+  "metadata_sha256": "794322a84d2a3c8e00957284acd9cedc84a74ffbcc962e152f6529f9d2c1cc86",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official"
+}

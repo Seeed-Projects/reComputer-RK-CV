@@ -115,7 +115,8 @@ def main():
     parser.add_argument("--runtime", required=True, help="Local runtime image tag")
     parser.add_argument("--repository", required=True, help="Image namespace, such as ghcr.io/owner/repo")
     parser.add_argument("--model", help="Catalog model ID (default: all models)")
-    parser.add_argument("--size", choices=("n", "s", "m"), help="Filter by model size")
+    parser.add_argument("--family", help="Filter by model family")
+    parser.add_argument("--size", help="Filter by the family-specific model size")
     parser.add_argument("--precision", choices=("int8", "fp16"), help="Filter by model precision")
     parser.add_argument("--chip", choices=("rk3576", "rk3588"), help="Filter by target chip")
     parser.add_argument("--revision", help="Add a versioned tag for this source revision")
@@ -124,10 +125,9 @@ def main():
 
     specs = load_catalog(ROOT / "models", ROOT)
     references = image_references(specs)
-    filters = {key: getattr(args, key) for key in ("size", "precision", "chip") if getattr(args, key)}
-    if args.model:
-        filters["id"] = args.model
-    selected = [spec for spec in specs if all(spec[key] == value for key, value in filters.items())]
+    filters = {key: getattr(args, key) for key in ("family", "size", "precision", "chip") if getattr(args, key)}
+    selected = [spec for spec in specs if all(spec[key] == value for key, value in filters.items()) and
+                (not args.model or args.model in (spec["id"], *spec.get("id_aliases", [])))]
     if not selected:
         parser.error("No catalog models matched the requested filters")
     if not args.repository or args.repository != args.repository.lower():

@@ -1,6 +1,8 @@
 #include "engine/task_json.hpp"
 #include "engine/common.hpp"
 
+#include <cmath>
+
 namespace nvr
 {
 ModelOptions model_options(const Json &info)
@@ -16,6 +18,41 @@ ModelOptions model_options(const Json &info)
         options.keypoint_dimensions = shape[1].get<int>();
     }
     options.end_to_end = info.value("end2end", false);
+    if (info.contains("text_embeddings"))
+    {
+        options.text_embeddings = info.at("text_embeddings").get<std::vector<float>>();
+        require(options.task == ModelTask::Detect && options.classes > 0 &&
+                    options.text_embeddings.size() == size_t(options.classes) * 512,
+                "Invalid YOLO-World text embeddings");
+    }
+    const std::string head = info.value("head", std::string("auto"));
+    if (head == "anchored")
+    {
+        options.head = ModelOptions::Head::Anchored;
+        const auto &anchors = info.at("anchors");
+        require(anchors.is_array() && anchors.size() == options.anchors.size(),
+                "Anchored YOLO needs three anchor groups");
+        for (size_t i = 0; i < options.anchors.size(); ++i)
+        {
+            const auto &group = anchors[i];
+            require(group.is_array() && group.size() == options.anchors[i].size(),
+                    "Each anchor group needs three width/height pairs");
+            for (size_t j = 0; j < options.anchors[i].size(); ++j)
+            {
+                float value = group[j].get<float>();
+                require(std::isfinite(value) && value > 0, "Invalid anchor dimension");
+                options.anchors[i][j] = value;
+            }
+        }
+    }
+    else if (head == "yolox")
+    {
+        options.head = ModelOptions::Head::YoloX;
+    }
+    else
+    {
+        require(head == "auto", "Unsupported YOLO head");
+    }
     options.apply_nms = info.value("nms", true);
     options.normalized = info.value("coordinates", std::string("pixels")) == "normalized";
     const std::string preprocess = info.value("preprocess", options.task == ModelTask::Classify

@@ -163,6 +163,40 @@ TaskPostprocessor::TaskPostprocessor(const ModelOptions &options,
                            ? options.keypoints * options.keypoint_dimensions
                        : options.task == ModelTask::Obb ? 1
                                                         : 0;
+    if (options.head != ModelOptions::Head::Auto)
+    {
+        const bool anchored = options.head == ModelOptions::Head::Anchored;
+        const bool segment = options.task == ModelTask::Segment;
+        const int outputs_per_branch = segment ? 2 : 1;
+        const int anchors = anchored ? 3 : 1;
+        require(options.classes > 0 && (options.task == ModelTask::Detect || (anchored && segment)) &&
+                    specs.size() == size_t(3 * outputs_per_branch + (segment ? 1 : 0)) &&
+                    (!segment || prototypes_ == int(specs.size()) - 1),
+                "Invalid YOLO objectness head");
+        for (int branch = 0; branch < 3; ++branch)
+        {
+            int index = branch * outputs_per_branch;
+            const auto &spec = specs[size_t(index)];
+            const auto &shape = spec.dimensions;
+            require(spec.channels_first && shape.size() == 4 &&
+                        shape[1] == anchors * (5 + options.classes) &&
+                        width % shape[3] == 0 && height % shape[2] == 0 &&
+                        width / shape[3] == height / shape[2],
+                    "Invalid YOLO objectness grid or channels");
+            if (segment)
+            {
+                const auto &coefficients = specs[size_t(index + 1)];
+                require(coefficients.channels_first &&
+                            coefficients.dimensions == std::vector<int>{1, anchors * extras,
+                                                                         shape[2], shape[3]},
+                        "Invalid YOLO mask coefficient grid or channels");
+            }
+            regressions_.push_back(index);
+            proposals_ += anchors * shape[2] * shape[3];
+        }
+        layout_ = Layout::Objectness;
+        return;
+    }
     // Standard exports: a decoded matrix, optionally followed by mask prototypes.
     if (specs.size() == size_t(prototypes_ >= 0 ? 2 : 1))
     {
@@ -264,6 +298,11 @@ TaskPostprocessor::TaskPostprocessor(const ModelOptions &options,
     for (int branch = 0; branch < 3; ++branch)
     {
         int reg = branch * stride, cls = packed_task ? reg : reg + 1;
+        if (!options.text_embeddings.empty())
+        {
+            // YOLO-World lists class scores before box regressions.
+            std::swap(reg, cls);
+        }
         const auto &d = specs[size_t(reg)].dimensions;
         const auto &c = specs[size_t(cls)].dimensions;
         require(d.size() == 4 && c.size() == 4 && specs[size_t(reg)].channels_first &&
@@ -309,6 +348,8 @@ const char *TaskPostprocessor::description() const
         return "split scores/boxes";
     case Layout::Dfl:
         return "spatial YOLO heads";
+    case Layout::Objectness:
+        return "spatial YOLO objectness heads";
     case Layout::Classification:
         return "classification probabilities";
     case Layout::Dense:

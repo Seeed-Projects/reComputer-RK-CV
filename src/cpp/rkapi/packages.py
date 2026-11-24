@@ -8,6 +8,7 @@ from urllib.parse import urlsplit
 
 IDENTIFIER = re.compile(r"^[a-z0-9]+(?:[-_][a-z0-9]+)*$")
 HF_REVISION = re.compile(r"/[^/]+/[^/]+/resolve/[0-9a-f]{40}/.+")
+RAW_GITHUB_REVISION = re.compile(r"/[^/]+/[^/]+/[0-9a-f]{40}/.+")
 
 
 def checked_path(root, value):
@@ -75,6 +76,14 @@ def load_catalog(directory, root):
                 raise ValueError(f"{spec['id']}: {key} must pin a Hugging Face commit")
         if not re.fullmatch(r"[0-9a-f]{64}", spec.get("metadata_sha256", "")):
             raise ValueError(f"{spec['id']}: metadata SHA-256 is required")
+        if "text_embeddings_url" in spec:
+            value = spec["text_embeddings_url"]
+            url = urlsplit(value if isinstance(value, str) else "")
+            if (url.scheme != "https" or url.netloc != "raw.githubusercontent.com" or
+                    not RAW_GITHUB_REVISION.fullmatch(url.path) or url.query or url.fragment):
+                raise ValueError(f"{spec['id']}: text embeddings must pin a GitHub commit")
+            if not re.fullmatch(r"[0-9a-f]{64}", spec.get("text_embeddings_sha256", "")):
+                raise ValueError(f"{spec['id']}: text embeddings SHA-256 is required")
         backend = checked_path(root, f"rkapi/backends/{spec['backend']}.py")
         if not backend.is_file():
             raise ValueError(f"{spec['id']}: backend module missing: {spec['backend']}")
@@ -87,7 +96,7 @@ def load_package(path):
     if spec.get("schema_version") != 1:
         raise ValueError("Unsupported model package schema")
     validate_spec(spec)
-    for key in ("file", "labels", "metadata"):
+    for key in ("file", "labels", "metadata", "text_embeddings"):
         if spec.get(key):
             resolved = checked_path(path.parent, spec[key])
             if not resolved.is_file():
@@ -95,4 +104,7 @@ def load_package(path):
             spec[key] = str(resolved)
     if not spec.get("file") or sha256(spec["file"]) != spec["sha256"]:
         raise ValueError("Packaged model checksum mismatch")
+    embeddings = spec.get("text_embeddings")
+    if embeddings and sha256(embeddings) != spec.get("text_embeddings_sha256"):
+        raise ValueError("Packaged text embeddings checksum mismatch")
     return spec

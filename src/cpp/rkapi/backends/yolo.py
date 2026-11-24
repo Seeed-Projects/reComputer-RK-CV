@@ -57,10 +57,17 @@ class Backend(BaseBackend):
         if nms_mode not in ("on", "off"):
             raise ValueError("RK_NMS must be on or off")
         options = {key: package[key] for key in ("classes", "end2end", "coordinates",
-                                                 "preprocess", "dense_resize", "kpt_shape")
+                                                 "preprocess", "dense_resize", "kpt_shape",
+                                                 "head", "anchors")
                    if key in package}
         options.update(task="detect" if package["task"] == "detection" else package["task"],
                        nms=nms_mode == "on")
+        if package.get("text_embeddings"):
+            embeddings = np.load(package["text_embeddings"], allow_pickle=False)
+            if (embeddings.shape != (1, package["classes"], 512) or
+                    embeddings.dtype != np.float32 or not np.isfinite(embeddings).all()):
+                raise ValueError("Invalid YOLO-World text embeddings")
+            options["text_embeddings"] = embeddings.ravel().tolist()
         if "runtime_preprocess" in package:
             options["preprocess"] = package["runtime_preprocess"]
         encoded_options = json.dumps(options)

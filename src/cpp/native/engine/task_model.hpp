@@ -36,6 +36,13 @@ enum class DenseResize
 
 struct ModelOptions
 {
+    enum class Head
+    {
+        Auto,
+        Anchored,
+        YoloX
+    };
+
     ModelTask task = ModelTask::Detect;
     int classes = 0;
     int keypoints = 17, keypoint_dimensions = 3;
@@ -43,6 +50,9 @@ struct ModelOptions
     InputTransform input_transform = InputTransform::Letterbox;
     bool apply_nms = true;
     DenseResize dense_resize = DenseResize::None;
+    Head head = Head::Auto;
+    std::array<std::array<float, 6>, 3> anchors{};
+    std::vector<float> text_embeddings;
 };
 
 struct TensorSpec
@@ -95,6 +105,7 @@ public:
         EndToEnd,
         Split,
         Dfl,
+        Objectness,
         Classification,
         Dense
     };

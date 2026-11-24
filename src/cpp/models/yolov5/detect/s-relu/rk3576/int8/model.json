@@ -1,0 +1,49 @@
+{
+  "id": "yolov5s-relu-rk3576-int8",
+  "name": "YOLOv5s-relu",
+  "family": "yolov5",
+  "chip": "rk3576",
+  "task": "detection",
+  "backend": "yolo",
+  "tag": "rk3576-yolov5s-relu-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLOv5-RKNN2/resolve/59945537ed936904e2cf33f854c9a73101a4e733/models/v2.3.2/detect/yolov5s_relu/rk3576/int8/model.rknn",
+  "sha256": "19b98ad8269a0afb194768abdb4f663d41529bf9b5dc7b71f7e2684644fa14ec",
+  "nms": true,
+  "size": "s-relu",
+  "precision": "int8",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLOv5-RKNN2/resolve/59945537ed936904e2cf33f854c9a73101a4e733/models/v2.3.2/detect/yolov5s_relu/rk3576/int8/metadata.yaml",
+  "metadata_sha256": "7c162ff80553a28108ae07949e4e0995b951e16854eb5650441f188e705c8e90",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official",
+  "head": "anchored",
+  "anchors": [
+    [
+      10.0,
+      13.0,
+      16.0,
+      30.0,
+      33.0,
+      23.0
+    ],
+    [
+      30.0,
+      61.0,
+      62.0,
+      45.0,
+      59.0,
+      119.0
+    ],
+    [
+      116.0,
+      90.0,
+      156.0,
+      198.0,
+      373.0,
+      326.0
+    ]
+  ]
+}

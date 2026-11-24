@@ -10,8 +10,9 @@ namespace nvr
 {
 // Model input resizing and color conversion.
 Preprocessor::Preprocessor(DmaBuffer &input, int w, int h, int stride,
-                           InputTransform input_transform)
-    : width_(w), height_(h), stride_(stride), input_(input), input_transform_(input_transform)
+                           InputTransform input_transform, int pad_value)
+    : width_(w), height_(h), stride_(stride), input_(input), input_transform_(input_transform),
+      pad_value_(pad_value)
 {
     require(w > 0 && h > 0 && w % 16 == 0 && h % 2 == 0 && stride >= w && stride % 16 == 0,
             "invalid RGB destination dimensions or stride");
@@ -119,7 +120,7 @@ Geometry Preprocessor::process(const Nv12ImageView &image)
         sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
         require(ioctl(input_.fd, DMA_BUF_IOCTL_SYNC, &sync) == 0,
                 "sync model input for letterbox initialization");
-        std::memset(input_.data, 114, input_.size);
+        std::memset(input_.data, pad_value_, input_.size);
         sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
         require(ioctl(input_.fd, DMA_BUF_IOCTL_SYNC, &sync) == 0,
                 "finish letterbox initialization");

@@ -23,13 +23,14 @@ class Preprocessor
     DmaBuffer &input_;
     bool painted_ = false;
     InputTransform input_transform_;
+    int pad_value_;
     Geometry previous_;
 
     rga_buffer_t resize_buffer(size_t slot, int width, int height);
 
 public:
     Preprocessor(DmaBuffer &input, int width, int height, int stride,
-                 InputTransform input_transform);
+                 InputTransform input_transform, int pad_value = 114);
     ~Preprocessor();
 
     Preprocessor(const Preprocessor &) = delete;

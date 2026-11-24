@@ -1,0 +1,22 @@
+{
+  "id": "yolo11n-cls-rk3576-int8",
+  "name": "YOLO11n-cls",
+  "family": "yolo11",
+  "chip": "rk3576",
+  "task": "classify",
+  "backend": "yolo",
+  "tag": "rk3576-yolo11n-cls-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLO11-RKNN2/resolve/a31867822336b491e7aa494e71ed4af17ccb1730/models/v2.3.2/classify/yolo11n-cls/rk3576/int8/model.rknn",
+  "sha256": "7ef550741e14cbd3864c903d78382c993f66f44305b9bc78095e384b1d00c718",
+  "nms": true,
+  "size": "n",
+  "precision": "int8",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLO11-RKNN2/resolve/a31867822336b491e7aa494e71ed4af17ccb1730/models/v2.3.2/classify/yolo11n-cls/rk3576/int8/metadata.yaml",
+  "metadata_sha256": "42ccc34d3daa1b7cadb1b1ac003a3bc8fbe769ba51f8903ffd5a11c5c9ebe821",
+  "classes": 1000,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "center_crop",
+  "dense_resize": "none",
+  "conversion": "model-zoo-inspired"
+}

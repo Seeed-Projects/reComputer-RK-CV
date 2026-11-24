@@ -20,6 +20,7 @@ class Detector
     rknn_context context_ = 0;
     rknn_tensor_attr input_attr_{}, output_attr_{};
     rknn_tensor_mem *tensor_ = nullptr;
+    rknn_tensor_mem *text_tensor_ = nullptr;
     std::unique_ptr<DmaBuffer> input_;
     std::unique_ptr<Preprocessor> preprocessor_;
     std::unique_ptr<YoloPostprocessor> postprocessor_;

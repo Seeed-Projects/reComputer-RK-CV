@@ -104,9 +104,21 @@ if metadata["model"]["task"] == "detection":
 
 ## Models
 
-YOLO26 ships in sizes `n`, `s`, and `m` for RK3576 and RK3588, with
-INT8 and FP16 builds for all seven tasks. Each image serves one model and includes demo media for its task.
-The catalog contains 84 variants across 21 image names.
+The catalog follows the model exports in [Rockchip CV API](https://github.com/Hanzo-Huang/rockchip-cv-api).
+It contains 316 INT8 and FP16 variants across 10 families for RK3576 and RK3588.
+Each image serves one model and includes demo media for its task.
+
+| Family | Sizes | Tasks |
+| --- | --- | --- |
+| YOLO26 | `n`, `s`, `m` | Detection, segmentation, pose, oriented boxes, classification, semantic segmentation, depth |
+| YOLO11, YOLOv8 | `n`, `s`, `m` | Detection, segmentation, pose, oriented boxes, classification |
+| YOLOv5 | `n`, `s`, `m`, plus `s-relu` for detection | Detection, segmentation, classification |
+| YOLOv6 | `n`, `s`, `m` | Detection |
+| YOLOv7 | `base`, `tiny` | Detection |
+| YOLOv10 | `n`, `s`, `m`, `b`, `l`, `x` | Detection |
+| YOLOX | `nano`, `s`, `m` | Detection |
+| PP-YOLOE | `s`, `m` | Detection |
+| YOLO-World | `v2s`, `v2m` | Detection with the model zoo's fixed COCO vocabulary |
 
 All images built from the same code revision share the same ARM64 operating
 system, dependencies, C++ engine, HTTP API, and browser code. The final filesystem layer contains model-specific files. A separate layer contains
@@ -126,7 +138,8 @@ Image names below use the prefix `ghcr.io/seeed-projects/recomputer-rk-cv/`.
 | Depth estimation | `yolo26n-depth:rk3588-int8` | `depth` raster |
 
 Replace `rk3588` with `rk3576` for the other board, or `int8` with `fp16`
-to change precision. Run `python3 tools/models.py list` for all image tags
+to change precision. For example, use `yolo11n-seg:rk3588-int8` for YOLO11
+segmentation. Run `python3 tools/models.py list` for all image tags
 and build IDs in the [model catalog](models/).
 
 <details>
@@ -284,7 +297,8 @@ preview and holds a live-source subscription.
 ### Build locally
 
 Run these commands in `src/cpp` on an ARM64 Docker host. Inference requires
-the matching Rockchip board. Leave out `--model` to build the full catalog.
+the matching Rockchip board. Use `--family yolo11` in place of `--model` to
+build a family, or omit both filters to build the full catalog.
 
 ```sh
 python3 tools/models.py list
@@ -296,16 +310,17 @@ python3 tools/build_images.py --runtime rockchip-cv-runtime:local \
 
 Replace the quick-start image reference with `rockchip-cv-local/yolo26n:rk3588-int8`.
 In a sparse checkout, include the two existing project clip paths in the table
-above. Use `--size n --precision int8` in place of `--model` to check all seven
-tasks on both chips.
+above. Use `--size n --precision int8` in place of `--model` to check the
+n-size INT8 variants on both chips.
 
 ### GitHub Actions
 
 The [C++ Rockchip model images workflow](../../.github/workflows/cpp-model-images.yml)
-uses a native ARM64 runner with a sparse checkout of `src/cpp` and the selected
-video files. Pull requests check all seven YOLO26n INT8 tasks on both chips.
-Changes to the code, packaged videos, or workflow on
-`main` publish all 84 variants to GHCR. A manual run accepts one catalog ID
+uses native ARM64 runners with sparse checkouts. A shared runtime job builds
+the base image, and per-family jobs add the demo media and model packages.
+Pull requests check n-size INT8 variants on both chips. Changes to the code,
+packaged videos, or workflow on `main` publish all 316 variants to GHCR.
+A manual run accepts one catalog ID
 or the full catalog when left empty. Manual runs on `main` publish images.
 
 The workflow saves one shared runtime per source commit under
@@ -321,7 +336,8 @@ rebuilds can reuse it. Each model is published with a
 Each manifest points to an immutable Hugging Face revision. The build
 downloads the RKNN model and its metadata, verifies their SHA-256 checksums,
 and checks the metadata against the task, chip, class list, and tensor
-contract. The repository stores the manifests without the weights.
+contract. YOLO-World also downloads and verifies the fixed text embedding
+tensor. The repository stores the manifests without the weights.
 
 ## Credits
 

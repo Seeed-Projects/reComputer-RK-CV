@@ -1,0 +1,49 @@
+{
+  "id": "yolov5n-seg-rk3576-int8",
+  "name": "YOLOv5n-seg",
+  "family": "yolov5",
+  "chip": "rk3576",
+  "task": "segment",
+  "backend": "yolo",
+  "tag": "rk3576-yolov5n-seg-int8",
+  "url": "https://huggingface.co/HanzoHuang/YOLOv5-RKNN2/resolve/59945537ed936904e2cf33f854c9a73101a4e733/models/v2.3.2/segment/yolov5n-seg/rk3576/int8/model.rknn",
+  "sha256": "a4b65137037ae946486804655a18cac6652fea3c957f8446df364f94d5100540",
+  "nms": true,
+  "size": "n",
+  "precision": "int8",
+  "metadata_url": "https://huggingface.co/HanzoHuang/YOLOv5-RKNN2/resolve/59945537ed936904e2cf33f854c9a73101a4e733/models/v2.3.2/segment/yolov5n-seg/rk3576/int8/metadata.yaml",
+  "metadata_sha256": "21ad0aa6d25582b890b3323c86c805bb7f713c12124eeff4fbd8752be9b78740",
+  "classes": 80,
+  "end2end": false,
+  "coordinates": "pixels",
+  "preprocess": "letterbox",
+  "dense_resize": "none",
+  "conversion": "model-zoo-official",
+  "head": "anchored",
+  "anchors": [
+    [
+      10.0,
+      13.0,
+      16.0,
+      30.0,
+      33.0,
+      23.0
+    ],
+    [
+      30.0,
+      61.0,
+      62.0,
+      45.0,
+      59.0,
+      119.0
+    ],
+    [
+      116.0,
+      90.0,
+      156.0,
+      198.0,
+      373.0,
+      326.0
+    ]
+  ]
+}
