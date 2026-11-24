@@ -4,11 +4,15 @@ on:
   pull_request:
     paths:
       - 'src/cpp/**'
+      - 'src/rv182x_rk3588_yolo26/video/test.mp4'
+      - 'src/rk3576_yolov8_pose/video/test.mp4'
       - '.github/workflows/cpp-model-images.yml'
   push:
     branches: [main]
     paths:
       - 'src/cpp/**'
+      - 'src/rv182x_rk3588_yolo26/video/test.mp4'
+      - 'src/rk3576_yolov8_pose/video/test.mp4'
       - '.github/workflows/cpp-model-images.yml'
   workflow_dispatch:
     inputs:
@@ -38,12 +42,18 @@ jobs:
       RUNTIME_IMAGE: rockchip-cv-runtime:${{ github.sha }}
       PUBLISH: ${{ github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
       MODEL_ID: ${{ inputs.model }}
+      CHECK_N_INT8: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
           lfs: false
-          sparse-checkout: src/cpp
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /.gitattributes
+            /src/cpp/
+            /src/rv182x_rk3588_yolo26/video/test.mp4
+            /src/rk3576_yolov8_pose/video/test.mp4
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
@@ -87,6 +97,7 @@ jobs:
         run: |
           args=()
           if [[ -n "$MODEL_ID" ]]; then args+=(--model "$MODEL_ID"); fi
+          if [[ "$CHECK_N_INT8" == true ]]; then args+=(--size n --precision int8); fi
           if [[ "$PUBLISH" == true ]]; then args+=(--publish); fi
           python tools/build_images.py --runtime "$RUNTIME_IMAGE" --repository "$IMAGE_NAMESPACE" \
             --revision "$GITHUB_SHA" "${args[@]}"

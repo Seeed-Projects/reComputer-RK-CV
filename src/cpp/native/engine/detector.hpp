@@ -53,7 +53,8 @@ public:
     Detector &operator=(const Detector &) = delete;
 
     bool supports_candidates() const { return split_ && !task_output_; }
-    Json infer(const Frame &frame, std::vector<Detection> *unfiltered = nullptr);
+    Json infer(const Frame &frame, std::vector<Detection> *unfiltered = nullptr,
+               bool candidates_only = false);
     void configure(float confidence, float iou)
     {
         confidence_ = confidence;

@@ -10,8 +10,8 @@ namespace nvr
 {
 // Model input resizing and color conversion.
 Preprocessor::Preprocessor(DmaBuffer &input, int w, int h, int stride,
-                           bool center_crop)
-    : width_(w), height_(h), stride_(stride), input_(input), center_crop_(center_crop)
+                           InputTransform input_transform)
+    : width_(w), height_(h), stride_(stride), input_(input), input_transform_(input_transform)
 {
     require(w > 0 && h > 0 && w % 16 == 0 && h % 2 == 0 && stride >= w && stride % 16 == 0,
             "invalid RGB destination dimensions or stride");
@@ -76,7 +76,7 @@ Geometry Preprocessor::process(const Nv12ImageView &image)
     require(image.size >= size_t(hs) * size_t(vs) * 3 / 2, "invalid NV12 image buffer size");
     auto g = letterbox_geometry(image.width, image.height, width_, height_);
     int crop_width = image.width, crop_height = image.height, crop_x = 0, crop_y = 0;
-    if (center_crop_)
+    if (input_transform_ == InputTransform::CenterCrop)
     {
         float ratio = float(width_) / float(height_);
         crop_width = std::min(image.width, int(float(image.height) * ratio)) & ~1;
@@ -84,6 +84,9 @@ Geometry Preprocessor::process(const Nv12ImageView &image)
         require(crop_width >= 2 && crop_height >= 2, "Invalid classification crop");
         crop_x = ((image.width - crop_width) / 2) & ~1;
         crop_y = ((image.height - crop_height) / 2) & ~1;
+    }
+    if (input_transform_ != InputTransform::Letterbox)
+    {
         g.rw = width_;
         g.rh = height_;
         g.px = 0;

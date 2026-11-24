@@ -35,6 +35,8 @@ def validate_spec(spec):
         raise ValueError(f"{spec['id']}: a SHA-256 checksum is required")
     if not isinstance(spec.get("nms", True), bool):
         raise ValueError(f"{spec['id']}: nms must be a boolean")
+    if "runtime_preprocess" in spec and (spec["task"] != "depth" or spec["runtime_preprocess"] != "stretch"):
+        raise ValueError(f"{spec['id']}: runtime_preprocess only supports stretch for depth")
     for key in ("aliases", "id_aliases"):
         aliases = spec.get(key, [])
         if not isinstance(aliases, list) or any(not isinstance(alias, str) or

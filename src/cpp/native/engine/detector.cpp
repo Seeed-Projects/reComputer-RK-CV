@@ -242,7 +242,7 @@ Detector::Detector(const std::string &model, float threshold, float iou,
             output_.resize(output_attr_.n_elems);
         }
         preprocessor_ = std::make_unique<Preprocessor>(*input_, width_, height_, stride_,
-                                                       options_.center_crop);
+                                                       options_.input_transform);
         rknn_sdk_version version{};
         require(rknn_query(context_, RKNN_QUERY_SDK_VERSION, &version, sizeof(version)) == 0,
                 "query RKNN version");
@@ -372,7 +372,7 @@ void Detector::run_output()
     last_output_ms_ = milliseconds(started);
 }
 
-Json Detector::infer(const Frame &f, std::vector<Detection> *unfiltered)
+Json Detector::infer(const Frame &f, std::vector<Detection> *unfiltered, bool candidates_only)
 {
     auto pre = Clock::now();
     auto geometry = preprocessor_->process(f.image());
@@ -397,7 +397,8 @@ Json Detector::infer(const Frame &f, std::vector<Detection> *unfiltered)
     }
     else
     {
-        for (const auto &detection : postprocessor_->decode(geometry, output_, quant_outputs_, &nms_ms, unfiltered))
+        for (const auto &detection : postprocessor_->decode(geometry, output_, quant_outputs_,
+                                                            &nms_ms, unfiltered, candidates_only))
         {
             result["detections"].push_back({{"class_id", detection.class_id},
                                             {"confidence", detection.confidence},

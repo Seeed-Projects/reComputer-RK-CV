@@ -18,9 +18,12 @@ ModelOptions model_options(const Json &info)
     options.end_to_end = info.value("end2end", false);
     options.apply_nms = info.value("nms", true);
     options.normalized = info.value("coordinates", std::string("pixels")) == "normalized";
-    options.center_crop = info.value("preprocess", options.task == ModelTask::Classify
-                                                       ? std::string("center_crop")
-                                                       : std::string("letterbox")) == "center_crop";
+    const std::string preprocess = info.value("preprocess", options.task == ModelTask::Classify
+                                                               ? std::string("center_crop")
+                                                               : std::string("letterbox"));
+    options.input_transform = preprocess == "center_crop" ? InputTransform::CenterCrop
+                              : preprocess == "stretch"    ? InputTransform::Stretch
+                                                           : InputTransform::Letterbox;
     const std::string resize = info.value("dense_resize", std::string("none"));
     require(resize == "none" || resize == "half_pixel" || resize == "align_corners",
             "Unsupported dense interpolation policy");

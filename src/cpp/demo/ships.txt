@@ -1,0 +1,4 @@
+Official Ultralytics oriented bounding box prediction example.
+Source: https://github.com/ultralytics/assets/blob/main/im/boats.jpg
+Repository license: https://github.com/ultralytics/assets/blob/main/LICENSE
+Example: https://docs.ultralytics.com/tasks/obb/

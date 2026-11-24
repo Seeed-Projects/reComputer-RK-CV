@@ -82,8 +82,10 @@ TaskPostprocessor::TaskPostprocessor(const ModelOptions &options,
     require(width > 0 && height > 0 && !specs.empty() && specs.size() <= 16,
             "Invalid model input or output count");
     require(options.classes >= 0 && options.classes <= 65535, "Invalid metadata class count");
-    require(!options.center_crop || options.task == ModelTask::Classify,
+    require(options.input_transform != InputTransform::CenterCrop || options.task == ModelTask::Classify,
             "Center-crop preprocessing is only supported for classification");
+    require(options.input_transform != InputTransform::Stretch || options.task == ModelTask::Depth,
+            "Stretch preprocessing is only supported for depth");
     require(options.dense_resize == DenseResize::None || options.task == ModelTask::Semantic ||
                 options.task == ModelTask::Depth,
             "Dense interpolation requires a dense task");

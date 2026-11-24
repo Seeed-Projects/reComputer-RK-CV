@@ -16,6 +16,7 @@
   "end2end": false,
   "coordinates": "pixels",
   "preprocess": "letterbox",
+  "runtime_preprocess": "stretch",
   "dense_resize": "align_corners",
   "nms": true,
   "conversion": "custom"
