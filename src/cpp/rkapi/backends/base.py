@@ -37,6 +37,12 @@ class BaseBackend(ABC):
         in the returned dictionary, not in the shared HTTP layer.
         """
 
+    def acquire_live(self):
+        raise UnsupportedOperation("this backend does not support live inference")
+
+    def release_live(self):
+        pass
+
     def source_status(self):
         return None
 

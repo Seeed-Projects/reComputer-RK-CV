@@ -128,6 +128,7 @@ public:
     }
 
     std::string description() const { return detector_.description.dump(); }
+    bool supports_candidates() const { return detector_.supports_candidates(); }
 };
 
 class Live
@@ -324,7 +325,8 @@ PYBIND11_MODULE(_native, m)
     py::class_<Predictor>(m, "Predictor")
         .def(py::init<const std::string &, const std::string &>(), py::arg("model"), py::arg("options") = "{}")
         .def("predict", &Predictor::image, py::call_guard<py::gil_scoped_release>())
-        .def("description", &Predictor::description);
+        .def("description", &Predictor::description)
+        .def("supports_candidates", &Predictor::supports_candidates);
     py::class_<Live>(m, "Live")
         .def(py::init<const std::string &, const std::string &, int, const std::string &, bool>(),
              py::arg("source"), py::arg("model"), py::arg("workers") = 0, py::arg("options") = "{}",

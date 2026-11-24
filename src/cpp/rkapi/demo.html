@@ -31,6 +31,7 @@
     h1 { margin: 1.25rem 0 .25rem; font-size: clamp(2rem, 5vw, 3.75rem); line-height: 1.1; }
     #model { margin: 0 0 1.25rem; color: var(--muted); }
     .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem); gap: 1rem; }
+    .layout.single { grid-template-columns: minmax(0, 1fr); }
     .monitor { background: var(--screen); color: #edf6fa; }
     .feed-bar { min-height: 2.75rem; padding: .5rem 1rem; border-bottom: 1px solid #39505c; }
     #feed-status { color: #b9ddeb; }
@@ -236,6 +237,48 @@
       return result.predictions = predictions;
     }
 
+    function drawRaster(raster, type, scale, offsetX, offsetY) {
+      if (!raster.canvas) {
+        const canvas = document.createElement("canvas");
+        canvas.width = raster.width;
+        canvas.height = raster.height;
+        const context = canvas.getContext("2d");
+        const pixels = context.createImageData(raster.width, raster.height);
+        let start = 0;
+        for (let i = 0; i < raster.runs.length; i += 2) {
+          const value = raster.runs[i], count = raster.runs[i + 1];
+          const end = Math.min(start + count, raster.width * raster.height);
+          if ((type === "mask" && value === 0) || (type === "depth" && value === 65536)) {
+            start = end;
+            continue;
+          }
+          const shade = type === "depth" ? Math.round(255 * value / 65535) : value * 73 % 256;
+          const red = type === "mask" ? 38 : shade;
+          const green = type === "mask" ? 225 : type === "depth" ? 128 : (shade + 89) % 256;
+          const blue = type === "mask" ? 172 : type === "depth" ? 255 - shade : (shade + 157) % 256;
+          for (let index = start * 4; index < end * 4; index += 4) {
+            pixels.data[index] = red;
+            pixels.data[index + 1] = green;
+            pixels.data[index + 2] = blue;
+            pixels.data[index + 3] = 102;
+          }
+          start = end;
+        }
+        context.putImageData(pixels, 0, 0);
+        raster.canvas = canvas;
+      }
+      const [x1, y1, x2, y2] = raster.box;
+      drawing.drawImage(raster.canvas, offsetX + x1 * scale, offsetY + y1 * scale,
+                        (x2 - x1) * scale, (y2 - y1) * scale);
+    }
+
+    function drawCaption(caption, x, y, pixelRatio) {
+      drawing.fillStyle = "#142733";
+      drawing.fillRect(x, y, drawing.measureText(caption).width + 8 * pixelRatio, 17 * pixelRatio);
+      drawing.fillStyle = "#edf6fa";
+      drawing.fillText(caption, x + 4 * pixelRatio, y + 2 * pixelRatio);
+    }
+
     function drawBoxes(_now, {mediaTime}) {
       if (!resultsStream) return;
       const contextWidth = boxes.width;
@@ -245,7 +288,7 @@
       if (latest && Number.isFinite(video.duration) && video.duration > 0) {
         const position = timeNear(mediaTime, latest.time);
         const result = results.findLast(item => item.time <= position + .008);
-        if (result && position - result.time < .15 && performance.now() - latest.received < 700) {
+        if (result && position - result.time < (browserNms ? .15 : .35) && performance.now() - latest.received < 700) {
           const scale = Math.min(contextWidth / result.image.width, contextHeight / result.image.height);
           const offsetX = (contextWidth - result.image.width * scale) / 2;
           const offsetY = (contextHeight - result.image.height * scale) / 2;
@@ -254,16 +297,35 @@
           drawing.lineWidth = 2 * pixelRatio;
           drawing.textBaseline = "top";
           drawing.strokeStyle = "#a6edcf";
-          for (const {box, confidence, class: label} of visiblePredictions(result)) {
+          if (result.semantic) drawRaster(result.semantic, "semantic", scale, offsetX, offsetY);
+          if (result.depth) drawRaster(result.depth, "depth", scale, offsetX, offsetY);
+          for (const [index, prediction] of (result.classification ?? []).slice(0, 3).entries()) {
+            drawCaption(`${prediction.class} ${Math.round(100 * prediction.confidence)}%`,
+                        offsetX + 8 * pixelRatio, offsetY + (8 + index * 19) * pixelRatio, pixelRatio);
+          }
+          for (const {box, confidence, class: label, polygon, keypoints, mask} of visiblePredictions(result)) {
             const x = offsetX + box.x1 * scale;
             const y = offsetY + box.y1 * scale;
+            if (mask) drawRaster(mask, "mask", scale, offsetX, offsetY);
+            if (polygon?.length) {
+              drawing.beginPath();
+              for (const [px, py] of polygon) drawing.lineTo(offsetX + px * scale, offsetY + py * scale);
+              drawing.closePath();
+              drawing.stroke();
+            } else {
+              drawing.strokeRect(x, y, (box.x2 - box.x1) * scale, (box.y2 - box.y1) * scale);
+            }
             const caption = `${label} ${Math.round(100 * confidence)}%`;
-            drawing.strokeRect(x, y, (box.x2 - box.x1) * scale, (box.y2 - box.y1) * scale);
-            const captionY = Math.max(y - 17 * pixelRatio, offsetY);
-            drawing.fillStyle = "#142733";
-            drawing.fillRect(x, captionY, drawing.measureText(caption).width + 8 * pixelRatio, 17 * pixelRatio);
-            drawing.fillStyle = "#edf6fa";
-            drawing.fillText(caption, x + 4 * pixelRatio, captionY + 2 * pixelRatio);
+            drawCaption(caption, x, Math.max(y - 17 * pixelRatio, offsetY), pixelRatio);
+            if (keypoints) {
+              drawing.fillStyle = "#a6edcf";
+              for (const [px, py, score] of keypoints) {
+                if (score < .4) continue;
+                drawing.beginPath();
+                drawing.arc(offsetX + px * scale, offsetY + py * scale, 3 * pixelRatio, 0, 2 * Math.PI);
+                drawing.fill();
+              }
+            }
           }
         }
       }
@@ -389,6 +451,12 @@
       try {
         const health = await json("./health");
         const { live, backend } = health;
+        const titles = {detection: "Live detection", classify: "Live classification", depth: "Live depth",
+                        obb: "Live oriented boxes", pose: "Live pose", segment: "Live instance segmentation",
+                        semantic: "Live semantic segmentation"};
+        document.querySelector("h1").textContent = titles[health.model.task] ?? "Live inference";
+        form.hidden = ["classify", "depth", "semantic"].includes(health.model.task);
+        document.querySelector(".layout").classList.toggle("single", form.hidden);
         model.textContent = `${health.model.name} / ${health.model.chip.toUpperCase()}`;
         const clientThresholds = Boolean(health.demo_video && !videoFailed && !live?.error &&
                                          backend.live?.candidate_stream);
@@ -493,6 +561,10 @@
       }
     });
 
+    window.addEventListener("pagehide", () => {
+      stopTimedFeed();
+      feed.removeAttribute("src");
+    });
     refreshFeed();
     loadConfig();
   </script>
